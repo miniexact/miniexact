@@ -64,25 +64,31 @@ struct ColoredNode {
   }
 };
 
+#ifdef DEBUG
+#define VIRT virtual
+#else
+#define VIRT
+#endif
+
 template<class HNA,
          class NA,
          class HN = typename HNA::value_type,
          class NodeT = typename NA::value_type>
 class AlgorithmC {
+  public:
   using L = typename NodeT::link_type;
   using C = typename NodeT::color_type;
   using NameT = typename HN::name_type;
   using NodePointerArray = std::vector<L>;
   using SizeType = typename NodePointerArray::size_type;
 
-  enum AlgororithmState { C1, C2, C3, C4, C5, C6, C7, C8, _STATE_COUNT };
+  enum AlgorithmState { C1, C2, C3, C4, C5, C6, C7, C8, _STATE_COUNT };
   const char* AlgorithmStateStr[_STATE_COUNT] = { "C1", "C2", "C3", "C4",
                                                   "C5", "C6", "C7", "C8" };
-  constexpr const char* AlgorithmStateToStr(AlgororithmState s) {
+  constexpr const char* AlgorithmStateToStr(AlgorithmState s) {
     return AlgorithmStateStr[s];
   }
 
-  public:
   AlgorithmC(HNA& hn, NA& n)
     : hn(hn)
     , n(n) {
@@ -94,7 +100,7 @@ class AlgorithmC {
       std::is_same<typename HN::link_type, typename NodeT::link_type>::value,
       "Link types must be the same for header and color nodes!");
   }
-  ~AlgorithmC() = default;
+  VIRT ~AlgorithmC() = default;
 
   void set_expected_solution_option_count(SizeType count) {
     xarr.resize(count);
@@ -127,14 +133,15 @@ class AlgorithmC {
   }
 
   protected:
-  AlgororithmState state = C1;
+  AlgorithmState state = C1;
   L N;
   L Z;
-  L l, j, i, p;
+  L l, j, i;
 
   enum StepResult { ResultAvailable, NoResultAvailable, CallAgain };
 
-  inline StepResult step() {
+  VIRT StepResult step() {
+    L p;
     switch(state) {
       case C1:
         N = n.size();
@@ -147,6 +154,7 @@ class AlgorithmC {
       case C2:
         if(RLINK(0) == 0) {
           state = C8;
+          xarr.resize(l);// The solution only contains l values.
           return ResultAvailable;
         }
         state = C3;
@@ -169,7 +177,7 @@ class AlgorithmC {
         }
         p = x(l) + 1;
         while(p != x(l)) {
-          j = TOP(p);
+          L j = TOP(p);
           if(j <= 0) {
             p = ULINK(p);
           } else {
@@ -177,14 +185,14 @@ class AlgorithmC {
             commit(p, j);
             p = p + 1;
           }
-          l = l + 1;
-          state = C2;
-          return CallAgain;
         }
+        l = l + 1;
+        state = C2;
+        return CallAgain;
       case C6:
         p = x(l) - 1;
         while(p != x(l)) {
-          j = TOP(p);
+          L j = TOP(p);
           if(j <= 0) {
             p = DLINK(p);
           } else {
@@ -208,6 +216,8 @@ class AlgorithmC {
         l = l - 1;
         state = C6;
         return CallAgain;
+      default:
+        assert(false);
     }
     return NoResultAvailable;
   }
@@ -222,7 +232,7 @@ class AlgorithmC {
     return last_spacer;
   }
 
-  void cover(L i) {
+  VIRT void cover(L i) {
     L p = DLINK(i);
     while(p != i) {
       hide(p);
@@ -233,7 +243,7 @@ class AlgorithmC {
     RLINK(l) = r;
     LLINK(r) = l;
   }
-  void hide(L p) {
+  VIRT void hide(L p) {
     L q = p + 1;
     while(q != p) {
       L x = TOP(q);
@@ -241,9 +251,12 @@ class AlgorithmC {
       L d = DLINK(q);
 
       if(x <= 0) {
+        cout << "SPACER with x:" << x << ", q:" << q << ", u:" << u << endl;
+        assert(q != u);
         q = u;// q was a spacer
       } else if(COLOR(q) < 0) {
-        q = d;// q is ignored because of color (page 88)
+        cout << "COLOR" << endl;
+        q = u;// q is ignored because of color (page 88)
       } else {
         DLINK(u) = d;
         ULINK(d) = u;
@@ -252,7 +265,7 @@ class AlgorithmC {
       }
     }
   }
-  void uncover(L i) {
+  VIRT void uncover(L i) {
     L l = LLINK(i);
     L r = RLINK(i);
     RLINK(l) = i;
@@ -263,7 +276,7 @@ class AlgorithmC {
       p = ULINK(p);
     }
   }
-  void unhide(L p) {
+  VIRT void unhide(L p) {
     L q = p - 1;
     while(q != p) {
       L x = TOP(q);
@@ -281,31 +294,31 @@ class AlgorithmC {
       }
     }
   }
-  void commit(L p, L j) {
+  VIRT void commit(L p, L j) {
     if(COLOR(p) == 0)
       cover(j);
     else if(COLOR(p) > 0)
       purify(p);
   }
-  void purify(L p) {
+  VIRT void purify(L p) {
     C c = COLOR(p);
     L i = TOP(p);
-    L q = ULINK(i);
+    L q = DLINK(i);
     while(q != i) {
-      q = ULINK(q);
+      q = DLINK(q);
       if(COLOR(q) == c)
         COLOR(q) = -1;
       else
         hide(q);
     }
   }
-  void uncommit(L p, L j) {
+  VIRT void uncommit(L p, L j) {
     if(COLOR(p) == 0)
       uncover(j);
     else if(COLOR(p) > 0)
       unpurify(p);
   }
-  void unpurify(L p) {
+  VIRT void unpurify(L p) {
     C c = COLOR(p);
     L i = TOP(p);
     L q = ULINK(i);
@@ -348,7 +361,7 @@ class AlgorithmC {
   }
   C& COLOR(L i) {
     assert(i < n.size());
-    auto &c = n[i].COLOR;
+    auto& c = n[i].COLOR;
     assert(c != NodeT::color_undefined);
     return c;
   }
@@ -360,7 +373,6 @@ class AlgorithmC {
     return xarr[i];
   }
 
-  private:
   HNA& hn;
   NA& n;
 
@@ -373,6 +385,65 @@ using NodeVector = std::vector<Node>;
 using HNodeVector = std::vector<HNode>;
 
 #define IGN 0
+
+#ifdef DEBUG
+template<class HNA, class NA>
+class ShoutingAlgorithmC : public AlgorithmC<HNA, NA> {
+  public:
+  using Base = AlgorithmC<HNA, NA>;
+
+  ShoutingAlgorithmC(HNA& hn, NA& n)
+    : Base(hn, n) {}
+
+  using L = Base::L;
+
+  VIRT ~ShoutingAlgorithmC() = default;
+
+  VIRT Base::StepResult step() {
+    cout << Base::AlgorithmStateToStr(Base::state) << " -> " << endl;
+    auto res = Base::step();
+    cout << " -> " << Base::AlgorithmStateToStr(Base::state)
+         << " Result: " << res << endl;
+
+    return res;
+  }
+
+  VIRT void cover(L i) {
+    cout << Base::AlgorithmStateToStr(Base::state) << ": cover " << i << endl;
+    Base::cover(i);
+  }
+  VIRT void hide(L p) {
+    cout << Base::AlgorithmStateToStr(Base::state) << ": hide " << p << endl;
+    Base::hide(p);
+  }
+  VIRT void uncover(L i) {
+    cout << Base::AlgorithmStateToStr(Base::state) << ": uncover " << i << endl;
+    Base::uncover(i);
+  }
+  VIRT void unhide(L p) {
+    cout << Base::AlgorithmStateToStr(Base::state) << ": unhide " << p << endl;
+    Base::unhide(p);
+  }
+  VIRT void commit(L p, L j) {
+    cout << Base::AlgorithmStateToStr(Base::state) << ": commit " << p << ", "
+         << j << endl;
+    Base::commit(p, j);
+  }
+  VIRT void purify(L p) {
+    cout << Base::AlgorithmStateToStr(Base::state) << ": purify " << p << endl;
+    Base::purify(p);
+  }
+  VIRT void uncommit(L p, L j) {
+    cout << Base::AlgorithmStateToStr(Base::state) << ": uncommit " << p << ", "
+         << j << endl;
+    Base::uncommit(p, j);
+  }
+  VIRT void unpurify(L p) {
+    cout << Base::AlgorithmStateToStr(Base::state) << ": unpurify " << p
+         << endl;
+    Base::unpurify(p);
+  }
+};
 
 auto
 produce_vectors_for_example_49() {
@@ -429,20 +500,23 @@ TEST_CASE("Algorithm C example problem from page 87") {
   auto& hnvec = vecs.first;
   auto& nvec = vecs.second;
 
-  AlgorithmC<HNodeVector, NodeVector> xcc(hnvec, nvec);
-
-  bool solution_available = xcc.compute_next_solution();
-  REQUIRE(solution_available);
+  ShoutingAlgorithmC<HNodeVector, NodeVector> xcc(hnvec, nvec);
 
   auto& s = xcc.current_solution();
 
-  REQUIRE(s.size() == 2);
-  REQUIRE(nvec[s[0]].TOP == 1);
-  REQUIRE(nvec[s[1]].TOP == 3);
+  while(bool solution_available = xcc.compute_next_solution()) {
+    cout << "Solution: " << endl;
+    std::for_each(
+      s.begin(), s.end(), [&nvec](auto n) { cout << nvec[n].TOP << endl; });
+  }
 
-  solution_available = xcc.compute_next_solution();
-  // REQUIRE(!solution_available);
+  // REQUIRE(solution_available);
+  // REQUIRE(s.size() == 2);
+  // REQUIRE(nvec[s[0]].TOP == 1);
+  // REQUIRE(nvec[s[1]].TOP == 3);
 }
+
+#endif
 
 class WordPuzzle {
   public:
