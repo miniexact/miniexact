@@ -5,6 +5,7 @@
 #include <limits>
 #include <vector>
 
+#define DOCTEST_CONFIG_NO_POSIX_SIGNALS
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "doctest.h"
 
@@ -251,12 +252,9 @@ class AlgorithmC {
       L d = DLINK(q);
 
       if(x <= 0) {
-        cout << "SPACER with x:" << x << ", q:" << q << ", u:" << u << endl;
-        assert(q != u);
         q = u;// q was a spacer
       } else if(COLOR(q) < 0) {
-        cout << "COLOR" << endl;
-        q = u;// q is ignored because of color (page 88)
+        q = q + 1;
       } else {
         DLINK(u) = d;
         ULINK(d) = u;
@@ -285,7 +283,7 @@ class AlgorithmC {
       if(x <= 0) {
         q = d;// q was a spacer
       } else if(COLOR(q) < 0) {
-        q = d;// q is ignored because of color (page 88)
+        q = q - 1;
       } else {
         DLINK(u) = q;
         ULINK(d) = q;
@@ -303,9 +301,7 @@ class AlgorithmC {
   VIRT void purify(L p) {
     C c = COLOR(p);
     L i = TOP(p);
-    L q = DLINK(i);
-    while(q != i) {
-      q = DLINK(q);
+    for(L q = DLINK(i); q != i; q = DLINK(q)) {
       if(COLOR(q) == c)
         COLOR(q) = -1;
       else
@@ -321,9 +317,7 @@ class AlgorithmC {
   VIRT void unpurify(L p) {
     C c = COLOR(p);
     L i = TOP(p);
-    L q = ULINK(i);
-    while(q != i) {
-      q = ULINK(q);
+    for(L q = DLINK(i); q != i; q = DLINK(q)) {
       if(COLOR(q) < 0)
         COLOR(q) = c;
       else
@@ -502,18 +496,24 @@ TEST_CASE("Algorithm C example problem from page 87") {
 
   ShoutingAlgorithmC<HNodeVector, NodeVector> xcc(hnvec, nvec);
 
+  // Printing solutions during testing:
+  // while(bool solution_available = xcc.compute_next_solution()) {
+  //  cout << "Solution: " << endl;
+  //  std::for_each(
+  //    s.begin(), s.end(), [&nvec](auto n) { cout << nvec[n].TOP << endl; });
+  //}
+
   auto& s = xcc.current_solution();
+  bool solution_available = xcc.compute_next_solution();
 
-  while(bool solution_available = xcc.compute_next_solution()) {
-    cout << "Solution: " << endl;
-    std::for_each(
-      s.begin(), s.end(), [&nvec](auto n) { cout << nvec[n].TOP << endl; });
-  }
+  REQUIRE(solution_available);
+  REQUIRE(s.size() == 2);
+  REQUIRE(nvec[s[0]].TOP == 1);
+  REQUIRE(nvec[s[1]].TOP == 2);
 
-  // REQUIRE(solution_available);
-  // REQUIRE(s.size() == 2);
-  // REQUIRE(nvec[s[0]].TOP == 1);
-  // REQUIRE(nvec[s[1]].TOP == 3);
+  solution_available = xcc.compute_next_solution();
+
+  REQUIRE(!solution_available);
 }
 
 #endif
