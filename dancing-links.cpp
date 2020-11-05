@@ -381,62 +381,65 @@ using HNodeVector = std::vector<HNode>;
 #define IGN 0
 
 #ifdef DEBUG
-template<class HNA, class NA>
+template<class HNA, class NA, class OutStream = std::ostream>
 class ShoutingAlgorithmC : public AlgorithmC<HNA, NA> {
   public:
   using Base = AlgorithmC<HNA, NA>;
 
-  ShoutingAlgorithmC(HNA& hn, NA& n)
-    : Base(hn, n) {}
+  ShoutingAlgorithmC(HNA& hn, NA& n, OutStream &o = cout)
+    : Base(hn, n)
+    , o(o) {}
 
   using L = Base::L;
 
   VIRT ~ShoutingAlgorithmC() = default;
 
   VIRT Base::StepResult step() {
-    cout << Base::AlgorithmStateToStr(Base::state) << " -> " << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << " -> " << endl;
     auto res = Base::step();
-    cout << " -> " << Base::AlgorithmStateToStr(Base::state)
-         << " Result: " << res << endl;
+    o << " -> " << Base::AlgorithmStateToStr(Base::state) << " Result: " << res
+      << endl;
 
     return res;
   }
 
   VIRT void cover(L i) {
-    cout << Base::AlgorithmStateToStr(Base::state) << ": cover " << i << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << ": cover " << i << endl;
     Base::cover(i);
   }
   VIRT void hide(L p) {
-    cout << Base::AlgorithmStateToStr(Base::state) << ": hide " << p << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << ": hide " << p << endl;
     Base::hide(p);
   }
   VIRT void uncover(L i) {
-    cout << Base::AlgorithmStateToStr(Base::state) << ": uncover " << i << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << ": uncover " << i << endl;
     Base::uncover(i);
   }
   VIRT void unhide(L p) {
-    cout << Base::AlgorithmStateToStr(Base::state) << ": unhide " << p << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << ": unhide " << p << endl;
     Base::unhide(p);
   }
   VIRT void commit(L p, L j) {
-    cout << Base::AlgorithmStateToStr(Base::state) << ": commit " << p << ", "
-         << j << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << ": commit " << p << ", " << j
+      << endl;
     Base::commit(p, j);
   }
   VIRT void purify(L p) {
-    cout << Base::AlgorithmStateToStr(Base::state) << ": purify " << p << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << ": purify " << p << endl;
     Base::purify(p);
   }
   VIRT void uncommit(L p, L j) {
-    cout << Base::AlgorithmStateToStr(Base::state) << ": uncommit " << p << ", "
-         << j << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << ": uncommit " << p << ", "
+      << j << endl;
     Base::uncommit(p, j);
   }
   VIRT void unpurify(L p) {
-    cout << Base::AlgorithmStateToStr(Base::state) << ": unpurify " << p
-         << endl;
+    o << Base::AlgorithmStateToStr(Base::state) << ": unpurify " << p << endl;
     Base::unpurify(p);
   }
+
+  private:
+  OutStream &o;
 };
 
 auto
@@ -494,7 +497,9 @@ TEST_CASE("Algorithm C example problem from page 87") {
   auto& hnvec = vecs.first;
   auto& nvec = vecs.second;
 
-  ShoutingAlgorithmC<HNodeVector, NodeVector> xcc(hnvec, nvec);
+  std::stringstream outStream;
+
+  ShoutingAlgorithmC<HNodeVector, NodeVector> xcc(hnvec, nvec, outStream);
 
   // Printing solutions during testing:
   // while(bool solution_available = xcc.compute_next_solution()) {
@@ -502,6 +507,8 @@ TEST_CASE("Algorithm C example problem from page 87") {
   //  std::for_each(
   //    s.begin(), s.end(), [&nvec](auto n) { cout << nvec[n].TOP << endl; });
   //}
+
+  CAPTURE(outStream.str());
 
   auto& s = xcc.current_solution();
   bool solution_available = xcc.compute_next_solution();
