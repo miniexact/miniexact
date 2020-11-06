@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <unordered_map>
+#include <variant>
 #include <vector>
 
 #ifdef DEBUG
@@ -10,6 +12,13 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "doctest.h"
 #endif
+
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/spirit/include/phoenix_core.hpp>
+#include <boost/spirit/include/phoenix_fusion.hpp>
+#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/spirit/include/phoenix_stl.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 namespace dancing_links {
 using std::cerr;
@@ -66,6 +75,146 @@ struct ColoredNode {
              << n.COLOR << "]";
   }
 };
+
+template<typename I>
+struct PrimaryItem {
+  I item;
+};
+
+template<typename I, typename C>
+struct ColoredItem {
+  I item;
+  C color;
+};
+
+template<typename I, typename C>
+struct ColoredExactCoveringProblem {
+  using PI = PrimaryItem<I>;
+  using CI = ColoredItem<I, C>;
+  using PrimaryItems = std::vector<I>;
+  using SecondaryItems = std::vector<I>;
+  using Item = std::variant<PI, CI>;
+  using Option = std::vector<Item>;
+  using Options = std::vector<Option>;
+
+  PrimaryItems primaryItems;
+  SecondaryItems secondaryItems;
+  Options options;
+
+  void addOption(Option o) { options.push_back(o); }
+};
+
+template<typename I, typename C, typename IM, typename CM>
+class MappedColoredExactCoveringProblem
+  : public ColoredExactCoveringProblem<I, C> {
+  public:
+  using B = ColoredExactCoveringProblem<I, C>;
+  using MappedPI = PrimaryItem<IM>;
+  using MappedCI = ColoredItem<IM, CM>;
+  using MappedItem = std::variant<MappedPI, MappedCI>;
+  using MappedOption = std::vector<MappedItem>;
+
+  I getItemMapping(IM n) {
+    auto i = mappingNameToItem[n];
+    if(i == 0) {
+      assert(itemCount != std::numeric_limits<I>::max());
+      i = itemCount++;
+      mappingNameToItem[n] = i;
+      colorToMappingName[i] = n;
+    }
+    return i;
+  }
+  C getColorMapping(CM n) {
+    auto c = mappingNameToColor[n];
+    if(c == 0) {
+      assert(itemCount != std::numeric_limits<C>::max());
+      c = itemCount++;
+      mappingNameToColor[n] = c;
+      colorToMappingName[c] = n;
+    }
+    return c;
+  }
+  IM getMappedItem(I i) {
+    auto it = itemToMappingName.find(i);
+    assert(it != itemToMappingName.end());
+    return it.second;
+  }
+  CM getMappedColor(C c) {
+    auto it = colorToMappingName.find(c);
+    assert(it != colorToMappingName.end());
+    return it.second;
+  }
+
+  void addMappedOption(const MappedOption& mappedOption) {
+    typename B::Option option(mappedOption.size());
+    for(typename MappedOption::size_type i = 0; i < mappedOption.size(); ++i) {
+      const auto& v = mappedOption[i];
+      if(std::holds_alternative<MappedPI>(v)) {
+        const auto& mappedPI = std::get<MappedPI>(v);
+        option[i] = typename B::PI{ getItemMapping(mappedPI.item) };
+      } else if(std::holds_alternative<MappedCI>(v)) {
+        const auto& mappedCI = std::get<MappedCI>(v);
+        option[i] = typename B::CI{ getItemMapping(mappedCI.item),
+                                    getColorMapping(mappedCI.color) };
+      } else {
+        assert(false);
+      }
+    }
+    B::addOption(option);
+  }
+
+  private:
+  std::unordered_map<IM, I> mappingNameToItem;
+  std::unordered_map<CM, C> mappingNameToColor;
+  std::unordered_map<I, IM> itemToMappingName;
+  std::unordered_map<C, CM> colorToMappingName;
+
+  I itemCount = 1;
+  C colorCount = 1;
+};
+
+template<typename Iterator,
+         typename I,
+         typename C,
+         typename IM,
+         typename CM,
+         typename XX = MappedColoredExactCoveringProblem<I, C, IM, CM>>
+class MappedColoredExactCoveringProblemParser
+  : boost::spirit::qi::
+      grammar<Iterator, XX(), boost::spirit::ascii::space_type> {
+  public:
+  using Option = typename XX::MappedOption;
+  using Item = typename XX::MappedItem;
+
+  MappedColoredExactCoveringProblemParser()
+    : MappedColoredExactCoveringProblemParser::base_type() {
+    using boost::spirit::qi::lit;
+
+    problem = (option % ';') % '.';
+    option = item % ',';
+    item = im[':' % cm];
+  }
+
+  private:
+  boost::spirit::qi::rule<Iterator, XX(), boost::spirit::ascii::space_type>
+    problem;
+  boost::spirit::qi::rule<Iterator, Option(), boost::spirit::ascii::space_type>
+    option;
+  boost::spirit::qi::rule<Iterator, Item(), boost::spirit::ascii::space_type>
+    item;
+  boost::spirit::qi::rule<Iterator, IM(), boost::spirit::ascii::space_type> im;
+  boost::spirit::qi::rule<Iterator, CM(), boost::spirit::ascii::space_type> cm;
+};
+
+template<typename Begin,
+         typename End,
+         typename I,
+         typename C,
+         typename IM,
+         typename CM,
+         typename XX = MappedColoredExactCoveringProblem<I, C, IM, CM>>
+std::optional<XX>
+ParseMappedColoredExactCoveringProblem(Begin begin, End end) {}
 
 #ifdef DEBUG
 #define VIRT virtual
@@ -432,11 +581,11 @@ class ShoutingAlgorithmC : public AlgorithmC<HNA, NA> {
     : Base(hn, n)
     , o(o) {}
 
-  using L = Base::L;
+  using L = typename Base::L;
 
   VIRT ~ShoutingAlgorithmC() = default;
 
-  VIRT Base::StepResult step() {
+  VIRT typename Base::StepResult step() {
     o << Base::AlgorithmStateToStr(Base::state) << " -> " << endl;
     auto res = Base::step();
     o << " -> " << Base::AlgorithmStateToStr(Base::state) << " Result: " << res
@@ -533,10 +682,6 @@ produce_vectors_for_example_49() {
   CHECK(pair.second.size() == 26);
   return pair;
 }
-
-template<class HNV, class NV, typename L, typename OutStream>
-void
-TraverseAndPrintOption(const HNV& hnv, const NV& nv, L n, OutStream& s) {}
 
 TEST_CASE("Algorithm C example problem from page 87") {
   auto vecs = produce_vectors_for_example_49();
