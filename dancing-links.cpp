@@ -5,9 +5,11 @@
 #include <limits>
 #include <vector>
 
+#ifdef DEBUG
 #define DOCTEST_CONFIG_NO_POSIX_SIGNALS
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "doctest.h"
+#endif
 
 namespace dancing_links {
 using std::cerr;
@@ -77,6 +79,8 @@ template<class HNA,
          class NodeT = typename NA::value_type>
 class AlgorithmC {
   public:
+  enum StepResult { ResultAvailable, NoResultAvailable, CallAgain };
+
   using L = typename NodeT::link_type;
   using C = typename NodeT::color_type;
   using NameT = typename HN::name_type;
@@ -109,6 +113,19 @@ class AlgorithmC {
 
   const NodePointerArray& current_solution() const { return xarr; }
 
+  NodePointerArray compute_selected_options() const {
+    NodePointerArray options;
+    options.resize(l);
+    for(L j = 0; j < l; ++j) {
+      L r = x(j);
+      while(TOP(r) >= 0) {
+        ++r;
+      }
+      options[j] = -TOP(r);
+    }
+    return options;
+  }
+
   bool compute_next_solution() {
     StepResult res;
     do {
@@ -116,6 +133,16 @@ class AlgorithmC {
     } while(res == CallAgain);
 
     return res == ResultAvailable;
+  }
+
+  bool has_solution() { return last_result == ResultAvailable; }
+  bool continue_calling() {
+    return last_result == NoResultAvailable || last_result == CallAgain;
+  }
+
+  VIRT StepResult step() {
+    last_result = stepExec();
+    return last_result;
   }
 
   friend std::ostream& operator<<(std::ostream& o, AlgorithmC& c) {
@@ -139,9 +166,9 @@ class AlgorithmC {
   L Z;
   L l, j, i;
 
-  enum StepResult { ResultAvailable, NoResultAvailable, CallAgain };
+  StepResult last_result = CallAgain;
 
-  VIRT StepResult step() {
+  StepResult stepExec() {
     L p;
     switch(state) {
       case C1:
@@ -349,6 +376,10 @@ class AlgorithmC {
     assert(i < n.size());
     return n[i].TOP;
   }
+  L TOP(L i) const {
+    assert(i < n.size());
+    return n[i].TOP;
+  }
   L& LEN(L i) {
     assert(i < n.size());
     return n[i].LEN;
@@ -366,6 +397,10 @@ class AlgorithmC {
     }
     return xarr[i];
   }
+  typename NodePointerArray::value_type x(L i) const {
+    assert(i < xarr.size());
+    return xarr[i];
+  }
 
   HNA& hn;
   NA& n;
@@ -375,8 +410,8 @@ class AlgorithmC {
 
 using HNode = HeaderNode<std::int32_t, char>;
 using Node = ColoredNode<std::int32_t, char>;
-using NodeVector = std::vector<Node>;
 using HNodeVector = std::vector<HNode>;
+using NodeVector = std::vector<Node>;
 
 #define IGN 0
 
@@ -386,7 +421,7 @@ class ShoutingAlgorithmC : public AlgorithmC<HNA, NA> {
   public:
   using Base = AlgorithmC<HNA, NA>;
 
-  ShoutingAlgorithmC(HNA& hn, NA& n, OutStream &o = cout)
+  ShoutingAlgorithmC(HNA& hn, NA& n, OutStream& o = cout)
     : Base(hn, n)
     , o(o) {}
 
@@ -439,7 +474,7 @@ class ShoutingAlgorithmC : public AlgorithmC<HNA, NA> {
   }
 
   private:
-  OutStream &o;
+  OutStream& o;
 };
 
 auto
@@ -492,6 +527,10 @@ produce_vectors_for_example_49() {
   return pair;
 }
 
+template<class HNV, class NV, typename L, typename OutStream>
+void
+TraverseAndPrintOption(const HNV& hnv, const NV& nv, L n, OutStream& s) {}
+
 TEST_CASE("Algorithm C example problem from page 87") {
   auto vecs = produce_vectors_for_example_49();
   auto& hnvec = vecs.first;
@@ -510,13 +549,14 @@ TEST_CASE("Algorithm C example problem from page 87") {
 
   CAPTURE(outStream.str());
 
-  auto& s = xcc.current_solution();
   bool solution_available = xcc.compute_next_solution();
 
   REQUIRE(solution_available);
+
+  auto s = xcc.compute_selected_options();
   REQUIRE(s.size() == 2);
-  REQUIRE(nvec[s[0]].TOP == 1);
-  REQUIRE(nvec[s[1]].TOP == 2);
+  REQUIRE(s[0] == 2);
+  REQUIRE(s[1] == 4);
 
   solution_available = xcc.compute_next_solution();
 
@@ -527,20 +567,53 @@ TEST_CASE("Algorithm C example problem from page 87") {
 
 class WordPuzzle {
   public:
+  using C = AlgorithmC<HNodeVector, NodeVector>;
+
   WordPuzzle()
     : xcc(hnodes, nodes) {}
   ~WordPuzzle() {}
 
+  bool compute_next_solution() { return xcc.compute_next_solution(); }
+  bool has_solution() { return xcc.has_solution(); }
+  bool continue_calling() { return xcc.continue_calling(); }
+  void step() { xcc.step(); }
+
+  const HNodeVector getHNodes() { return hnodes; }
+  const NodeVector& getNodes() { return nodes; }
+
   private:
   HNodeVector hnodes;
   NodeVector nodes;
-  AlgorithmC<HNodeVector, NodeVector> xcc;
+  C xcc;
 };
 }
+
+#ifdef __EMSCRIPTEN__
+
+#include <emscripten/bind.h>
+
+using namespace emscripten;
+using namespace dancing_links;
+
+// Following tutorial from
+// https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html
+EMSCRIPTEN_BINDINGS(dancinglinks) {
+  // clang-format off
+  class_<WordPuzzle>("WordPuzzle")
+    .constructor<>()
+    .function("compute_next_solution", &WordPuzzle::compute_next_solution)
+    .function("has_solution", &WordPuzzle::has_solution)
+    .function("continue_calling", &WordPuzzle::continue_calling)
+    .function("step", &WordPuzzle::step)
+  ;
+  // clang-format on
+}
+#endif
 
 int
 main(int argc, const char* argv[]) {
   if(argc > 1 && strcmp(argv[1], "--test") == 0) {
+#ifdef DEBUG
     doctest::Context ctx;
 
     ctx.setOption("no-breaks", false);
@@ -549,6 +622,11 @@ main(int argc, const char* argv[]) {
     int res = ctx.run();
     ctx.shouldExit();
     return res;
+#else
+    cout << "!! DEBUG undefined! No doctest and testing code included in "
+            "binary. Recompile with -DDEBUG to enable testing functionality."
+         << endl;
+#endif
   }
 
   using namespace dancing_links;
