@@ -113,17 +113,9 @@ class AlgorithmC {
 
   const NodePointerArray& current_solution() const { return xarr; }
 
-  NodePointerArray compute_selected_options() const {
-    NodePointerArray options;
-    options.resize(l);
-    for(L j = 0; j < l; ++j) {
-      L r = x(j);
-      while(TOP(r) >= 0) {
-        ++r;
-      }
-      options[j] = -TOP(r);
-    }
-    return options;
+  const NodePointerArray& current_selected_options() const {
+    assert(has_solution());
+    return selected_options;
   }
 
   bool compute_next_solution() {
@@ -135,13 +127,16 @@ class AlgorithmC {
     return res == ResultAvailable;
   }
 
-  bool has_solution() { return last_result == ResultAvailable; }
-  bool continue_calling() {
+  bool has_solution() const { return last_result == ResultAvailable; }
+  bool continue_calling() const {
     return last_result == NoResultAvailable || last_result == CallAgain;
   }
 
   VIRT StepResult step() {
     last_result = stepExec();
+    if(last_result == ResultAvailable) {
+      update_selected_options();
+    }
     return last_result;
   }
 
@@ -402,10 +397,22 @@ class AlgorithmC {
     return xarr[i];
   }
 
+  void update_selected_options() {
+    selected_options.resize(l);
+    for(L j = 0; j < l; ++j) {
+      L r = x(j);
+      while(TOP(r) >= 0) {
+        ++r;
+      }
+      selected_options[j] = -TOP(r);
+    }
+  }
+
   HNA& hn;
   NA& n;
 
   NodePointerArray xarr;
+  NodePointerArray selected_options;
 };
 
 using HNode = HeaderNode<std::int32_t, char>;
@@ -553,7 +560,7 @@ TEST_CASE("Algorithm C example problem from page 87") {
 
   REQUIRE(solution_available);
 
-  auto s = xcc.compute_selected_options();
+  const auto& s = xcc.current_selected_options();
   REQUIRE(s.size() == 2);
   REQUIRE(s[0] == 2);
   REQUIRE(s[1] == 4);
