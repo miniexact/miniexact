@@ -15,7 +15,12 @@
 #include "doctest.h"
 #endif
 
+#include <boost/bimap.hpp>
+#include <boost/bimap/list_of.hpp>
+#include <boost/bimap/set_of.hpp>
+#include <boost/bind.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/phoenix/bind/bind_member_function.hpp>
 #include <boost/spirit/home/qi/auto/create_parser.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_fusion.hpp>
@@ -95,17 +100,68 @@ template<typename I, typename C>
 struct ColoredExactCoveringProblem {
   using PI = PrimaryItem<I>;
   using CI = ColoredItem<I, C>;
-  using PrimaryItems = std::vector<I>;
-  using SecondaryItems = std::vector<I>;
   using Item = std::variant<PI, CI>;
   using Option = std::vector<Item>;
   using Options = std::vector<Option>;
 
-  PrimaryItems primaryItems;
-  SecondaryItems secondaryItems;
-  Options options;
+  using HN = HeaderNode<I, I>;
+  using N = ColoredNode<I, C>;
+  using HNA = std::vector<HN>;
+  using NA = std::vector<N>;
 
-  void addOption(Option o) { options.push_back(o); }
+  using Size = typename Option::size_type;
+
+  bool isSecondaryItem(I i) { return isSecondaryItemMap[i]; }
+  bool isKnownItem(I i) const { return isSecondaryItemMap.count(i); }
+
+  void addOption(Option o) {
+    for(const auto& i : o) {
+      if(std::holds_alternative<PI>(i)) {
+        const auto& pi = std::get<PI>(i);
+        if(!isKnownItem(pi.item)) {
+          isSecondaryItemMap[pi.item] = false;
+          hna.push_back(HeaderNode(pi.item, 0, 0));
+        }
+      }
+      if(std::holds_alternative<CI>(i)) {
+        const auto& ci = std::get<CI>(i);
+        if(!isKnownItem(ci.item)) {
+          hna.push_back(HeaderNode(ci.item, 0, 0));
+        }
+        if(!isSecondaryItem(ci.item)) {
+          isSecondaryItemMap[ci.item] = true;
+          ++secondaryItemCount;
+        }
+      }
+    }
+
+    // Options are added sequentially to the node array. Finalize at the end
+    // links up everything correctly.
+  }
+
+  Size getPrimaryItemCount() const {
+    return isSecondaryItemMap.size() - secondaryItemCount;
+  }
+  Size getSecondaryItemCount() const { return secondaryItemCount; }
+
+  void addPrimaryItem(PI i) {
+    assert(secondaryItemCount == 0);
+    hna.push_back(HN(i.item, hna.size() - 1, 0));
+    hna[hna.size() - 2].RLINK = hna.size() - 1;
+    hna[0].LLINK = hna.size() - 1;
+  }
+  void addSecondaryItem(PI i) {
+    hna.push_back(HN(i.item, hna.size(), hna.size() - secondaryItemCount));
+    hna[hna.size() - 2].RLINK = hna.size() - 1;
+    hna[hna.size() - secondaryItemCount].LLINK = hna.size() - 1;
+  }
+
+  HNA hna = { HN(0, 0, 0) };
+  NA na;
+
+  private:
+  std::unordered_map<I, bool> isSecondaryItemMap;
+  Size secondaryItemCount = 0;
 };
 
 template<typename I, typename C, typename IM, typename CM>
@@ -117,41 +173,59 @@ class MappedColoredExactCoveringProblem
   using MappedCI = ColoredItem<IM, CM>;
   using MappedItem = std::variant<MappedPI, MappedCI>;
   using MappedOption = std::vector<MappedItem>;
+  using MappedPrimaryItems = std::vector<PrimaryItem<IM>>;
 
   I getItemMapping(IM n) {
-    auto i = mappingNameToItem[n];
-    if(i == 0) {
-      if(itemCount == std::numeric_limits<I>::max()) {
+    I i;
+    auto it = itemMappings.left.find(n);
+    if(it == itemMappings.left.end()) {
+      if(itemMappings.size() == std::numeric_limits<I>::max()) {
         error = true;
         return 0;
       }
-      i = itemCount++;
-      mappingNameToItem[n] = i;
-      colorToMappingName[i] = n;
+      i = itemMappings.size() + 1;
+      itemMappings.insert(ItemMappingValue(n, i));
+    } else {
+      i = it->second;
     }
     return i;
   }
   C getColorMapping(CM n) {
-    auto c = mappingNameToColor[n];
-    if(c == 0) {
-      if(colorCount == std::numeric_limits<C>::max()) {
+    C c;
+    auto it = colorMappings.left.find(n);
+    if(it == colorMappings.left.end()) {
+      if(colorMappings.size() == std::numeric_limits<C>::max()) {
         error = true;
         return 0;
       }
-      c = itemCount++;
-      mappingNameToColor[n] = c;
-      colorToMappingName[c] = n;
+      c = colorMappings.size() + 1;
+      colorMappings.insert(ColorMappingValue(n, c));
+    } else {
+      c = it->second;
     }
     return c;
   }
-  IM getMappedItem(I i) {
-    auto it = itemToMappingName.find(i);
-    assert(it != itemToMappingName.end());
+  I getItemMappingConst(IM m) const {
+    auto it = itemMappings.left.find(m);
+    if(it == itemMappings.left.end())
+      return 0;
+    return it->second;
+  }
+  C getColorMappingConst(CM m) const {
+    auto it = colorMappings.left.find(m);
+    if(it == colorMappings.left.end())
+      return 0;
+    return it->second;
+  }
+
+  IM getMappedItem(I i) const {
+    auto it = itemMappings.right.find(i);
+    assert(it != itemMappings.right.end());
     return it.second;
   }
-  CM getMappedColor(C c) {
-    auto it = colorToMappingName.find(c);
-    assert(it != colorToMappingName.end());
+  CM getMappedColor(C c) const {
+    auto it = colorMappings.right.find(c);
+    assert(it != colorMappings.right.end());
     return it.second;
   }
 
@@ -161,13 +235,24 @@ class MappedColoredExactCoveringProblem
       const auto& v = mappedOption[i];
       if(std::holds_alternative<MappedPI>(v)) {
         const auto& mappedPI = std::get<MappedPI>(v);
-        option[i] = typename B::PI{ getItemMapping(mappedPI.item) };
+        auto mi = getItemMappingConst(mappedPI.item);
+        if(mi == 0) {
+          cerr << "Item \"" << mappedPI.item
+               << "\" not specified as primary or secondary item!" << endl;
+          return false;
+        }
+        option[i] = typename B::PI{ mi };
       } else if(std::holds_alternative<MappedCI>(v)) {
         const auto& mappedCI = std::get<MappedCI>(v);
-        option[i] = typename B::CI{ getItemMapping(mappedCI.item),
-                                    getColorMapping(mappedCI.color) };
+        auto mi = getItemMappingConst(mappedCI.item);
+        if(mi == 0) {
+          cerr << "Item \"" << mappedCI.item
+               << "\" not specified as primary or secondary item!" << endl;
+          return false;
+        }
+        option[i] = typename B::CI{ mi, getColorMapping(mappedCI.color) };
       } else {
-      assert(false);
+        assert(false);
         return false;
       }
     }
@@ -179,16 +264,43 @@ class MappedColoredExactCoveringProblem
     return true;
   }
 
+  bool isItemMappingKnown(IM m) { return itemMappings.left.count(m); }
+  bool isColorMappingKnown(CM m) { return colorMappings.left.count(m); }
+
+  void addMappedPrimaryItem(MappedPI& item) {
+    if(isItemMappingKnown(item.item)) {
+      cerr << "Error: Primary item \"" << item.item
+           << "\" is already known! Cannot add again!" << endl;
+    } else if(error) {
+      cerr << "Error: Too many mappings! Cannot add primary item \""
+           << item.item << "\"!" << endl;
+    } else {
+      B::addPrimaryItem(typename B::PI{ getItemMapping(item.item) });
+    }
+  }
+  void addMappedSecondaryItem(MappedPI& item) {
+    if(isItemMappingKnown(item.item)) {
+      cerr << "Error: Secondary item \"" << item.item
+           << "\" is already known! Cannot add again!" << endl;
+    } else if(error) {
+      cerr << "Error: Too many mappings! Cannot add secondary item \""
+           << item.item << "\"!" << endl;
+    } else {
+      B::addSecondaryItem(typename B::PI{ getItemMapping(item.item) });
+    }
+  }
+
   private:
-  std::unordered_map<IM, I> mappingNameToItem;
-  std::unordered_map<CM, C> mappingNameToColor;
-  std::unordered_map<I, IM> itemToMappingName;
-  std::unordered_map<C, CM> colorToMappingName;
+  using ItemMapping =
+    boost::bimap<boost::bimaps::set_of<IM>, boost::bimaps::list_of<I>>;
+  using ColorMapping =
+    boost::bimap<boost::bimaps::set_of<CM>, boost::bimaps::list_of<C>>;
+  using ItemMappingValue = typename ItemMapping::value_type;
+  using ColorMappingValue = typename ColorMapping::value_type;
+  ItemMapping itemMappings;
+  ColorMapping colorMappings;
 
   bool error = false;
-
-  I itemCount = 1;
-  C colorCount = 1;
 };
 }
 
@@ -253,7 +365,8 @@ class MappedColoredExactCoveringProblemParser
         std::is_same<std::string, typename std::decay<T>::type>> {};
 
   MappedColoredExactCoveringProblemParser()
-    : MappedColoredExactCoveringProblemParser::base_type(problem, "problem") {
+    : MappedColoredExactCoveringProblemParser::base_type(problemWrapper,
+                                                         "problem") {
     using boost::spirit::ascii::alnum;
     using boost::spirit::ascii::alpha;
     using boost::spirit::ascii::char_;
@@ -265,18 +378,28 @@ class MappedColoredExactCoveringProblemParser
     using boost::phoenix::construct;
     using boost::phoenix::val;
 
+    using boost::spirit::qi::_a;
+    using boost::spirit::qi::_r1;
     using boost::spirit::qi::labels::_1;
     using boost::spirit::qi::labels::_2;
     using boost::spirit::qi::labels::_3;
     using boost::spirit::qi::labels::_4;
+    using boost::spirit::qi::labels::_val;
 
     identifier %= lexeme[alpha >> *(alnum | char_('_'))];
 
-    problem %= (option % ";") > '.';
+    problemWrapper %= problem > '.';
+    problem %= ('<' > primaryItemMapList(_val) > '>' > '[' >
+                secondaryItemMapList(_val) > ']' > (option % ";"));
     option %= +item;
     item %= mappedCI | mappedPI;
     mappedCI %= im >> ':' > cm;
     mappedPI %= im;
+
+    primaryItemMapList %=
+      +(mappedPI[boost::phoenix::bind(&XX::addMappedPrimaryItem, _r1, _1)]);
+    secondaryItemMapList %=
+      +(mappedPI[boost::phoenix::bind(&XX::addMappedSecondaryItem, _r1, _1)]);
 
     // Only if mapping is to string, identifier is used. If some other type is
     // used, the parser should use that type.
@@ -291,6 +414,7 @@ class MappedColoredExactCoveringProblemParser
       cm = boost::spirit::qi::create_parser<CM>();
     }
 
+    problemWrapper.name("problem");
     problem.name("problem");
     option.name("option");
     item.name("item");
@@ -308,6 +432,11 @@ class MappedColoredExactCoveringProblemParser
 
   private:
   boost::spirit::qi::rule<Iterator, XX(), boost::spirit::ascii::space_type>
+    problemWrapper;
+  boost::spirit::qi::rule<Iterator,
+                          XX(),
+                          boost::spirit::qi::locals<XX>,
+                          boost::spirit::ascii::space_type>
     problem;
   boost::spirit::qi::rule<Iterator, Option(), boost::spirit::ascii::space_type>
     option;
@@ -315,6 +444,11 @@ class MappedColoredExactCoveringProblemParser
     item;
   boost::spirit::qi::rule<Iterator, IM(), boost::spirit::ascii::space_type> im;
   boost::spirit::qi::rule<Iterator, CM(), boost::spirit::ascii::space_type> cm;
+
+  boost::spirit::qi::rule<Iterator, void(XX&), boost::spirit::ascii::space_type>
+    primaryItemMapList;
+  boost::spirit::qi::rule<Iterator, void(XX&), boost::spirit::ascii::space_type>
+    secondaryItemMapList;
 
   boost::spirit::qi::
     rule<Iterator, MappedPI(), boost::spirit::ascii::space_type>
@@ -871,14 +1005,16 @@ TEST_CASE("Algorithm C example problem from page 87") {
 }
 
 TEST_CASE("Parse example problem from page 87") {
-  std::string_view problemStr = "p q x y:A; p r x:A y; p x:B; q x:A; r y:B .";
+  std::string_view problemStr =
+    "<p q r> [x y] p q x y:A; p r x:A y; p x:B; q x:A; r y:B .";
   auto problemOpt = parse_string_mapped_int32(problemStr);
 
   REQUIRE(problemOpt);
 
   auto problem = problemOpt.value();
 
-  REQUIRE(problem.options.size() == 5);
+  REQUIRE(problem.getPrimaryItemCount() == 3);
+  REQUIRE(problem.getSecondaryItemCount() == 2);
 }
 
 #endif
