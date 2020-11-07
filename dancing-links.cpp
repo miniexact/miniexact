@@ -40,12 +40,16 @@ struct HeaderNode {
   using link_type = T;
   using name_type = N;
 
+  HeaderNode(T l, T r)
+    : LLINK(l)
+    , RLINK(r) {}
+
   HeaderNode(N n, T l, T r)
     : LLINK(l)
     , RLINK(r)
     , NAME(n) {}
 
-  N NAME;
+  N NAME = 0;
   T LLINK;
   T RLINK;
 
@@ -111,27 +115,29 @@ struct ColoredExactCoveringProblem {
 
   using Size = typename Option::size_type;
 
-  bool isSecondaryItem(I i) { return isSecondaryItemMap[i]; }
-  bool isKnownItem(I i) const { return isSecondaryItemMap.count(i); }
-
   void addOption(Option o) {
+    if(firstOption) {
+      na.push_back(N(0, 0, 0));
+
+      hna.push_back(HN(hna.size() - 1, hna.size() - secondaryItemCount));
+      hna[hna.size() - 2].RLINK = hna.size() - 1;
+      hna[hna.size() - secondaryItemCount - 1].LLINK = hna.size() - 1;
+
+      firstOption = false;
+    }
+
     for(const auto& i : o) {
+      I item = 0;
+      C color = 0;
+
       if(std::holds_alternative<PI>(i)) {
         const auto& pi = std::get<PI>(i);
-        if(!isKnownItem(pi.item)) {
-          isSecondaryItemMap[pi.item] = false;
-          hna.push_back(HeaderNode(pi.item, 0, 0));
-        }
+        item = pi.item;
       }
       if(std::holds_alternative<CI>(i)) {
         const auto& ci = std::get<CI>(i);
-        if(!isKnownItem(ci.item)) {
-          hna.push_back(HeaderNode(ci.item, 0, 0));
-        }
-        if(!isSecondaryItem(ci.item)) {
-          isSecondaryItemMap[ci.item] = true;
-          ++secondaryItemCount;
-        }
+        item = ci.item;
+        color = ci.color;
       }
     }
 
@@ -140,7 +146,9 @@ struct ColoredExactCoveringProblem {
   }
 
   Size getPrimaryItemCount() const {
-    return isSecondaryItemMap.size() - secondaryItemCount;
+    // Two spacer nodes. The second spacer node is only there if options have
+    // been added.
+    return hna.size() - secondaryItemCount - !firstOption - 1;
   }
   Size getSecondaryItemCount() const { return secondaryItemCount; }
 
@@ -149,19 +157,30 @@ struct ColoredExactCoveringProblem {
     hna.push_back(HN(i.item, hna.size() - 1, 0));
     hna[hna.size() - 2].RLINK = hna.size() - 1;
     hna[0].LLINK = hna.size() - 1;
+
+    na.push_back(N(0, 0, 0));
+    tops[i.item] = na.size() - 1;
   }
   void addSecondaryItem(PI i) {
-    hna.push_back(HN(i.item, hna.size(), hna.size() - secondaryItemCount));
-    hna[hna.size() - 2].RLINK = hna.size() - 1;
-    hna[hna.size() - secondaryItemCount].LLINK = hna.size() - 1;
+    hna.push_back(HN(i.item, hna.size() - 1, hna.size() - secondaryItemCount));
+    if(secondaryItemCount > 0) {
+      hna[hna.size() - 2].RLINK = hna.size() - 1;
+      hna[hna.size() - secondaryItemCount - 1].LLINK = hna.size() - 1;
+    }
+
+    na.push_back(N(0, 0, 0));
+    tops[i.item] = na.size() - 1;
+
+    ++secondaryItemCount;
   }
 
   HNA hna = { HN(0, 0, 0) };
-  NA na;
+  NA na = { N(0, 0, 0) };
 
   private:
-  std::unordered_map<I, bool> isSecondaryItemMap;
+  std::unordered_map<I, Size> tops;
   Size secondaryItemCount = 0;
+  bool firstOption = true;
 };
 
 template<typename I, typename C, typename IM, typename CM>
@@ -262,6 +281,22 @@ class MappedColoredExactCoveringProblem
     }
     B::addOption(option);
     return true;
+  }
+
+  friend std::ostream& operator<<(std::ostream& o,
+                                  MappedColoredExactCoveringProblem& c) {
+    if(c.hna.size() < 1 || c.na.size() < 1)
+      return o << "{[],[]}";
+
+    o << "{[" << c.hna[0];
+    for(auto i = 1; i < c.hna.size(); ++i) {
+      o << "," << endl << c.hna[i];
+    }
+    o << "],[" << c.na[0];
+    for(auto i = 1; i < c.na.size(); ++i) {
+      o << "," << endl << c.na[i];
+    }
+    return o << "]}";
   }
 
   bool isItemMappingKnown(IM m) { return itemMappings.left.count(m); }
@@ -1015,6 +1050,8 @@ TEST_CASE("Parse example problem from page 87") {
 
   REQUIRE(problem.getPrimaryItemCount() == 3);
   REQUIRE(problem.getSecondaryItemCount() == 2);
+
+  cout << problem;
 }
 
 #endif
