@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -8,6 +9,7 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <fstream>
 
 #ifdef DEBUG
 #define DOCTEST_CONFIG_NO_POSIX_SIGNALS
@@ -29,11 +31,12 @@
 #include <boost/spirit/include/phoenix_stl.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-namespace dancing_links {
 using std::cerr;
 using std::clog;
 using std::cout;
 using std::endl;
+
+namespace dancing_links {
 
 template<typename T, typename N>
 struct HeaderNode {
@@ -165,6 +168,7 @@ struct ColoredExactCoveringProblem {
     // links up everything correctly.
   }
 
+  Size getOptionCount() const { return optionCount; }
   Size getPrimaryItemCount() const {
     // Two spacer nodes. The second spacer node is only there if options have
     // been added.
@@ -266,12 +270,12 @@ class MappedColoredExactCoveringProblem
   IM getMappedItem(I i) const {
     auto it = itemMappings.right.find(i);
     assert(it != itemMappings.right.end());
-    return it.second;
+    return it->second;
   }
   CM getMappedColor(C c) const {
     auto it = colorMappings.right.find(c);
     assert(it != colorMappings.right.end());
-    return it.second;
+    return it->second;
   }
 
   bool addMappedOption(const MappedOption& mappedOption) {
@@ -353,9 +357,9 @@ class MappedColoredExactCoveringProblem
 
   private:
   using ItemMapping =
-    boost::bimap<boost::bimaps::set_of<IM>, boost::bimaps::list_of<I>>;
+    boost::bimap<boost::bimaps::set_of<IM>, boost::bimaps::set_of<I>>;
   using ColorMapping =
-    boost::bimap<boost::bimaps::set_of<CM>, boost::bimaps::list_of<C>>;
+    boost::bimap<boost::bimaps::set_of<CM>, boost::bimaps::set_of<C>>;
   using ItemMappingValue = typename ItemMapping::value_type;
   using ColorMappingValue = typename ColorMapping::value_type;
   ItemMapping itemMappings;
@@ -523,6 +527,29 @@ class MappedColoredExactCoveringProblemParser
       identifier;
 };
 
+struct printer {
+  typedef boost::spirit::utf8_string string;
+
+  void element(string const& tag, string const& value, int depth) const {
+    for(int i = 0; i < (depth * 4); ++i)// indent to depth
+      std::cout << ' ';
+
+    std::cout << "tag: " << tag;
+    if(value != "")
+      std::cout << ", value: " << value;
+    std::cout << std::endl;
+  }
+};
+
+void
+print_info(boost::spirit::info const& what) {
+  using boost::spirit::basic_info_walker;
+
+  printer pr;
+  basic_info_walker<printer> walker(pr, what.tag, 0);
+  boost::apply_visitor(walker, what.value);
+}
+
 template<typename I,
          typename C,
          typename IM,
@@ -537,18 +564,33 @@ ParseMappedColoredExactCoveringProblem(Begin begin, End end) {
   XX problem;
   Begin iter = begin;
 
-  bool r = boost::spirit::qi::phrase_parse(iter, end, grammar, space, problem);
+  bool r;
+  try {
+    r = boost::spirit::qi::phrase_parse(iter, end, grammar, space, problem);
+  } catch(boost::spirit::qi::expectation_failure<Begin> const& x) {
+    std::cout << "expected: ";
+    print_info(x.what_);
+    std::cout << "got: \"" << std::string(x.first, x.last) << '"' << std::endl;
+  }
   if(r && iter == end) {
     return problem;
   } else {
-    Begin some = iter + 30;
-    std::string context(iter, (some > end) ? end : some);
-    cerr << "Did not parse whole string! Stopped at position " << iter - begin
-         << ". Context: " << context << endl;
+    cerr << "Did not parse whole string!" << endl;
     return std::nullopt;
   }
 }
 
+auto
+parse_string_mapped_int32_from_file(const std::string& filepath) {
+  std::ifstream ifs(filepath);
+  ifs >> std::noskipws;
+  boost::spirit::istream_iterator f(ifs), l;
+
+  return ParseMappedColoredExactCoveringProblem<int32_t,
+                                                int32_t,
+                                                std::string,
+                                                std::string>(f, l);
+}
 auto
 parse_string_mapped_int32(const std::string& str) {
   return ParseMappedColoredExactCoveringProblem<int32_t,
@@ -615,6 +657,10 @@ class AlgorithmC {
   const NodePointerArray& current_selected_options() const {
     assert(has_solution());
     return selected_options;
+  }
+  const NodePointerArray& current_selected_option_starts() const {
+    assert(has_solution());
+    return selected_option_starts;
   }
 
   bool compute_next_solution() {
@@ -898,12 +944,14 @@ class AlgorithmC {
 
   void update_selected_options() {
     selected_options.resize(l);
+    selected_option_starts.resize(l);
     for(L j = 0; j < l; ++j) {
       L r = x(j);
       while(TOP(r) >= 0) {
         ++r;
       }
       selected_options[j] = -TOP(r);
+      selected_option_starts[j] = ULINK(r);
     }
   }
 
@@ -912,6 +960,7 @@ class AlgorithmC {
 
   NodePointerArray xarr;
   NodePointerArray selected_options;
+  NodePointerArray selected_option_starts;
 };
 
 using HNode = HeaderNode<std::int32_t, char>;
@@ -1163,7 +1212,51 @@ main(int argc, const char* argv[]) {
   }
 
   using namespace dancing_links;
-  WordPuzzle puzzle;
+
+  if(argc > 1 && strcmp(argv[1], "--parse-and-solve") == 0) {
+    if(argc <= 2) {
+      cerr << "Require file to read!" << endl;
+      return EXIT_FAILURE;
+    }
+
+    auto problemOpt = parse_string_mapped_int32_from_file(argv[2]);
+    if(!problemOpt) {
+      cerr << "Could not parse file!" << endl;
+    } else {
+
+      auto& problem = *problemOpt;
+
+      clog << "  Parsed file. Read " << problem.getOptionCount()
+           << " options with " << problem.getPrimaryItemCount()
+           << " primary and " << problem.getSecondaryItemCount()
+           << " secondary items. Starting solver." << endl;
+
+      AlgorithmC xcc(problem.hna, problem.na);
+      bool solution_found = xcc.compute_next_solution();
+
+      if(solution_found) {
+        clog << "  Solution Found! Printing solution:" << endl;
+        const auto& s = xcc.current_selected_options();
+        clog << "  Selected Options: ";
+        std::for_each(s.begin(), s.end(), [](auto& s) { clog << s << " "; });
+        clog << endl;
+        clog << "  Stringified Selected Options: " << endl;
+        for(auto& o : xcc.current_selected_option_starts()) {
+          clog << "    ";
+          for(size_t i = o; problem.na[i].TOP >= 0; ++i) {
+            clog << problem.getMappedItem(problem.na[i].TOP);
+            if(problem.na[i].COLOR > 0) {
+              clog << ":" << problem.getMappedColor(problem.na[i].COLOR);
+            }
+            clog << " ";
+          }
+          clog << ";" << endl;
+        }
+      } else {
+        clog << "  No Solution Found!" << endl;
+      }
+    }
+  }
 
   return 0;
 }
