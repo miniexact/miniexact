@@ -116,15 +116,18 @@ struct ColoredExactCoveringProblem {
   using Size = typename Option::size_type;
 
   void addOption(Option o) {
-    if(firstOption) {
+    if(optionCount == 0) {
       na.push_back(N(0, 0, 0));
+      lastSpacer = na.size() - 1;
 
       hna.push_back(HN(hna.size() - 1, hna.size() - secondaryItemCount));
       hna[hna.size() - 2].RLINK = hna.size() - 1;
       hna[hna.size() - secondaryItemCount - 1].LLINK = hna.size() - 1;
-
-      firstOption = false;
     }
+    optionCount++;
+
+    Size beginningOfOption = na.size();
+    Size lastDLINK = 0;
 
     for(const auto& i : o) {
       I item = 0;
@@ -139,7 +142,24 @@ struct ColoredExactCoveringProblem {
         item = ci.item;
         color = ci.color;
       }
+
+      Link& l = links[item];
+
+      N& t = na[l.top];
+      ++t.LEN;
+      t.ULINK = na.size();
+
+      if(t.LEN == 1) {
+        l.up = l.top;
+      }
+
+      na[l.up].DLINK = na.size();
+      na.push_back(N(l.top, l.up, l.top, color));
+      l.up = na.size() - 1;
     }
+    na[lastSpacer].DLINK = na.size() - 1;
+    na.push_back(N(-optionCount, beginningOfOption, 0, 0));
+    lastSpacer = na.size() - 1;
 
     // Options are added sequentially to the node array. Finalize at the end
     // links up everything correctly.
@@ -148,7 +168,7 @@ struct ColoredExactCoveringProblem {
   Size getPrimaryItemCount() const {
     // Two spacer nodes. The second spacer node is only there if options have
     // been added.
-    return hna.size() - secondaryItemCount - !firstOption - 1;
+    return hna.size() - secondaryItemCount - !(optionCount == 0) - 1;
   }
   Size getSecondaryItemCount() const { return secondaryItemCount; }
 
@@ -159,7 +179,7 @@ struct ColoredExactCoveringProblem {
     hna[0].LLINK = hna.size() - 1;
 
     na.push_back(N(0, 0, 0));
-    tops[i.item] = na.size() - 1;
+    links[i.item].top = na.size() - 1;
   }
   void addSecondaryItem(PI i) {
     hna.push_back(HN(i.item, hna.size() - 1, hna.size() - secondaryItemCount));
@@ -169,7 +189,7 @@ struct ColoredExactCoveringProblem {
     }
 
     na.push_back(N(0, 0, 0));
-    tops[i.item] = na.size() - 1;
+    links[i.item].top = na.size() - 1;
 
     ++secondaryItemCount;
   }
@@ -178,9 +198,15 @@ struct ColoredExactCoveringProblem {
   NA na = { N(0, 0, 0) };
 
   private:
-  std::unordered_map<I, Size> tops;
+  struct Link {
+    Size top = 0;
+    Size up = 0;
+  };
+
+  std::unordered_map<I, Link> links;
   Size secondaryItemCount = 0;
-  bool firstOption = true;
+  Size optionCount = 0;
+  Size lastSpacer = 0;
 };
 
 template<typename I, typename C, typename IM, typename CM>
@@ -975,7 +1001,7 @@ produce_vectors_for_example_49() {
                                                    N(3, 17, 7),
                                                    N(2, 20, 8),
                                                    N(2, 23, 13),
-                                                   N(3, 21, 9),
+                                                   N(4, 21, 9),
                                                    N(3, 24, 10),
                                                    N(0, IGN, 10),
                                                    // Row 3
@@ -1051,7 +1077,23 @@ TEST_CASE("Parse example problem from page 87") {
   REQUIRE(problem.getPrimaryItemCount() == 3);
   REQUIRE(problem.getSecondaryItemCount() == 2);
 
-  cout << problem;
+  auto staticallyDefinedVectorPair = produce_vectors_for_example_49();
+  auto& shna = staticallyDefinedVectorPair.first;
+  auto& sna = staticallyDefinedVectorPair.second;
+
+  for(size_t i = 0; i < shna.size(); ++i) {
+    CAPTURE(i);
+
+    REQUIRE(problem.hna[i].LLINK == shna[i].LLINK);
+    REQUIRE(problem.hna[i].RLINK == shna[i].RLINK);
+  }
+  for(size_t i = 0; i < sna.size(); ++i) {
+    CAPTURE(i);
+
+    REQUIRE(problem.na[i].TOP == sna[i].TOP);
+    REQUIRE(problem.na[i].ULINK == sna[i].ULINK);
+    REQUIRE(problem.na[i].DLINK == sna[i].DLINK);
+  }
 }
 
 #endif
