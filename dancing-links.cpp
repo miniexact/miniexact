@@ -1332,21 +1332,25 @@ class WordPuzzle {
     }
 
     void paintRect(P& p, size_t x, size_t y, Orientation o) {
-      if(o.left_to_right && x + side <= width)
+      if(o.left_to_right && x + side <= width && w.length() <= width)
         paintRectWrapper(p, x, y, &Painter::paintRectLeftToRight);
-      if(o.right_to_left && x + side <= width)
+      if(o.right_to_left && x + side <= width && w.length() <= width)
         paintRectWrapper(p, x, y, &Painter::paintRectRightToLeft);
-      if(o.top_to_bottom && y + side <= height)
+      if(o.top_to_bottom && y + side <= height && w.length() <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectTopToBottom);
-      if(o.bottom_to_top && y + side <= height)
+      if(o.bottom_to_top && y + side <= height && w.length() <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectBottomToTop);
-      if(o.upper_left_to_lower_right && x + side <= width && y + side <= height)
+      if(o.upper_left_to_lower_right && x + side <= width &&
+         y + side <= height && w.length() <= width && w.length() <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectUpperLeftToLowerRight);
-      if(o.lower_right_to_upper_left && x + side <= width && y + side <= height)
+      if(o.lower_right_to_upper_left && x + side <= width &&
+         y + side <= height && w.length() <= width && w.length() <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectLowerRightToUpperLeft);
-      if(o.lower_left_to_upper_right && x + side <= width && y + side <= height)
+      if(o.lower_left_to_upper_right && x + side <= width &&
+         y + side <= height && w.length() <= width && w.length() <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectLowerLeftToUpperRight);
-      if(o.upper_right_to_lower_left && x + side <= width && y + side <= height)
+      if(o.upper_right_to_lower_left && x + side <= width &&
+         y + side <= height && w.length() <= width && w.length() <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectUpperLeftToLowerRight);
     }
 
@@ -1439,6 +1443,11 @@ class WordPuzzle {
   }
 
   void addWord(WS word) {
+    if(word.length() > width && word.length() > height) {
+      cerr << "Word \"" << WStringToUtf8Str(word) << "\" is too long!" << endl;
+      return;
+    }
+
     for(char32_t c : word) {
       if(!alphabet.count(c)) {
         alphabet.insert(c);
