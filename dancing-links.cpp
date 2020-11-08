@@ -1,15 +1,19 @@
 #include <algorithm>
+#include <boost/proto/detail/remove_typename.hpp>
 #include <cassert>
+#include <codecvt>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <variant>
 #include <vector>
-#include <fstream>
 
 #ifdef DEBUG
 #define DOCTEST_CONFIG_NO_POSIX_SIGNALS
@@ -102,6 +106,28 @@ struct ColoredItem {
   I item;
   C color;
 };
+
+// Roughly following
+// https://stackoverflow.com/a/31302660
+template<typename T>
+std::string
+WStringToUtf8Str(T m) {
+  if constexpr(std::is_same_v<T, std::string>) {
+    return m;
+  } else if constexpr(std::is_same_v<T, std::u16string>) {
+    std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> conv;
+    return conv.to_bytes(m);
+  } else if constexpr(std::is_same_v<T, std::u32string>) {
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    return conv.to_bytes(m);
+  }
+}
+
+std::u32string
+Utf8StringToUTF32String(const std::string& s) {
+  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+  return conv.from_bytes(s);
+}
 
 template<typename I, typename C>
 struct ColoredExactCoveringProblem {
@@ -225,6 +251,10 @@ class MappedColoredExactCoveringProblem
   using MappedPrimaryItems = std::vector<PrimaryItem<IM>>;
 
   I getItemMapping(IM n) {
+    if constexpr(std::is_same_v<I, IM>) {
+      return n;
+    }
+
     I i;
     auto it = itemMappings.left.find(n);
     if(it == itemMappings.left.end()) {
@@ -240,6 +270,10 @@ class MappedColoredExactCoveringProblem
     return i;
   }
   C getColorMapping(CM n) {
+    if constexpr(std::is_same_v<C, CM>) {
+      return n;
+    }
+
     C c;
     auto it = colorMappings.left.find(n);
     if(it == colorMappings.left.end()) {
@@ -255,12 +289,20 @@ class MappedColoredExactCoveringProblem
     return c;
   }
   I getItemMappingConst(IM m) const {
+    if constexpr(std::is_same_v<I, IM>) {
+      return m;
+    }
+
     auto it = itemMappings.left.find(m);
     if(it == itemMappings.left.end())
       return 0;
     return it->second;
   }
   C getColorMappingConst(CM m) const {
+    if constexpr(std::is_same_v<C, CM>()) {
+      return m;
+    }
+
     auto it = colorMappings.left.find(m);
     if(it == colorMappings.left.end())
       return 0;
@@ -268,6 +310,10 @@ class MappedColoredExactCoveringProblem
   }
 
   IM getMappedItem(I i) const {
+    if constexpr(std::is_same_v<I, IM>) {
+      return i;
+    }
+
     auto it = itemMappings.right.find(i);
     assert(it != itemMappings.right.end());
     return it->second;
@@ -286,7 +332,7 @@ class MappedColoredExactCoveringProblem
         const auto& mappedPI = std::get<MappedPI>(v);
         auto mi = getItemMappingConst(mappedPI.item);
         if(mi == 0) {
-          cerr << "Item \"" << mappedPI.item
+          cerr << "Item \"" << WStringToUtf8Str(mappedPI.item)
                << "\" not specified as primary or secondary item!" << endl;
           return false;
         }
@@ -295,7 +341,7 @@ class MappedColoredExactCoveringProblem
         const auto& mappedCI = std::get<MappedCI>(v);
         auto mi = getItemMappingConst(mappedCI.item);
         if(mi == 0) {
-          cerr << "Item \"" << mappedCI.item
+          cerr << "Item \"" << WStringToUtf8Str(mappedCI.item)
                << "\" not specified as primary or secondary item!" << endl;
           return false;
         }
@@ -334,22 +380,22 @@ class MappedColoredExactCoveringProblem
 
   void addMappedPrimaryItem(MappedPI& item) {
     if(isItemMappingKnown(item.item)) {
-      cerr << "Error: Primary item \"" << item.item
+      cerr << "Error: Primary item \"" << WStringToUtf8Str(item.item)
            << "\" is already known! Cannot add again!" << endl;
     } else if(error) {
       cerr << "Error: Too many mappings! Cannot add primary item \""
-           << item.item << "\"!" << endl;
+           << WStringToUtf8Str(item.item) << "\"!" << endl;
     } else {
       B::addPrimaryItem(typename B::PI{ getItemMapping(item.item) });
     }
   }
   void addMappedSecondaryItem(MappedPI& item) {
     if(isItemMappingKnown(item.item)) {
-      cerr << "Error: Secondary item \"" << item.item
+      cerr << "Error: Secondary item \"" << WStringToUtf8Str(item.item)
            << "\" is already known! Cannot add again!" << endl;
     } else if(error) {
       cerr << "Error: Too many mappings! Cannot add secondary item \""
-           << item.item << "\"!" << endl;
+           << WStringToUtf8Str(item.item) << "\"!" << endl;
     } else {
       B::addSecondaryItem(typename B::PI{ getItemMapping(item.item) });
     }
@@ -1149,24 +1195,248 @@ TEST_CASE("Parse example problem from page 87") {
 
 class WordPuzzle {
   public:
-  using C = AlgorithmC<HNodeVector, NodeVector>;
+  using WS = std::u32string;
+  using Alphabet = std::set<char32_t>;
+  using P = MappedColoredExactCoveringProblem<int32_t, char32_t, WS, char32_t>;
+  using Option = typename P::MappedOption;
+  using PI = typename P::MappedPI;
+  using CI = typename P::MappedCI;
 
-  WordPuzzle()
-    : xcc(hnodes, nodes) {}
+  static size_t numDigits(int32_t x) {
+    if(x == std::numeric_limits<int32_t>::min())
+      return 10 + 1;
+    if(x < 0)
+      return numDigits(-x) + 1;
+
+    if(x >= 10000) {
+      if(x >= 10000000) {
+        if(x >= 100000000) {
+          if(x >= 1000000000)
+            return 10;
+          return 9;
+        }
+        return 8;
+      }
+      if(x >= 100000) {
+        if(x >= 1000000)
+          return 7;
+        return 6;
+      }
+      return 5;
+    }
+    if(x >= 100) {
+      if(x >= 1000)
+        return 4;
+      return 3;
+    }
+    if(x >= 10)
+      return 2;
+    return 1;
+  }
+
+  static WS getItemFromCoord(size_t w, size_t h, size_t x, size_t y) {
+    std::stringstream ss;
+    ss << std::setw(numDigits(w)) << std::setfill('0') << x;
+    ss << "-";
+    ss << std::setw(numDigits(h)) << std::setfill('0') << y;
+    return Utf8StringToUTF32String(ss.str());
+  }
+
+  struct Orientation {
+    bool left_to_right : 1;
+    bool right_to_left : 1;
+    bool top_to_bottom : 1;
+    bool bottom_to_top : 1;
+    bool upper_left_to_lower_right : 1;
+    bool lower_right_to_upper_left : 1;
+    bool lower_left_to_upper_right : 1;
+    bool upper_right_to_lower_left : 1;
+  };
+
+  struct Painter {
+    explicit Painter(const WS& w,
+                     const Alphabet& a,
+                     size_t width,
+                     size_t height)
+      : w(w)
+      , width(width)
+      , height(height)
+      , side(w.length()) {}
+
+    void paint(P& p, Alphabet& alphabet, Orientation o) {
+      for(size_t y = 0; y < height; ++y) {
+        for(size_t x = 0; x < width; ++x) {
+          paintRect(p, x, y, o);
+
+          for(auto& l : alphabet) {
+            Option option;
+            option.push_back(CI{ getItemFromCoord(width, height, x, y), l });
+            p.addMappedOption(option);
+          }
+        }
+      }
+    }
+
+    void paintRect(P& p, size_t x, size_t y, Orientation o) {
+      if(o.left_to_right && x + side < width)
+        paintRectWrapper(p, x, y, &Painter::paintRectLeftToRight);
+      if(o.right_to_left && x + side < width)
+        paintRectWrapper(p, x, y, &Painter::paintRectRightToLeft);
+      if(o.top_to_bottom && y + side < height)
+        paintRectWrapper(p, x, y, &Painter::paintRectTopToBottom);
+      if(o.bottom_to_top && y + side < height)
+        paintRectWrapper(p, x, y, &Painter::paintRectBottomToTop);
+      if(o.upper_left_to_lower_right && x + side < width && y + side < height)
+        paintRectWrapper(p, x, y, &Painter::paintRectUpperLeftToLowerRight);
+      if(o.lower_right_to_upper_left && x + side < width && y + side < height)
+        paintRectWrapper(p, x, y, &Painter::paintRectLowerRightToUpperLeft);
+      if(o.lower_left_to_upper_right && x + side < width && y + side < height)
+        paintRectWrapper(p, x, y, &Painter::paintRectLowerLeftToUpperRight);
+      if(o.upper_right_to_lower_left && x + side < width && y + side < height)
+        paintRectWrapper(p, x, y, &Painter::paintRectUpperLeftToLowerRight);
+    }
+
+    template<typename Functor>
+    void paintRectWrapper(P& p, size_t x, size_t y, Functor f) {
+      Option option;
+      option.push_back(PI{ w });
+      (this->*f)(option, p, x, y);
+      p.addMappedOption(option);
+    }
+
+    void paintRectLeftToRight(Option& o, P& p, size_t x, size_t y) {
+      assert(x + side < width);
+      for(size_t i = 0; i < side; ++i)
+        o.push_back(CI{ getItemFromCoord(width, height, x + i, y), w[i] });
+    }
+    void paintRectRightToLeft(Option& o, P& p, size_t x, size_t y) {
+      assert(x + side < width);
+      for(size_t i = 0; i < side; ++i)
+        o.push_back(
+          CI{ getItemFromCoord(width, height, x + side - i, y), w[i] });
+    }
+    void paintRectTopToBottom(Option& o, P& p, size_t x, size_t y) {
+      assert(y + side < height);
+      for(size_t i = 0; i < side; ++i)
+        o.push_back(CI{ getItemFromCoord(width, height, x, y + i), w[i] });
+    }
+    void paintRectBottomToTop(Option& o, P& p, size_t x, size_t y) {
+      assert(y + side < height);
+      for(size_t i = 0; i < side; ++i)
+        o.push_back(
+          CI{ getItemFromCoord(width, height, x, y + side - i), w[i] });
+    }
+    void paintRectUpperLeftToLowerRight(Option& o, P& p, size_t x, size_t y) {
+      assert(x + side < width);
+      assert(y + side < height);
+      for(size_t i = 0; i < side; ++i)
+        o.push_back(CI{ getItemFromCoord(width, height, x + i, y + i), w[i] });
+    }
+    void paintRectLowerRightToUpperLeft(Option& o, P& p, size_t x, size_t y) {
+      assert(x + side < width);
+      assert(y + side < height);
+      for(size_t i = 0; i < side; ++i)
+        o.push_back(CI{
+          getItemFromCoord(width, height, x + side - i, y + side - i), w[i] });
+    }
+    void paintRectLowerLeftToUpperRight(Option& o, P& p, size_t x, size_t y) {
+      assert(x + side < width);
+      assert(y + side < height);
+      for(size_t i = 0; i < side; ++i)
+        o.push_back(
+          CI{ getItemFromCoord(width, height, x + i, y + side - i), w[i] });
+    }
+    void paintRectUpperRightToLowerLeft(Option& o, P& p, size_t x, size_t y) {
+      assert(x + side < width);
+      assert(y + side < height);
+      for(size_t i = 0; i < side; ++i)
+        o.push_back(
+          CI{ getItemFromCoord(width, height, x + side - i, y + i), w[i] });
+    }
+
+    const WS& w;
+    size_t width, height;
+    size_t side;
+  };
+
+  explicit WordPuzzle(size_t width, size_t height)
+    : width(width)
+    , height(height) {}
   ~WordPuzzle() {}
 
-  bool compute_next_solution() { return xcc.compute_next_solution(); }
-  bool has_solution() { return xcc.has_solution(); }
-  bool continue_calling() { return xcc.continue_calling(); }
-  void step() { xcc.step(); }
+  bool compute_next_solution() {
+    ensureRegen();
+    return xcc->compute_next_solution();
+  }
+  bool has_solution() {
+    if(!xcc)
+      return false;
+    return xcc->has_solution();
+  }
+  bool continue_calling() {
+    if(!xcc)
+      return false;
+    return xcc->continue_calling();
+  }
+  void step() {
+    assert(xcc);
+    xcc->step();
+  }
 
-  const HNodeVector getHNodes() { return hnodes; }
-  const NodeVector& getNodes() { return nodes; }
+  void addWord(WS word) {
+    for(char32_t c : word) {
+      if(!alphabet.count(c)) {
+        alphabet.insert(c);
+      }
+    }
+    if(words.insert(word).second) {
+      needsRegen = true;
+    }
+  }
+  void addLetter(typename Alphabet::value_type l) {
+    if(alphabet.insert(l).second) {
+      needsRegen = true;
+    }
+  }
+
+  auto wordCount() const { return words.size(); }
+  auto alphabetSize() const { return alphabet.size(); }
+
+  Orientation orientation;
 
   private:
-  HNodeVector hnodes;
-  NodeVector nodes;
-  C xcc;
+  std::unique_ptr<P> p;
+  std::unique_ptr<AlgorithmC<P::HNA, P::NA>> xcc;
+  Alphabet alphabet;
+  std::set<WS> words;
+  size_t width, height;
+  bool needsRegen = true;
+
+  void ensureRegen() {
+    if(needsRegen)
+      regen();
+  }
+  void regen() {
+    p = std::make_unique<P>();
+    xcc = std::make_unique<AlgorithmC<P::HNA, P::NA>>(p->hna, p->na);
+
+    for(const auto& word : words) {
+      auto pi = PI{ word };
+      p->addMappedPrimaryItem(pi);
+    }
+
+    for(size_t y = 0; y < height; ++y) {
+      for(size_t x = 0; x < width; ++x) {
+        auto pi = PI{ getItemFromCoord(width, height, x, y) };
+        p->addMappedSecondaryItem(pi);
+      }
+    }
+
+    for(const auto& word : words) {
+      Painter painter(word, alphabet, width, height);
+      painter.paint(*p, alphabet, orientation);
+    }
+  }
 };
 }
 
@@ -1182,7 +1452,7 @@ using namespace dancing_links;
 EMSCRIPTEN_BINDINGS(dancinglinks) {
   // clang-format off
   class_<WordPuzzle>("WordPuzzle")
-    .constructor<>()
+    .constructor<size_t, size_t>()
     .function("compute_next_solution", &WordPuzzle::compute_next_solution)
     .function("has_solution", &WordPuzzle::has_solution)
     .function("continue_calling", &WordPuzzle::continue_calling)
@@ -1255,6 +1525,69 @@ main(int argc, const char* argv[]) {
       } else {
         clog << "  No Solution Found!" << endl;
       }
+    }
+  }
+
+  if(argc > 1 && strcmp(argv[1], "--wordpuzzle") == 0) {
+    if(argc != 5 && argc != 6) {
+      cerr << "Wordpuzzle requires width, height, a filename containing the "
+              "word list, and optionally a file containing the alphabet!"
+           << endl;
+      cerr << "Alphabet files are line by line single character alphabets "
+              "(unicode aware). File lists are line by line unicode words."
+           << endl;
+      cerr << "Call like " << argv[0]
+           << " <width> <height> <word-list> [alphabet-file]" << endl;
+      return EXIT_FAILURE;
+    }
+
+    int width = atoi(argv[2]);
+    int height = atoi(argv[3]);
+
+    if(width <= 0 || height <= 0) {
+      cerr << "Width and height must both be > 0!" << endl;
+      return EXIT_FAILURE;
+    }
+
+    WordPuzzle wordPuzzle(width, height);
+
+    std::string line;
+
+    std::string wordlistFilePath = argv[4];
+    if(argc == 6) {
+      std::ifstream alphabetFile(argv[5]);
+      if(!alphabetFile) {
+        cerr << "Cannot open alphabet file \"" << argv[5] << "\"!" << endl;
+        return EXIT_FAILURE;
+      }
+
+      while(std::getline(alphabetFile, line)) {
+        auto u32str = Utf8StringToUTF32String(line);
+        wordPuzzle.addLetter(u32str[0]);
+      }
+    }
+
+    std::ifstream wordListFile(argv[4]);
+    if(!wordListFile) {
+      cerr << "Cannot open word list file \"" << argv[4] << "\"!" << endl;
+      return EXIT_FAILURE;
+    }
+    while(std::getline(wordListFile, line)) {
+      auto u32str = Utf8StringToUTF32String(line);
+      wordPuzzle.addWord(u32str);
+    }
+
+    clog << "Parsed word list with " << wordPuzzle.wordCount() << " words and "
+         << wordPuzzle.alphabetSize() << " letters in the alphabet." << endl;
+    clog << "Start to search for possible puzzles..." << endl;
+
+    bool solution_fount = wordPuzzle.compute_next_solution();
+
+    if(solution_fount) {
+      clog << "Possibility found:" << endl;
+    } else {
+      clog << "No way to align letters to fit all " << wordPuzzle.wordCount()
+           << " words into a " << width << "x" << height << " field!";
     }
   }
 
