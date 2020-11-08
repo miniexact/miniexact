@@ -319,6 +319,10 @@ class MappedColoredExactCoveringProblem
     return it->second;
   }
   CM getMappedColor(C c) const {
+    if constexpr(std::is_same_v<C, CM>) {
+      return c;
+    }
+
     auto it = colorMappings.right.find(c);
     assert(it != colorMappings.right.end());
     return it->second;
@@ -1237,9 +1241,17 @@ class WordPuzzle {
   static WS getItemFromCoord(size_t w, size_t h, size_t x, size_t y) {
     std::stringstream ss;
     ss << std::setw(numDigits(w)) << std::setfill('0') << x;
-    ss << "-";
+    ss << "_";
     ss << std::setw(numDigits(h)) << std::setfill('0') << y;
     return Utf8StringToUTF32String(ss.str());
+  }
+  static std::pair<size_t, size_t> getCoordFromItem(size_t w,
+                                                    size_t h,
+                                                    WS item) {
+    std::string xStr = WStringToUtf8Str(item.substr(0, numDigits(w)));
+    std::string yStr =
+      WStringToUtf8Str(item.substr(numDigits(w) + 1, numDigits(h)));
+    return { std::atoi(xStr.c_str()), std::atoi(yStr.c_str()) };
   }
 
   struct Orientation {
@@ -1267,32 +1279,26 @@ class WordPuzzle {
       for(size_t y = 0; y < height; ++y) {
         for(size_t x = 0; x < width; ++x) {
           paintRect(p, x, y, o);
-
-          for(auto& l : alphabet) {
-            Option option;
-            option.push_back(CI{ getItemFromCoord(width, height, x, y), l });
-            p.addMappedOption(option);
-          }
         }
       }
     }
 
     void paintRect(P& p, size_t x, size_t y, Orientation o) {
-      if(o.left_to_right && x + side < width)
+      if(o.left_to_right && x + side <= width)
         paintRectWrapper(p, x, y, &Painter::paintRectLeftToRight);
-      if(o.right_to_left && x + side < width)
+      if(o.right_to_left && x + side <= width)
         paintRectWrapper(p, x, y, &Painter::paintRectRightToLeft);
-      if(o.top_to_bottom && y + side < height)
+      if(o.top_to_bottom && y + side <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectTopToBottom);
-      if(o.bottom_to_top && y + side < height)
+      if(o.bottom_to_top && y + side <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectBottomToTop);
-      if(o.upper_left_to_lower_right && x + side < width && y + side < height)
+      if(o.upper_left_to_lower_right && x + side <= width && y + side <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectUpperLeftToLowerRight);
-      if(o.lower_right_to_upper_left && x + side < width && y + side < height)
+      if(o.lower_right_to_upper_left && x + side <= width && y + side <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectLowerRightToUpperLeft);
-      if(o.lower_left_to_upper_right && x + side < width && y + side < height)
+      if(o.lower_left_to_upper_right && x + side <= width && y + side <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectLowerLeftToUpperRight);
-      if(o.upper_right_to_lower_left && x + side < width && y + side < height)
+      if(o.upper_right_to_lower_left && x + side <= width && y + side <= height)
         paintRectWrapper(p, x, y, &Painter::paintRectUpperLeftToLowerRight);
     }
 
@@ -1305,53 +1311,54 @@ class WordPuzzle {
     }
 
     void paintRectLeftToRight(Option& o, P& p, size_t x, size_t y) {
-      assert(x + side < width);
+      assert(x + side <= width);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(width, height, x + i, y), w[i] });
     }
     void paintRectRightToLeft(Option& o, P& p, size_t x, size_t y) {
-      assert(x + side < width);
+      assert(x + side <= width);
       for(size_t i = 0; i < side; ++i)
         o.push_back(
-          CI{ getItemFromCoord(width, height, x + side - i, y), w[i] });
+          CI{ getItemFromCoord(width, height, x + side - i - 1, y), w[i] });
     }
     void paintRectTopToBottom(Option& o, P& p, size_t x, size_t y) {
-      assert(y + side < height);
+      assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(width, height, x, y + i), w[i] });
     }
     void paintRectBottomToTop(Option& o, P& p, size_t x, size_t y) {
-      assert(y + side < height);
+      assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(
-          CI{ getItemFromCoord(width, height, x, y + side - i), w[i] });
+          CI{ getItemFromCoord(width, height, x, y + side - i - 1), w[i] });
     }
     void paintRectUpperLeftToLowerRight(Option& o, P& p, size_t x, size_t y) {
-      assert(x + side < width);
-      assert(y + side < height);
+      assert(x + side <= width);
+      assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(width, height, x + i, y + i), w[i] });
     }
     void paintRectLowerRightToUpperLeft(Option& o, P& p, size_t x, size_t y) {
-      assert(x + side < width);
-      assert(y + side < height);
+      assert(x + side <= width);
+      assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{
-          getItemFromCoord(width, height, x + side - i, y + side - i), w[i] });
+          getItemFromCoord(width, height, x + side - i - 1, y + side - i - 1),
+          w[i] });
     }
     void paintRectLowerLeftToUpperRight(Option& o, P& p, size_t x, size_t y) {
-      assert(x + side < width);
-      assert(y + side < height);
+      assert(x + side <= width);
+      assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(
-          CI{ getItemFromCoord(width, height, x + i, y + side - i), w[i] });
+          CI{ getItemFromCoord(width, height, x + i, y + side - i - 1), w[i] });
     }
     void paintRectUpperRightToLowerLeft(Option& o, P& p, size_t x, size_t y) {
-      assert(x + side < width);
-      assert(y + side < height);
+      assert(x + side <= width);
+      assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(
-          CI{ getItemFromCoord(width, height, x + side - i, y + i), w[i] });
+          CI{ getItemFromCoord(width, height, x + side - i - 1, y + i), w[i] });
     }
 
     const WS& w;
@@ -1402,7 +1409,36 @@ class WordPuzzle {
   auto wordCount() const { return words.size(); }
   auto alphabetSize() const { return alphabet.size(); }
 
-  Orientation orientation;
+  Orientation orientation = { true, true, true, true, true, true, true, true };
+
+  void printPuzzle() {
+    assert(has_solution());
+
+    std::vector<std::vector<char32_t>> arr;
+    arr.resize(height);
+    for(size_t y = 0; y < height; ++y) {
+      arr[y].resize(width);
+    }
+
+    for(auto& o : xcc->current_selected_option_starts()) {
+      for(size_t i = o; p->na[i].TOP >= 0; ++i) {
+        auto mappedItem = p->getMappedItem(p->na[i].TOP);
+        if(p->na[i].COLOR > 0) {
+          auto mappedColor = p->getMappedColor(p->na[i].COLOR);
+
+          auto [x, y] = getCoordFromItem(width, height, mappedItem);
+          arr[x][y] = mappedColor;
+        }
+      }
+    }
+
+    for(size_t y = 0; y < height; ++y) {
+      for(size_t x = 0; x < width; ++x) {
+        cout << (char)arr[x][y];
+      }
+      cout << endl;
+    }
+  }
 
   private:
   std::unique_ptr<P> p;
@@ -1432,10 +1468,22 @@ class WordPuzzle {
       }
     }
 
+    for(size_t y = 0; y < height; ++y) {
+      for(size_t x = 0; x < width; ++x) {
+        for(auto& l : alphabet) {
+          Option option;
+          option.push_back(CI{ getItemFromCoord(width, height, x, y), l });
+          p->addMappedOption(option);
+        }
+      }
+    }
+
     for(const auto& word : words) {
       Painter painter(word, alphabet, width, height);
       painter.paint(*p, alphabet, orientation);
     }
+
+    needsRegen = false;
   }
 };
 }
@@ -1585,6 +1633,7 @@ main(int argc, const char* argv[]) {
 
     if(solution_fount) {
       clog << "Possibility found:" << endl;
+      wordPuzzle.printPuzzle();
     } else {
       clog << "No way to align letters to fit all " << wordPuzzle.wordCount()
            << " words into a " << width << "x" << height << " field!";
