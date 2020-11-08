@@ -125,6 +125,8 @@ WStringToUtf8Str(T m) {
     str += m;
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
     return conv.to_bytes(str);
+  } else {
+    return std::to_string(m);
   }
 }
 
@@ -431,7 +433,7 @@ class MappedColoredExactCoveringProblem
     for(size_t i = B::hna.size(); i < B::na.size(); ++i) {
       const auto& n = B::na[i];
       if(n.TOP > 0) {
-        o << WStringToUtf8Str(getMappedItem(n.TOP));
+        o << WStringToUtf8Str(getMappedItem(B::hna[n.TOP].NAME));
         if(n.COLOR > 0) {
           o << ":" << WStringToUtf8Str(getMappedColor(n.COLOR));
         }
@@ -1244,62 +1246,56 @@ class WordPuzzle {
   public:
   using WS = std::u32string;
   using Alphabet = std::set<char32_t>;
-  using P = MappedColoredExactCoveringProblem<int32_t, int32_t, WS, char32_t>;
+  using P =
+    MappedColoredExactCoveringProblem<int32_t, int32_t, int32_t, char32_t>;
   using Option = typename P::MappedOption;
   using PI = typename P::MappedPI;
   using CI = typename P::MappedCI;
 
-  static size_t numDigits(int32_t x) {
-    if(x == std::numeric_limits<int32_t>::min())
-      return 10 + 1;
-    if(x < 0)
-      return numDigits(-x) + 1;
+  static int32_t getItemFromCoord(int16_t x,
+                                  int16_t y,
+                                  bool assignedItem = false) {
+    assert(x >= 0);
+    assert(y >= 0);
 
-    if(x >= 10000) {
-      if(x >= 10000000) {
-        if(x >= 100000000) {
-          if(x >= 1000000000)
-            return 10;
-          return 9;
-        }
-        return 8;
-      }
-      if(x >= 100000) {
-        if(x >= 1000000)
-          return 7;
-        return 6;
-      }
-      return 5;
+    int32_t i = x;
+    i <<= 16u;
+    i |= y;
+
+    i <<= 2u;
+
+    if(assignedItem) {
+      i |= 0b10;
+    } else {
+      i |= 0b11;
     }
-    if(x >= 100) {
-      if(x >= 1000)
-        return 4;
-      return 3;
-    }
-    if(x >= 10)
-      return 2;
-    return 1;
+
+    return i;
   }
 
-  static WS getItemFromCoord(size_t w,
-                             size_t h,
-                             size_t x,
-                             size_t y,
-                             const std::string& prefix = "") {
-    std::stringstream ss;
-    ss << prefix;
-    ss << std::setw(numDigits(w)) << std::setfill('0') << x;
-    ss << "_";
-    ss << std::setw(numDigits(h)) << std::setfill('0') << y;
-    return Utf8StringToUTF32String(ss.str());
+  static std::pair<int16_t, int16_t> getCoordFromItem(int32_t i) {
+    // Remove flags;
+    i >>= 2u;
+
+    int16_t x, y;
+    y = i;
+    i >>= 16u;
+    x = i;
+
+    return { x, y };
   }
-  static std::pair<size_t, size_t> getCoordFromItem(size_t w,
-                                                    size_t h,
-                                                    WS item) {
-    std::string xStr = WStringToUtf8Str(item.substr(0, numDigits(w)));
-    std::string yStr =
-      WStringToUtf8Str(item.substr(numDigits(w) + 1, numDigits(h)));
-    return { std::atoi(xStr.c_str()), std::atoi(yStr.c_str()) };
+
+  static int32_t getItemFromWord(size_t word) {
+    int32_t i = word;
+    i <<= 2u;
+    i |= 0b01;
+    return i;
+  }
+
+  static size_t getWordFromItem(int32_t i) {
+    assert(i & 0b01);
+    i >>= 2u;
+    return i;
   }
 
   struct Orientation {
@@ -1315,10 +1311,12 @@ class WordPuzzle {
 
   struct Painter {
     explicit Painter(const WS& w,
+                     size_t i,
                      const Alphabet& a,
                      size_t width,
                      size_t height)
       : w(w)
+      , wPI(i)
       , width(width)
       , height(height)
       , side(w.length()) {}
@@ -1357,7 +1355,7 @@ class WordPuzzle {
     template<typename Functor>
     void paintRectWrapper(P& p, size_t x, size_t y, Functor f) {
       Option option;
-      option.push_back(PI{ w });
+      option.push_back(PI{ getItemFromWord(wPI) });
       (this->*f)(option, p, x, y);
       p.addMappedOption(option);
     }
@@ -1365,55 +1363,51 @@ class WordPuzzle {
     void paintRectLeftToRight(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       for(size_t i = 0; i < side; ++i)
-        o.push_back(CI{ getItemFromCoord(width, height, x + i, y), w[i] });
+        o.push_back(CI{ getItemFromCoord(x + i, y), w[i] });
     }
     void paintRectRightToLeft(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       for(size_t i = 0; i < side; ++i)
-        o.push_back(
-          CI{ getItemFromCoord(width, height, x + side - i - 1, y), w[i] });
+        o.push_back(CI{ getItemFromCoord(x + side - i - 1, y), w[i] });
     }
     void paintRectTopToBottom(Option& o, P& p, size_t x, size_t y) {
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
-        o.push_back(CI{ getItemFromCoord(width, height, x, y + i), w[i] });
+        o.push_back(CI{ getItemFromCoord(x, y + i), w[i] });
     }
     void paintRectBottomToTop(Option& o, P& p, size_t x, size_t y) {
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
-        o.push_back(
-          CI{ getItemFromCoord(width, height, x, y + side - i - 1), w[i] });
+        o.push_back(CI{ getItemFromCoord(x, y + side - i - 1), w[i] });
     }
     void paintRectUpperLeftToLowerRight(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
-        o.push_back(CI{ getItemFromCoord(width, height, x + i, y + i), w[i] });
+        o.push_back(CI{ getItemFromCoord(x + i, y + i), w[i] });
     }
     void paintRectLowerRightToUpperLeft(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
-        o.push_back(CI{
-          getItemFromCoord(width, height, x + side - i - 1, y + side - i - 1),
-          w[i] });
+        o.push_back(
+          CI{ getItemFromCoord(x + side - i - 1, y + side - i - 1), w[i] });
     }
     void paintRectLowerLeftToUpperRight(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
-        o.push_back(
-          CI{ getItemFromCoord(width, height, x + i, y + side - i - 1), w[i] });
+        o.push_back(CI{ getItemFromCoord(x + i, y + side - i - 1), w[i] });
     }
     void paintRectUpperRightToLowerLeft(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
-        o.push_back(
-          CI{ getItemFromCoord(width, height, x + side - i - 1, y + i), w[i] });
+        o.push_back(CI{ getItemFromCoord(x + side - i - 1, y + i), w[i] });
     }
 
     const WS& w;
+    const size_t wPI;
     size_t width, height;
     size_t side;
   };
@@ -1453,9 +1447,8 @@ class WordPuzzle {
         alphabet.insert(c);
       }
     }
-    if(words.insert(word).second) {
-      needsRegen = true;
-    }
+    words.push_back(word);
+    needsRegen = true;
   }
   void addLetter(typename Alphabet::value_type l) {
     if(alphabet.insert(l).second) {
@@ -1477,10 +1470,10 @@ class WordPuzzle {
 
     for(auto& o : xcc->current_selected_option_starts()) {
       for(size_t i = o; p->na[i].TOP >= 0; ++i) {
-        auto mappedItem = p->getMappedItem(p->na[i].TOP);
+        auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
         if(p->na[i].COLOR > 0) {
           auto mappedColor = p->getMappedColor(p->na[i].COLOR);
-          auto [x, y] = getCoordFromItem(width, height, mappedItem);
+          auto [x, y] = getCoordFromItem(mappedItem);
           arr[x][y] += mappedColor;
         }
       }
@@ -1507,10 +1500,10 @@ class WordPuzzle {
 
     for(auto& o : xcc->current_selected_option_starts()) {
       for(size_t i = o; p->na[i].TOP >= 0; ++i) {
-        auto mappedItem = p->getMappedItem(p->na[i].TOP);
+        auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
         if(p->na[i].COLOR > 0) {
           auto mappedColor = p->getMappedColor(p->na[i].COLOR);
-          auto [x, y] = getCoordFromItem(width, height, mappedItem);
+          auto [x, y] = getCoordFromItem(mappedItem);
           arr[x][y] += mappedColor;
         }
       }
@@ -1521,12 +1514,13 @@ class WordPuzzle {
     for(auto& o : xcc->current_selected_option_starts()) {
       positions.clear();
 
-      auto name = p->getMappedItem(p->na[o].TOP);
-      outStream << "  " << WStringToUtf8Str(name) << ":" << endl;
+      auto name = p->getMappedItem(p->hna[p->na[o].TOP].NAME);
+      outStream << "  " << WStringToUtf8Str(words[getWordFromItem(name)]) << ":"
+                << endl;
 
       for(size_t i = o + 1; p->na[i].TOP >= 0; ++i) {
-        auto mappedItem = p->getMappedItem(p->na[i].TOP);
-        positions.insert(getCoordFromItem(width, height, mappedItem));
+        auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
+        positions.insert(getCoordFromItem(mappedItem));
       }
 
       for(size_t y = 0; y < height; ++y) {
@@ -1550,7 +1544,7 @@ class WordPuzzle {
   std::unique_ptr<P> p;
   std::unique_ptr<AlgorithmC<P::HNA, P::NA>> xcc;
   Alphabet alphabet;
-  std::set<WS> words;
+  std::vector<WS> words;
   size_t width, height;
   bool needsRegen = true;
 
@@ -1565,39 +1559,39 @@ class WordPuzzle {
       << "Translating word puzzle to color-controlled exact covering problem."
       << endl;
 
-    for(const auto& word : words) {
-      auto pi = PI{ word };
+    for(size_t i = 0; i < words.size(); ++i) {
+      auto pi = PI{ getItemFromWord(i) };
       p->addMappedPrimaryItem(pi);
     }
 
     for(size_t y = 0; y < height; ++y) {
       for(size_t x = 0; x < width; ++x) {
-        auto pi = PI{ getItemFromCoord(width, height, x, y, "a") };
+        auto pi = PI{ getItemFromCoord(x, y, true) };
         p->addMappedPrimaryItem(pi);
       }
     }
 
     for(size_t y = 0; y < height; ++y) {
       for(size_t x = 0; x < width; ++x) {
-        auto pi = PI{ getItemFromCoord(width, height, x, y) };
+        auto pi = PI{ getItemFromCoord(x, y) };
         p->addMappedSecondaryItem(pi);
       }
     }
 
     for(size_t y = 0; y < height; ++y) {
       for(size_t x = 0; x < width; ++x) {
-        auto pi = PI{ getItemFromCoord(width, height, x, y, "a") };
+        auto pi = PI{ getItemFromCoord(x, y, true) };
         for(auto& l : alphabet) {
           Option option;
           option.push_back(pi);
-          option.push_back(CI{ getItemFromCoord(width, height, x, y), l });
+          option.push_back(CI{ getItemFromCoord(x, y), l });
           p->addMappedOption(std::move(option));
         }
       }
     }
 
-    for(const auto& word : words) {
-      Painter painter(word, alphabet, width, height);
+    for(size_t i = 0; i < words.size(); ++i) {
+      Painter painter(words[i], i, alphabet, width, height);
       painter.paint(*p, alphabet, orientation);
     }
 
@@ -1683,7 +1677,7 @@ main(int argc, const char* argv[]) {
         for(auto& o : xcc.current_selected_option_starts()) {
           clog << "    ";
           for(size_t i = o; problem.na[i].TOP >= 0; ++i) {
-            clog << problem.getMappedItem(problem.na[i].TOP);
+            clog << problem.getMappedItem(problem.hna[problem.na[i].TOP].NAME);
             if(problem.na[i].COLOR > 0) {
               clog << ":" << problem.getMappedColor(problem.na[i].COLOR);
             }
