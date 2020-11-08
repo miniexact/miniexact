@@ -1252,6 +1252,21 @@ class WordPuzzle {
   using PI = typename P::MappedPI;
   using CI = typename P::MappedCI;
 
+  static int32_t getItemFromCoordWithDir(int16_t x, int16_t y, int8_t dir) {
+    assert(x >= 0);
+    assert(y >= 0);
+    assert(dir >= 0 && dir < 8);
+
+    int32_t i = x + 1;
+    i <<= 13u;
+    i |= (y + 1) & 0b1111111111111;
+    i <<= 13u;
+    i |= dir & 0b1111;
+    i <<= 2u;
+
+    return i;
+  }
+
   static int32_t getItemFromCoord(int16_t x,
                                   int16_t y,
                                   bool assignedItem = false) {
@@ -1312,14 +1327,18 @@ class WordPuzzle {
   struct Painter {
     explicit Painter(const WS& w,
                      size_t i,
+                     size_t uniqueWord,
                      const Alphabet& a,
                      size_t width,
                      size_t height)
       : w(w)
       , wPI(i)
+      , uniqueWord(uniqueWord)
       , width(width)
       , height(height)
-      , side(w.length()) {}
+      , side(w.length()) {
+      assert(uniqueWord != 0);
+    }
 
     void paint(P& p, Alphabet& alphabet, Orientation o) {
       for(size_t y = 0; y < height; ++y) {
@@ -1364,27 +1383,37 @@ class WordPuzzle {
       assert(x + side <= width);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(x + i, y), w[i] });
+      o.push_back(
+        CI{ getItemFromCoordWithDir(x, y, 0), static_cast<char32_t>(wPI) });
     }
     void paintRectRightToLeft(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(x + side - i - 1, y), w[i] });
+      o.push_back(
+        CI{ getItemFromCoordWithDir(x, y, 1), static_cast<char32_t>(wPI) });
     }
     void paintRectTopToBottom(Option& o, P& p, size_t x, size_t y) {
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(x, y + i), w[i] });
+      o.push_back(
+        CI{ getItemFromCoordWithDir(x, y, 2), static_cast<char32_t>(wPI) });
     }
     void paintRectBottomToTop(Option& o, P& p, size_t x, size_t y) {
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(x, y + side - i - 1), w[i] });
+      o.push_back(
+        CI{ getItemFromCoordWithDir(x, y, 3), static_cast<char32_t>(wPI) });
     }
     void paintRectUpperLeftToLowerRight(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(x + i, y + i), w[i] });
+      o.push_back(
+        CI{ getItemFromCoordWithDir(x, y, 4), static_cast<char32_t>(wPI) });
     }
     void paintRectLowerRightToUpperLeft(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
@@ -1392,24 +1421,31 @@ class WordPuzzle {
       for(size_t i = 0; i < side; ++i)
         o.push_back(
           CI{ getItemFromCoord(x + side - i - 1, y + side - i - 1), w[i] });
+      o.push_back(
+        CI{ getItemFromCoordWithDir(x, y, 5), static_cast<char32_t>(wPI) });
     }
     void paintRectLowerLeftToUpperRight(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(x + i, y + side - i - 1), w[i] });
+      o.push_back(
+        CI{ getItemFromCoordWithDir(x, y, 6), static_cast<char32_t>(wPI) });
     }
     void paintRectUpperRightToLowerLeft(Option& o, P& p, size_t x, size_t y) {
       assert(x + side <= width);
       assert(y + side <= height);
       for(size_t i = 0; i < side; ++i)
         o.push_back(CI{ getItemFromCoord(x + side - i - 1, y + i), w[i] });
+      o.push_back(
+        CI{ getItemFromCoordWithDir(x, y, 7), static_cast<char32_t>(wPI) });
     }
 
     const WS& w;
     const size_t wPI;
     size_t width, height;
     size_t side;
+    size_t uniqueWord;
   };
 
   explicit WordPuzzle(size_t width, size_t height)
@@ -1448,6 +1484,11 @@ class WordPuzzle {
       }
     }
     words.push_back(word);
+
+    if(!uniqueWords.count(word)) {
+      uniqueWords.insert({ word, words.size() });
+    }
+
     needsRegen = true;
   }
   void addLetter(typename Alphabet::value_type l) {
@@ -1469,7 +1510,7 @@ class WordPuzzle {
     BoardArr arr(boost::extents[width][height]);
 
     for(auto& o : xcc->current_selected_option_starts()) {
-      for(size_t i = o; p->na[i].TOP >= 0; ++i) {
+      for(size_t i = o; p->na[i + 1].TOP >= 0; ++i) {
         auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
         if(p->na[i].COLOR > 0) {
           auto mappedColor = p->getMappedColor(p->na[i].COLOR);
@@ -1499,7 +1540,7 @@ class WordPuzzle {
     BoardArr arr(boost::extents[width][height]);
 
     for(auto& o : xcc->current_selected_option_starts()) {
-      for(size_t i = o; p->na[i].TOP >= 0; ++i) {
+      for(size_t i = o; p->na[i + 1].TOP >= 0; ++i) {
         auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
         if(p->na[i].COLOR > 0) {
           auto mappedColor = p->getMappedColor(p->na[i].COLOR);
@@ -1518,7 +1559,7 @@ class WordPuzzle {
       outStream << "  " << WStringToUtf8Str(words[getWordFromItem(name)]) << ":"
                 << endl;
 
-      for(size_t i = o + 1; p->na[i].TOP >= 0; ++i) {
+      for(size_t i = o + 1; p->na[i + 1].TOP >= 0; ++i) {
         auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
         positions.insert(getCoordFromItem(mappedItem));
       }
@@ -1545,6 +1586,7 @@ class WordPuzzle {
   std::unique_ptr<AlgorithmC<P::HNA, P::NA>> xcc;
   Alphabet alphabet;
   std::vector<WS> words;
+  std::map<WS, size_t> uniqueWords;
   size_t width, height;
   bool needsRegen = true;
 
@@ -1575,6 +1617,11 @@ class WordPuzzle {
       for(size_t x = 0; x < width; ++x) {
         auto pi = PI{ getItemFromCoord(x, y) };
         p->addMappedSecondaryItem(pi);
+
+        for(size_t i = 0; i < 8; ++i) {
+          auto pi = PI{ getItemFromCoordWithDir(x, y, i) };
+          p->addMappedSecondaryItem(pi);
+        }
       }
     }
 
@@ -1591,7 +1638,8 @@ class WordPuzzle {
     }
 
     for(size_t i = 0; i < words.size(); ++i) {
-      Painter painter(words[i], i, alphabet, width, height);
+      Painter painter(
+        words[i], i, uniqueWords[words[i]], alphabet, width, height);
       painter.paint(*p, alphabet, orientation);
     }
 
