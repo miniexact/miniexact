@@ -22,10 +22,10 @@
 #endif
 
 #include <boost/bimap.hpp>
-#include <boost/bimap/list_of.hpp>
 #include <boost/bimap/set_of.hpp>
 #include <boost/bind.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/multi_array.hpp>
 #include <boost/phoenix/bind/bind_member_function.hpp>
 #include <boost/spirit/home/qi/auto/create_parser.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
@@ -120,6 +120,11 @@ WStringToUtf8Str(T m) {
   } else if constexpr(std::is_same_v<T, std::u32string>) {
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
     return conv.to_bytes(m);
+  } else if constexpr(std::is_same_v<T, char32_t>) {
+    std::u32string str;
+    str += m;
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    return conv.to_bytes(str);
   }
 }
 
@@ -204,6 +209,7 @@ struct ColoredExactCoveringProblem {
 
   void addPrimaryItem(PI i) {
     assert(secondaryItemCount == 0);
+    assert(optionCount == 0);
     hna.push_back(HN(i.item, hna.size() - 1, 0));
     hna[hna.size() - 2].RLINK = hna.size() - 1;
     hna[0].LLINK = hna.size() - 1;
@@ -212,6 +218,7 @@ struct ColoredExactCoveringProblem {
     links[i.item].top = na.size() - 1;
   }
   void addSecondaryItem(PI i) {
+    assert(optionCount == 0);
     hna.push_back(HN(i.item, hna.size() - 1, hna.size() - secondaryItemCount));
     if(secondaryItemCount > 0) {
       hna[hna.size() - 2].RLINK = hna.size() - 1;
@@ -405,6 +412,38 @@ class MappedColoredExactCoveringProblem
     }
   }
 
+  template<class OutStream>
+  void printMapped(OutStream& o) {
+    o << "< ";
+    for(size_t i = 1; i < B::getPrimaryItemCount() + 1; ++i) {
+      o << WStringToUtf8Str(getMappedItem(B::hna[i].NAME)) << " ";
+    }
+    o << ">" << endl;
+
+    o << "[ ";
+    for(size_t i = 1 + B::getPrimaryItemCount();
+        i < B::getPrimaryItemCount() + B::getSecondaryItemCount() + 1;
+        ++i) {
+      o << WStringToUtf8Str(getMappedItem(B::hna[i].NAME)) << " ";
+    }
+    o << "]" << endl;
+
+    for(size_t i = B::hna.size(); i < B::na.size(); ++i) {
+      const auto& n = B::na[i];
+      if(n.TOP > 0) {
+        o << WStringToUtf8Str(getMappedItem(n.TOP));
+        if(n.COLOR > 0) {
+          o << ":" << WStringToUtf8Str(getMappedColor(n.COLOR));
+        }
+        o << " ";
+      } else if(i + 1 < B::na.size()) {
+        o << ";" << endl;
+      } else {
+        o << "." << endl;
+      }
+    }
+  }
+
   private:
   using ItemMapping =
     boost::bimap<boost::bimaps::set_of<IM>, boost::bimaps::set_of<I>>;
@@ -501,7 +540,7 @@ class MappedColoredExactCoveringProblemParser
     using boost::spirit::qi::labels::_4;
     using boost::spirit::qi::labels::_val;
 
-    identifier %= lexeme[alpha >> *(alnum | char_('_'))];
+    identifier %= lexeme[alnum >> *(alnum | char_('_'))];
 
     problemWrapper %= problem > '.';
     problem %= ('<' > primaryItemMapList(_val) > '>' > '[' >
@@ -536,6 +575,8 @@ class MappedColoredExactCoveringProblemParser
     im.name("primary item");
     cm.name("colored secondary item");
     identifier.name("identifier");
+    primaryItemMapList.name("primary item list");
+    secondaryItemMapList.name("secondary item list");
 
     on_error<fail>(
       problem,
@@ -695,6 +736,8 @@ class AlgorithmC {
     static_assert(
       std::is_same<typename HN::link_type, typename NodeT::link_type>::value,
       "Link types must be the same for header and color nodes!");
+
+    static_assert(std::is_signed_v<C>, "Color must be a signed datatype.");
   }
   VIRT ~AlgorithmC() = default;
 
@@ -1201,7 +1244,7 @@ class WordPuzzle {
   public:
   using WS = std::u32string;
   using Alphabet = std::set<char32_t>;
-  using P = MappedColoredExactCoveringProblem<int32_t, char32_t, WS, char32_t>;
+  using P = MappedColoredExactCoveringProblem<int32_t, int32_t, WS, char32_t>;
   using Option = typename P::MappedOption;
   using PI = typename P::MappedPI;
   using CI = typename P::MappedCI;
@@ -1238,8 +1281,13 @@ class WordPuzzle {
     return 1;
   }
 
-  static WS getItemFromCoord(size_t w, size_t h, size_t x, size_t y) {
+  static WS getItemFromCoord(size_t w,
+                             size_t h,
+                             size_t x,
+                             size_t y,
+                             const std::string& prefix = "") {
     std::stringstream ss;
+    ss << prefix;
     ss << std::setw(numDigits(w)) << std::setfill('0') << x;
     ss << "_";
     ss << std::setw(numDigits(h)) << std::setfill('0') << y;
@@ -1411,32 +1459,81 @@ class WordPuzzle {
 
   Orientation orientation = { true, true, true, true, true, true, true, true };
 
-  void printPuzzle() {
+  template<class OutStream = decltype(std::cout)>
+  void printPuzzle(OutStream& outStream = std::cout) {
     assert(has_solution());
 
-    std::vector<std::vector<char32_t>> arr;
-    arr.resize(height);
-    for(size_t y = 0; y < height; ++y) {
-      arr[y].resize(width);
-    }
+    using BoardArr = boost::multi_array<std::u32string, 2>;
+    BoardArr arr(boost::extents[width][height]);
 
     for(auto& o : xcc->current_selected_option_starts()) {
       for(size_t i = o; p->na[i].TOP >= 0; ++i) {
         auto mappedItem = p->getMappedItem(p->na[i].TOP);
         if(p->na[i].COLOR > 0) {
           auto mappedColor = p->getMappedColor(p->na[i].COLOR);
-
           auto [x, y] = getCoordFromItem(width, height, mappedItem);
-          arr[x][y] = mappedColor;
+          arr[x][y] += mappedColor;
         }
       }
     }
 
     for(size_t y = 0; y < height; ++y) {
       for(size_t x = 0; x < width; ++x) {
-        cout << (char)arr[x][y];
+        cout << WStringToUtf8Str(arr[x][y]) << " ";
       }
-      cout << endl;
+      outStream << endl;
+
+      if(y + 1 < height) {
+        outStream << endl;
+      }
+    }
+  }
+
+  template<class OutStream = decltype(std::cout)>
+  void printSolution(OutStream& outStream = std::cout) {
+    assert(has_solution());
+
+    using BoardArr = boost::multi_array<std::u32string, 2>;
+    BoardArr arr(boost::extents[width][height]);
+
+    for(auto& o : xcc->current_selected_option_starts()) {
+      for(size_t i = o; p->na[i].TOP >= 0; ++i) {
+        auto mappedItem = p->getMappedItem(p->na[i].TOP);
+        if(p->na[i].COLOR > 0) {
+          auto mappedColor = p->getMappedColor(p->na[i].COLOR);
+          auto [x, y] = getCoordFromItem(width, height, mappedItem);
+          arr[x][y] += mappedColor;
+        }
+      }
+    }
+
+    size_t word = 0;
+    std::set<std::pair<size_t, size_t>> positions;
+    for(auto& o : xcc->current_selected_option_starts()) {
+      positions.clear();
+
+      auto name = p->getMappedItem(p->na[o].TOP);
+      outStream << "  " << WStringToUtf8Str(name) << ":" << endl;
+
+      for(size_t i = o + 1; p->na[i].TOP >= 0; ++i) {
+        auto mappedItem = p->getMappedItem(p->na[i].TOP);
+        positions.insert(getCoordFromItem(width, height, mappedItem));
+      }
+
+      for(size_t y = 0; y < height; ++y) {
+        for(size_t x = 0; x < width; ++x) {
+          if(positions.count(std::pair<size_t, size_t>(x, y))) {
+            outStream << WStringToUtf8Str(arr[x][y]);
+          } else {
+            outStream << " ";
+          }
+        }
+        outStream << endl;
+      }
+
+      if(++word >= words.size()) {
+        break;
+      }
     }
   }
 
@@ -1454,11 +1551,21 @@ class WordPuzzle {
   }
   void regen() {
     p = std::make_unique<P>();
-    xcc = std::make_unique<AlgorithmC<P::HNA, P::NA>>(p->hna, p->na);
+
+    clog
+      << "Translating word puzzle to color-controlled exact covering problem."
+      << endl;
 
     for(const auto& word : words) {
       auto pi = PI{ word };
       p->addMappedPrimaryItem(pi);
+    }
+
+    for(size_t y = 0; y < height; ++y) {
+      for(size_t x = 0; x < width; ++x) {
+        auto pi = PI{ getItemFromCoord(width, height, x, y, "a") };
+        p->addMappedPrimaryItem(pi);
+      }
     }
 
     for(size_t y = 0; y < height; ++y) {
@@ -1470,10 +1577,12 @@ class WordPuzzle {
 
     for(size_t y = 0; y < height; ++y) {
       for(size_t x = 0; x < width; ++x) {
+        auto pi = PI{ getItemFromCoord(width, height, x, y, "a") };
         for(auto& l : alphabet) {
           Option option;
+          option.push_back(pi);
           option.push_back(CI{ getItemFromCoord(width, height, x, y), l });
-          p->addMappedOption(option);
+          p->addMappedOption(std::move(option));
         }
       }
     }
@@ -1484,6 +1593,9 @@ class WordPuzzle {
     }
 
     needsRegen = false;
+
+    xcc = std::make_unique<AlgorithmC<P::HNA, P::NA>>(p->hna, p->na);
+    clog << "Finished translating." << endl;
   }
 };
 }
@@ -1633,7 +1745,10 @@ main(int argc, const char* argv[]) {
 
     if(solution_fount) {
       clog << "Possibility found:" << endl;
-      wordPuzzle.printPuzzle();
+      wordPuzzle.printPuzzle(std::cout);
+
+      clog << "Solution:" << endl;
+      wordPuzzle.printSolution(std::cout);
     } else {
       clog << "No way to align letters to fit all " << wordPuzzle.wordCount()
            << " words into a " << width << "x" << height << " field!";
