@@ -9,6 +9,7 @@
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -443,6 +444,21 @@ class MappedColoredExactCoveringProblem
       } else {
         o << "." << endl;
       }
+    }
+  }
+
+  template<class Solution, class OutStream>
+  void printMappedSolution(const Solution& s, OutStream& out) const {
+    for(auto& o : s) {
+      out << "    ";
+      for(size_t i = o; B::na[i].TOP >= 0; ++i) {
+        out << getMappedItem(B::hna[B::na[i].TOP].NAME);
+        if(B::na[i].COLOR > 0) {
+          out << ":" << getMappedColor(B::na[i].COLOR);
+        }
+        out << " ";
+      }
+      out << ";" << endl;
     }
   }
 
@@ -1473,6 +1489,7 @@ class WordPuzzle {
 
   bool compute_next_solution() {
     ensureRegen();
+    clog << "Computing next solution for word puzzle..." << endl;
     return xcc->compute_next_solution();
   }
   bool has_solution() {
@@ -1597,6 +1614,9 @@ class WordPuzzle {
     }
   }
 
+  void printPuzzleToSTDOUT() { printPuzzle(std::cout); }
+  void printSolutionToSTDOUT() { printSolution(std::cout); }
+
   private:
   std::unique_ptr<P> p;
   std::unique_ptr<AlgorithmC<P::HNA, P::NA>> xcc;
@@ -1665,6 +1685,64 @@ class WordPuzzle {
     clog << "Finished translating." << endl;
   }
 };
+
+class ColoredExactCoverProblemSolverWrapper {
+  public:
+  using XX = MappedColoredExactCoveringProblem<int32_t,
+                                               int32_t,
+                                               std::string,
+                                               std::string>;
+  using XCC = AlgorithmC<XX::B::HNA, XX::B::NA>;
+
+  ColoredExactCoverProblemSolverWrapper() {}
+  ~ColoredExactCoverProblemSolverWrapper() {}
+
+  bool parse(const std::string& problem) {
+    m_xx = parse_string_mapped_int32(problem);
+    if(m_xx) {
+      m_xcc = std::make_unique<XCC>(m_xx->hna, m_xx->na);
+    }
+    return m_xx.has_value();
+  }
+
+  bool compute_next_solution() {
+    if(!m_xx || !m_xcc)
+      return false;
+    return m_xcc->compute_next_solution();
+  }
+
+  bool has_solution() const { return m_xx && m_xcc && m_xcc->has_solution(); }
+
+  const XCC::NodePointerArray& get_selected_options() {
+    if(!has_solution())
+      return m_emptySolution;
+    else
+      return m_xcc->current_selected_options();
+  }
+
+  void print_solution() const {
+    if(has_solution()) {
+      m_xx->printMappedSolution(m_xcc->current_selected_option_starts(),
+                                std::cout);
+    }
+  }
+
+  std::string get_stringified_solution() const {
+    if(!has_solution()) {
+      return "";
+    }
+
+    std::stringstream s;
+    m_xx->printMappedSolution(m_xcc->current_selected_option_starts(), s);
+    return s.str();
+  }
+
+  private:
+  std::optional<XX> m_xx;
+  std::unique_ptr<XCC> m_xcc;
+
+  XCC::NodePointerArray m_emptySolution;
+};
 }
 
 #ifdef __EMSCRIPTEN__
@@ -1684,6 +1762,22 @@ EMSCRIPTEN_BINDINGS(dancinglinks) {
     .function("has_solution", &WordPuzzle::has_solution)
     .function("continue_calling", &WordPuzzle::continue_calling)
     .function("step", &WordPuzzle::step)
+    .function("addWord", &WordPuzzle::addWord)
+    .function("addLetter", &WordPuzzle::addLetter)
+    .function("getPuzzle", &WordPuzzle::getPuzzle)
+    .function("printPuzzle", &WordPuzzle::printPuzzleToSTDOUT)
+    .function("printSolution", &WordPuzzle::printSolutionToSTDOUT)
+  ;
+
+  register_vector<ColoredExactCoverProblemSolverWrapper::XCC::NodePointerArray::value_type>("NodePointerArray");
+
+  class_<ColoredExactCoverProblemSolverWrapper>("XCC")
+    .constructor<>()
+    .function("parse", &ColoredExactCoverProblemSolverWrapper::parse)
+    .function("compute_next_solution", &ColoredExactCoverProblemSolverWrapper::compute_next_solution)
+    .function("has_solution", &ColoredExactCoverProblemSolverWrapper::has_solution)
+    .function("get_selected_options", &ColoredExactCoverProblemSolverWrapper::get_selected_options)
+    .function("get_stringified_solution", &ColoredExactCoverProblemSolverWrapper::get_stringified_solution)
   ;
   // clang-format on
 }
@@ -1720,7 +1814,6 @@ main(int argc, const char* argv[]) {
     if(!problemOpt) {
       cerr << "Could not parse file!" << endl;
     } else {
-
       auto& problem = *problemOpt;
 
       clog << "  Parsed file. Read " << problem.getOptionCount()
@@ -1738,17 +1831,8 @@ main(int argc, const char* argv[]) {
         std::for_each(s.begin(), s.end(), [](auto& s) { clog << s << " "; });
         clog << endl;
         clog << "  Stringified Selected Options: " << endl;
-        for(auto& o : xcc.current_selected_option_starts()) {
-          clog << "    ";
-          for(size_t i = o; problem.na[i].TOP >= 0; ++i) {
-            clog << problem.getMappedItem(problem.hna[problem.na[i].TOP].NAME);
-            if(problem.na[i].COLOR > 0) {
-              clog << ":" << problem.getMappedColor(problem.na[i].COLOR);
-            }
-            clog << " ";
-          }
-          clog << ";" << endl;
-        }
+        problem.printMappedSolution(xcc.current_selected_option_starts(),
+                                    std::clog);
       } else {
         clog << "  No Solution Found!" << endl;
       }
