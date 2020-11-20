@@ -855,7 +855,10 @@ class AlgorithmC {
         return CallAgain;
       case C3:
         // One of the possible i from header.
-        chooseI();
+        // chooseI();
+        // Simplest i chooser. Is also most suited for word puzzle in these
+        // experiments:
+        i = RLINK(0);
         state = C4;
         return CallAgain;
       case C4:
@@ -1232,8 +1235,8 @@ TEST_CASE("Algorithm C example problem from page 87") {
 
   const auto& s = xcc.current_selected_options();
   REQUIRE(s.size() == 2);
-  REQUIRE(s[0] == 4);
-  REQUIRE(s[1] == 2);
+  REQUIRE((s[0] == 4 || s[0] == 2));
+  REQUIRE((s[1] == 2 || s[1] == 4));
 
   solution_available = xcc.compute_next_solution();
 
@@ -1288,13 +1291,14 @@ class WordPuzzle {
     assert(y >= 0);
     assert(dir >= 0 && dir < 8);
 
-    int32_t i = x + 1;
+    int32_t i = (x + 1) & 0b1111111111111;
     i <<= 13u;
     i |= (y + 1) & 0b1111111111111;
-    i <<= 13u;
+    i <<= 4u;
     i |= dir & 0b1111;
     i <<= 2u;
 
+    assert(i != 0);
     assert(i > 0);
     assert((i & 0b11) == 0);
 
@@ -1319,10 +1323,13 @@ class WordPuzzle {
       i |= 0b11;
     }
 
+    assert(i > 0);
+
     return i;
   }
 
   static std::pair<int16_t, int16_t> getCoordFromItem(int32_t i) {
+    assert(i > 0);
     // Remove flags;
     i >>= 2u;
 
@@ -1338,6 +1345,7 @@ class WordPuzzle {
     int32_t i = word;
     i <<= 2u;
     i |= 0b01;
+    assert(i > 0);
     return i;
   }
 
@@ -1402,7 +1410,7 @@ class WordPuzzle {
         paintRectWrapper(p, x, y, &Painter::paintRectLowerLeftToUpperRight);
       if(o.upper_right_to_lower_left && x + side <= width &&
          y + side <= height && w.length() <= width && w.length() <= height)
-        paintRectWrapper(p, x, y, &Painter::paintRectUpperLeftToLowerRight);
+        paintRectWrapper(p, x, y, &Painter::paintRectUpperRightToLowerLeft);
     }
 
     template<typename Functor>
@@ -1661,6 +1669,12 @@ class WordPuzzle {
       }
     }
 
+    for(size_t i = 0; i < words.size(); ++i) {
+      Painter painter(
+        words[i], i, uniqueWords[words[i]], alphabet, width, height);
+      painter.paint(*p, alphabet, orientation);
+    }
+
     for(size_t y = 0; y < height; ++y) {
       for(size_t x = 0; x < width; ++x) {
         auto pi = PI{ getItemFromCoord(x, y, true) };
@@ -1671,12 +1685,6 @@ class WordPuzzle {
           p->addMappedOption(std::move(option));
         }
       }
-    }
-
-    for(size_t i = 0; i < words.size(); ++i) {
-      Painter painter(
-        words[i], i, uniqueWords[words[i]], alphabet, width, height);
-      painter.paint(*p, alphabet, orientation);
     }
 
     needsRegen = false;
