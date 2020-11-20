@@ -803,6 +803,21 @@ class AlgorithmC {
 
   StepResult last_result = CallAgain;
 
+  void chooseI() {
+    L p = RLINK(0), theta = std::numeric_limits<L>::max();
+    while(p != 0) {
+      L lambda = LEN(p);
+      if(lambda < theta) {
+        theta = lambda;
+        i = p;
+      }
+      if(lambda == 0) {
+        return;
+      }
+      p = RLINK(p);
+    }
+  }
+
   StepResult stepExec() {
     L p;
     switch(state) {
@@ -824,7 +839,7 @@ class AlgorithmC {
         return CallAgain;
       case C3:
         // One of the possible i from header.
-        i = RLINK(0);
+        chooseI();
         state = C4;
         return CallAgain;
       case C4:
@@ -1201,8 +1216,8 @@ TEST_CASE("Algorithm C example problem from page 87") {
 
   const auto& s = xcc.current_selected_options();
   REQUIRE(s.size() == 2);
-  REQUIRE(s[0] == 2);
-  REQUIRE(s[1] == 4);
+  REQUIRE(s[0] == 4);
+  REQUIRE(s[1] == 2);
 
   solution_available = xcc.compute_next_solution();
 
@@ -1263,6 +1278,8 @@ class WordPuzzle {
     i <<= 13u;
     i |= dir & 0b1111;
     i <<= 2u;
+
+    assert(i > 0);
 
     return i;
   }
