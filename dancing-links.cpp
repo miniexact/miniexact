@@ -1280,6 +1280,7 @@ class WordPuzzle {
     i <<= 2u;
 
     assert(i > 0);
+    assert((i & 0b11) == 0);
 
     return i;
   }
@@ -1519,23 +1520,28 @@ class WordPuzzle {
 
   Orientation orientation = { true, true, true, true, true, true, true, true };
 
-  template<class OutStream = decltype(std::cout)>
-  void printPuzzle(OutStream& outStream = std::cout) {
-    assert(has_solution());
-
-    using BoardArr = boost::multi_array<std::u32string, 2>;
+  using BoardArr = boost::multi_array<std::u32string, 2>;
+  BoardArr getPuzzle() const {
     BoardArr arr(boost::extents[width][height]);
 
     for(auto& o : xcc->current_selected_option_starts()) {
-      for(size_t i = o; p->na[i + 1].TOP >= 0; ++i) {
+      for(size_t i = o; p->na[i].TOP >= 0; ++i) {
         auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
-        if(p->na[i].COLOR > 0) {
+        if(p->na[i].COLOR > 0 && (mappedItem & 0b11) != 0) {
           auto mappedColor = p->getMappedColor(p->na[i].COLOR);
           auto [x, y] = getCoordFromItem(mappedItem);
           arr[x][y] += mappedColor;
         }
       }
     }
+    return arr;
+  }
+
+  template<class OutStream = decltype(std::cout)>
+  void printPuzzle(OutStream& outStream = std::cout) {
+    assert(has_solution());
+
+    auto arr = getPuzzle();
 
     for(size_t y = 0; y < height; ++y) {
       for(size_t x = 0; x < width; ++x) {
@@ -1553,26 +1559,19 @@ class WordPuzzle {
   void printSolution(OutStream& outStream = std::cout) {
     assert(has_solution());
 
-    using BoardArr = boost::multi_array<std::u32string, 2>;
-    BoardArr arr(boost::extents[width][height]);
-
-    for(auto& o : xcc->current_selected_option_starts()) {
-      for(size_t i = o; p->na[i + 1].TOP >= 0; ++i) {
-        auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
-        if(p->na[i].COLOR > 0) {
-          auto mappedColor = p->getMappedColor(p->na[i].COLOR);
-          auto [x, y] = getCoordFromItem(mappedItem);
-          arr[x][y] += mappedColor;
-        }
-      }
-    }
+    auto arr = getPuzzle();
 
     size_t word = 0;
     std::set<std::pair<size_t, size_t>> positions;
     for(auto& o : xcc->current_selected_option_starts()) {
+      auto name = p->getMappedItem(p->hna[p->na[o].TOP].NAME);
+
+      // Only go over word options.
+      if((name & 0b11) != 0b01)
+        continue;
+
       positions.clear();
 
-      auto name = p->getMappedItem(p->hna[p->na[o].TOP].NAME);
       outStream << "  " << WStringToUtf8Str(words[getWordFromItem(name)]) << ":"
                 << endl;
 
