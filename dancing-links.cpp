@@ -564,7 +564,7 @@ class MappedColoredExactCoveringProblemParser
     identifier %= lexeme[+(char_ - char_(';') - char_(':') - char_(']') -
                            char_('>') - char_(' ') - char_('.'))];
 
-    problemWrapper %= problem > '.';
+    problemWrapper %= problem >> -(char_('.') | char_(';'));
     problem %= ('<' > primaryItemMapList(_val) > '>' >>
                 -('[' > secondaryItemMapList(_val) > ']') > (option % ";"));
     option %= +item;
@@ -1072,7 +1072,12 @@ class AlgorithmC {
   C& COLOR(L i) {
     assert(i < n.size());
     auto& c = n[i].COLOR;
-    assert(c != NodeT::color_undefined);
+    if(c == NodeT::color_undefined) {
+      cerr << "ENCODING ERROR! Visited undefined color. This means, some items "
+              "never occur in options and the problem statement is invalid!"
+           << endl;
+      exit(EXIT_FAILURE);
+    }
     return c;
   }
 
@@ -1657,7 +1662,9 @@ class WordPuzzle {
   }
   std::string getPossibleConfigurations() {
     return std::to_string(width * height) + "^" +
-           std::to_string(alphabetSize());
+           std::to_string(alphabetSize()) + " = " +
+           std::to_string(std::pow(static_cast<double>(width * height),
+                                   static_cast<double>(alphabetSize())));
   }
 
   void setUseMRV(bool useMRV) {
@@ -1913,6 +1920,8 @@ main(int argc, const char* argv[]) {
       use_mrv = vm["mrv"].as<bool>();
   } catch(std::exception& e) {
     cerr << "Could not parse parameters! Error: " << e.what() << endl;
+    cerr << desc << endl;
+    return EXIT_FAILURE;
   }
 
   if(vm.count("xcc")) {
@@ -1960,9 +1969,7 @@ main(int argc, const char* argv[]) {
         clog << "Found " << solution_counter << " solutions." << endl;
       }
     }
-  }
-
-  if(vm.count("wordpuzzle")) {
+  } else if(vm.count("wordpuzzle")) {
     WordPuzzle wordPuzzle(wordpuzzle_width, wordpuzzle_height);
 
     std::string line;
@@ -2015,6 +2022,11 @@ main(int argc, const char* argv[]) {
     if(exhaust) {
       clog << "Found " << solution_counter << " solutions!" << endl;
     }
+  } else {
+    cerr << "No operation specified! Please specify what you want to do!"
+         << endl;
+    cerr << desc << endl;
+    return EXIT_FAILURE;
   }
 
   return 0;
