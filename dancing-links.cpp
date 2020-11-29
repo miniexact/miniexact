@@ -1661,10 +1661,14 @@ class WordPuzzle {
     return p->getSecondaryItemCount();
   }
   std::string getPossibleConfigurations() {
-    return std::to_string(width * height) + "^" +
-           std::to_string(alphabetSize()) + " = " +
-           std::to_string(std::pow(static_cast<double>(width * height),
-                                   static_cast<double>(alphabetSize())));
+    std::ostringstream out;
+    out.precision(0);
+    out << alphabetSize() << "^" << width * height << " = ";
+    out.imbue(std::locale(""));
+    out << std::fixed
+        << std::pow(static_cast<double>(alphabetSize()),
+                    static_cast<double>(width * height));
+    return out.str();
   }
 
   void setUseMRV(bool useMRV) {
@@ -1956,7 +1960,7 @@ main(int argc, const char* argv[]) {
           clog << endl;
           clog << "  Stringified Selected Options: " << endl;
           problem.printMappedSolution(xcc.current_selected_option_starts(),
-                                      std::clog);
+                                      std::cout);
         } else if(solution_counter == 0) {
           clog << "  No Solution Found!" << endl;
         }
@@ -1986,13 +1990,14 @@ main(int argc, const char* argv[]) {
     }
 
     clog << "Parsed word list with " << wordPuzzle.wordCount() << " words and "
-         << wordPuzzle.alphabetSize()
-         << " letters in the alphabet. This computes to "
-         << wordPuzzle.getOptionCount() << " options with "
-         << wordPuzzle.getPrimaryItemCount() << " primary items and "
-         << wordPuzzle.getSecondaryItemCount() << " secondary items, making "
+         << wordPuzzle.alphabetSize() << " letters in the alphabet on a "
+         << wordpuzzle_width << "x" << wordpuzzle_height
+         << " puzzle field. This computes to " << wordPuzzle.getOptionCount()
+         << " options with " << wordPuzzle.getPrimaryItemCount()
+         << " primary items and " << wordPuzzle.getSecondaryItemCount()
+         << " secondary items, describing and compressing "
          << wordPuzzle.getPossibleConfigurations()
-         << " possible configurations." << endl;
+         << " possible puzzle configurations." << endl;
     clog << "Start to search for possible puzzles..." << endl;
 
     wordPuzzle.setUseMRV(use_mrv);
