@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <boost/proto/detail/remove_typename.hpp>
+#include <boost/spirit/home/support/iterators/istream_iterator.hpp>
 #include <cassert>
 #include <codecvt>
 #include <cstdint>
@@ -28,6 +29,7 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/phoenix/bind/bind_member_function.hpp>
+#include <boost/regex/pending/unicode_iterator.hpp>
 #include <boost/spirit/home/qi/auto/create_parser.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_fusion.hpp>
@@ -521,7 +523,7 @@ template<typename Iterator,
          typename XX = MappedColoredExactCoveringProblem<I, C, IM, CM>>
 class MappedColoredExactCoveringProblemParser
   : public boost::spirit::qi::
-      grammar<Iterator, XX(), boost::spirit::ascii::space_type> {
+      grammar<Iterator, XX(), boost::spirit::standard_wide::space_type> {
   public:
   using Option = typename XX::MappedOption;
   using Item = typename XX::MappedItem;
@@ -539,13 +541,14 @@ class MappedColoredExactCoveringProblemParser
   MappedColoredExactCoveringProblemParser()
     : MappedColoredExactCoveringProblemParser::base_type(problemWrapper,
                                                          "problem") {
-    using boost::spirit::ascii::alnum;
-    using boost::spirit::ascii::alpha;
-    using boost::spirit::ascii::char_;
     using boost::spirit::qi::fail;
     using boost::spirit::qi::lexeme;
     using boost::spirit::qi::lit;
     using boost::spirit::qi::on_error;
+    using boost::spirit::standard_wide::alnum;
+    using boost::spirit::standard_wide::alpha;
+    using boost::spirit::standard_wide::char_;
+    using boost::spirit::standard_wide::string;
 
     using boost::phoenix::construct;
     using boost::phoenix::val;
@@ -558,11 +561,12 @@ class MappedColoredExactCoveringProblemParser
     using boost::spirit::qi::labels::_4;
     using boost::spirit::qi::labels::_val;
 
-    identifier %= lexeme[alnum >> *(alnum | char_('_'))];
+    identifier %= lexeme[+(char_ - char_(';') - char_(':') - char_(']') -
+                           char_('>') - char_(' ') - char_('.'))];
 
     problemWrapper %= problem > '.';
-    problem %= ('<' > primaryItemMapList(_val) > '>' > '[' >
-                secondaryItemMapList(_val) > ']' > (option % ";"));
+    problem %= ('<' > primaryItemMapList(_val) > '>' >>
+                -('[' > secondaryItemMapList(_val) > ']') > (option % ";"));
     option %= +item;
     item %= mappedCI | mappedPI;
     mappedCI %= im >> ':' > cm;
@@ -605,34 +609,43 @@ class MappedColoredExactCoveringProblemParser
   }
 
   private:
-  boost::spirit::qi::rule<Iterator, XX(), boost::spirit::ascii::space_type>
-    problemWrapper;
+  boost::spirit::qi::
+    rule<Iterator, XX(), boost::spirit::standard_wide::space_type>
+      problemWrapper;
   boost::spirit::qi::rule<Iterator,
                           XX(),
                           boost::spirit::qi::locals<XX>,
-                          boost::spirit::ascii::space_type>
+                          boost::spirit::standard_wide::space_type>
     problem;
-  boost::spirit::qi::rule<Iterator, Option(), boost::spirit::ascii::space_type>
-    option;
-  boost::spirit::qi::rule<Iterator, Item(), boost::spirit::ascii::space_type>
-    item;
-  boost::spirit::qi::rule<Iterator, IM(), boost::spirit::ascii::space_type> im;
-  boost::spirit::qi::rule<Iterator, CM(), boost::spirit::ascii::space_type> cm;
-
-  boost::spirit::qi::rule<Iterator, void(XX&), boost::spirit::ascii::space_type>
-    primaryItemMapList;
-  boost::spirit::qi::rule<Iterator, void(XX&), boost::spirit::ascii::space_type>
-    secondaryItemMapList;
+  boost::spirit::qi::
+    rule<Iterator, Option(), boost::spirit::standard_wide::space_type>
+      option;
+  boost::spirit::qi::
+    rule<Iterator, Item(), boost::spirit::standard_wide::space_type>
+      item;
+  boost::spirit::qi::
+    rule<Iterator, IM(), boost::spirit::standard_wide::space_type>
+      im;
+  boost::spirit::qi::
+    rule<Iterator, CM(), boost::spirit::standard_wide::space_type>
+      cm;
 
   boost::spirit::qi::
-    rule<Iterator, MappedPI(), boost::spirit::ascii::space_type>
+    rule<Iterator, void(XX&), boost::spirit::standard_wide::space_type>
+      primaryItemMapList;
+  boost::spirit::qi::
+    rule<Iterator, void(XX&), boost::spirit::standard_wide::space_type>
+      secondaryItemMapList;
+
+  boost::spirit::qi::
+    rule<Iterator, MappedPI(), boost::spirit::standard_wide::space_type>
       mappedPI;
   boost::spirit::qi::
-    rule<Iterator, MappedCI(), boost::spirit::ascii::space_type>
+    rule<Iterator, MappedCI(), boost::spirit::standard_wide::space_type>
       mappedCI;
 
   boost::spirit::qi::
-    rule<Iterator, std::string(), boost::spirit::ascii::space_type>
+    rule<Iterator, std::string(), boost::spirit::standard_wide::space_type>
       identifier;
 };
 
@@ -668,7 +681,7 @@ template<typename I,
          typename XX = MappedColoredExactCoveringProblem<I, C, IM, CM>>
 std::optional<XX>
 ParseMappedColoredExactCoveringProblem(Begin begin, End end) {
-  using boost::spirit::ascii::space;
+  using boost::spirit::standard_wide::space;
   MappedColoredExactCoveringProblemParser<Begin, I, C, IM, CM> grammar;
   XX problem;
   Begin iter = begin;
@@ -759,6 +772,8 @@ class AlgorithmC {
   }
   VIRT ~AlgorithmC() = default;
 
+  void setUseMRV(bool useMRV) { m_useMRV = useMRV; }
+
   void set_expected_solution_option_count(SizeType count) {
     xarr.resize(count);
   }
@@ -820,17 +835,21 @@ class AlgorithmC {
   StepResult last_result = CallAgain;
 
   void chooseI() {
-    L p = RLINK(0), theta = std::numeric_limits<L>::max();
-    while(p != 0) {
-      L lambda = LEN(p);
-      if(lambda < theta) {
-        theta = lambda;
-        i = p;
+    if(m_useMRV) {
+      L p = RLINK(0), theta = std::numeric_limits<L>::max();
+      while(p != 0) {
+        L lambda = LEN(p);
+        if(lambda < theta) {
+          theta = lambda;
+          i = p;
+        }
+        if(lambda == 0) {
+          return;
+        }
+        p = RLINK(p);
       }
-      if(lambda == 0) {
-        return;
-      }
-      p = RLINK(p);
+    } else {
+      i = RLINK(0);
     }
   }
 
@@ -855,10 +874,7 @@ class AlgorithmC {
         return CallAgain;
       case C3:
         // One of the possible i from header.
-        // chooseI();
-        // Simplest i chooser. Is also most suited for word puzzle in these
-        // experiments:
-        i = RLINK(0);
+        chooseI();
         state = C4;
         return CallAgain;
       case C4:
@@ -1090,6 +1106,8 @@ class AlgorithmC {
   NodePointerArray xarr;
   NodePointerArray selected_options;
   NodePointerArray selected_option_starts;
+
+  bool m_useMRV = false;
 };
 
 using HNode = HeaderNode<std::int32_t, char>;
@@ -1625,6 +1643,28 @@ class WordPuzzle {
   void printPuzzleToSTDOUT() { printPuzzle(std::cout); }
   void printSolutionToSTDOUT() { printSolution(std::cout); }
 
+  size_t getOptionCount() {
+    ensureRegen();
+    return p->getOptionCount();
+  }
+  size_t getPrimaryItemCount() {
+    ensureRegen();
+    return p->getPrimaryItemCount();
+  }
+  size_t getSecondaryItemCount() {
+    ensureRegen();
+    return p->getSecondaryItemCount();
+  }
+  std::string getPossibleConfigurations() {
+    return std::to_string(width * height) + "^" +
+           std::to_string(alphabetSize());
+  }
+
+  void setUseMRV(bool useMRV) {
+    ensureRegen();
+    xcc->setUseMRV(useMRV);
+  }
+
   private:
   std::unique_ptr<P> p;
   std::unique_ptr<AlgorithmC<P::HNA, P::NA>> xcc;
@@ -1791,6 +1831,19 @@ EMSCRIPTEN_BINDINGS(dancinglinks) {
 }
 #endif
 
+#ifndef __EMSCRIPTEN__
+#include <boost/program_options.hpp>
+
+void
+conflicting_options(const boost::program_options::variables_map& vm,
+                    const char* opt1,
+                    const char* opt2) {
+  if(vm.count(opt1) && !vm[opt1].defaulted() && vm.count(opt2) &&
+     !vm[opt2].defaulted())
+    throw std::logic_error(std::string("Conflicting options '") + opt1 +
+                           "' and '" + opt2 + "'.");
+}
+
 int
 main(int argc, const char* argv[]) {
   if(argc > 1 && strcmp(argv[1], "--test") == 0) {
@@ -1811,16 +1864,61 @@ main(int argc, const char* argv[]) {
   }
 
   using namespace dancing_links;
+  using namespace boost::program_options;
 
-  if(argc > 1 && strcmp(argv[1], "--parse-and-solve") == 0) {
-    if(argc <= 2) {
-      cerr << "Require file to read!" << endl;
-      return EXIT_FAILURE;
+  std::string input_wordpuzzle = "";
+  std::string input_xcc = "";
+  bool exhaust = false;
+  bool use_mrv = false;
+
+  uint16_t wordpuzzle_width = 5;
+  uint16_t wordpuzzle_height = 5;
+
+  // clang-format off
+  options_description desc("Options");
+  desc.add_options()
+    ("help,h", "print help message")
+    ("wordpuzzle,w", value<std::string>(&input_wordpuzzle), "specify word puzzle definition to parse and generate puzzle")
+    ("xcc,x", value<std::string>(&input_xcc), "specify xcc problem file to parse and solve problem")
+    ("exhaust,e", bool_switch(&exhaust), "compute all solutions that are available")
+    ("width", value<uint16_t>(&wordpuzzle_width), "specify width of the word puzzle")
+    ("height", value<uint16_t>(&wordpuzzle_height), "specify height of the word puzzle")
+    ("mrv", bool_switch(&use_mrv), "use the MRV heuristic")
+  ;
+  // clang-format on
+
+  variables_map vm;
+  try {
+    store(parse_command_line(argc, argv, desc), vm);
+
+    conflicting_options(vm, "xcc", "width");
+    conflicting_options(vm, "xcc", "height");
+    conflicting_options(vm, "wordpuzzle", "xcc");
+
+    if(vm.count("help")) {
+      cout << desc << endl;
+      return EXIT_SUCCESS;
     }
+    if(vm.count("wordpuzzle"))
+      input_wordpuzzle = vm["wordpuzzle"].as<std::string>();
+    if(vm.count("xcc"))
+      input_xcc = vm["xcc"].as<std::string>();
+    if(vm.count("width"))
+      wordpuzzle_width = vm["width"].as<uint16_t>();
+    if(vm.count("height"))
+      wordpuzzle_height = vm["height"].as<uint16_t>();
+    if(vm.count("exhaust"))
+      exhaust = vm["exhaust"].as<bool>();
+    if(vm.count("mrv"))
+      use_mrv = vm["mrv"].as<bool>();
+  } catch(std::exception& e) {
+    cerr << "Could not parse parameters! Error: " << e.what() << endl;
+  }
 
-    auto problemOpt = parse_string_mapped_int32_from_file(argv[2]);
+  if(vm.count("xcc")) {
+    auto problemOpt = parse_string_mapped_int32_from_file(input_xcc);
     if(!problemOpt) {
-      cerr << "Could not parse file!" << endl;
+      cerr << "Could not parse file \"" << input_xcc << "\"!" << endl;
     } else {
       auto& problem = *problemOpt;
 
@@ -1828,67 +1926,51 @@ main(int argc, const char* argv[]) {
            << " options with " << problem.getPrimaryItemCount()
            << " primary and " << problem.getSecondaryItemCount()
            << " secondary items. Starting solver." << endl;
+      if(use_mrv) {
+        clog << "  Using MRV heuristic." << endl;
+      }
 
       AlgorithmC xcc(problem.hna, problem.na);
-      bool solution_found = xcc.compute_next_solution();
+      xcc.setUseMRV(use_mrv);
 
-      if(solution_found) {
-        clog << "  Solution Found! Printing solution:" << endl;
-        const auto& s = xcc.current_selected_options();
-        clog << "  Selected Options: ";
-        std::for_each(s.begin(), s.end(), [](auto& s) { clog << s << " "; });
-        clog << endl;
-        clog << "  Stringified Selected Options: " << endl;
-        problem.printMappedSolution(xcc.current_selected_option_starts(),
-                                    std::clog);
-      } else {
-        clog << "  No Solution Found!" << endl;
+      int solution_counter = 0;
+      bool solution_found = true;
+      while(solution_found) {
+        solution_found = xcc.compute_next_solution();
+
+        if(solution_found) {
+          clog << "  Solution " << ++solution_counter
+               << " found! Printing solution:" << endl;
+          const auto& s = xcc.current_selected_options();
+          clog << "  Selected Options: ";
+          std::for_each(s.begin(), s.end(), [](auto& s) { clog << s << " "; });
+          clog << endl;
+          clog << "  Stringified Selected Options: " << endl;
+          problem.printMappedSolution(xcc.current_selected_option_starts(),
+                                      std::clog);
+        } else if(solution_counter == 0) {
+          clog << "  No Solution Found!" << endl;
+        }
+
+        if(!exhaust) {
+          solution_found = false;
+        }
+      }
+      if(exhaust) {
+        clog << "Found " << solution_counter << " solutions." << endl;
       }
     }
   }
 
-  if(argc > 1 && strcmp(argv[1], "--wordpuzzle") == 0) {
-    if(argc != 5 && argc != 6) {
-      cerr << "Wordpuzzle requires width, height, a filename containing the "
-              "word list, and optionally a file containing the alphabet!"
-           << endl;
-      cerr << "Alphabet files are line by line single character alphabets "
-              "(unicode aware). File lists are line by line unicode words."
-           << endl;
-      cerr << "Call like " << argv[0]
-           << " <width> <height> <word-list> [alphabet-file]" << endl;
-      return EXIT_FAILURE;
-    }
-
-    int width = atoi(argv[2]);
-    int height = atoi(argv[3]);
-
-    if(width <= 0 || height <= 0) {
-      cerr << "Width and height must both be > 0!" << endl;
-      return EXIT_FAILURE;
-    }
-
-    WordPuzzle wordPuzzle(width, height);
+  if(vm.count("wordpuzzle")) {
+    WordPuzzle wordPuzzle(wordpuzzle_width, wordpuzzle_height);
 
     std::string line;
 
-    std::string wordlistFilePath = argv[4];
-    if(argc == 6) {
-      std::ifstream alphabetFile(argv[5]);
-      if(!alphabetFile) {
-        cerr << "Cannot open alphabet file \"" << argv[5] << "\"!" << endl;
-        return EXIT_FAILURE;
-      }
-
-      while(std::getline(alphabetFile, line)) {
-        auto u32str = Utf8StringToUTF32String(line);
-        wordPuzzle.addLetter(u32str[0]);
-      }
-    }
-
-    std::ifstream wordListFile(argv[4]);
+    std::ifstream wordListFile(input_wordpuzzle);
     if(!wordListFile) {
-      cerr << "Cannot open word list file \"" << argv[4] << "\"!" << endl;
+      cerr << "Cannot open word list file \"" << input_wordpuzzle << "\"!"
+           << endl;
       return EXIT_FAILURE;
     }
     while(std::getline(wordListFile, line)) {
@@ -1897,22 +1979,52 @@ main(int argc, const char* argv[]) {
     }
 
     clog << "Parsed word list with " << wordPuzzle.wordCount() << " words and "
-         << wordPuzzle.alphabetSize() << " letters in the alphabet." << endl;
+         << wordPuzzle.alphabetSize()
+         << " letters in the alphabet. This computes to "
+         << wordPuzzle.getOptionCount() << " options with "
+         << wordPuzzle.getPrimaryItemCount() << " primary items and "
+         << wordPuzzle.getSecondaryItemCount() << " secondary items, making "
+         << wordPuzzle.getPossibleConfigurations()
+         << " possible configurations." << endl;
     clog << "Start to search for possible puzzles..." << endl;
 
-    bool solution_fount = wordPuzzle.compute_next_solution();
+    wordPuzzle.setUseMRV(use_mrv);
 
-    if(solution_fount) {
-      clog << "Possibility found:" << endl;
-      wordPuzzle.printPuzzle(std::cout);
+    if(use_mrv) {
+      clog << "Using MRV heuristic." << endl;
+    }
 
-      clog << "Solution:" << endl;
-      wordPuzzle.printSolution(std::cout);
-    } else {
-      clog << "No way to align letters to fit all " << wordPuzzle.wordCount()
-           << " words into a " << width << "x" << height << " field!";
+    int solution_counter = 0;
+    bool solution_found = true;
+    while(solution_found) {
+      solution_found = wordPuzzle.compute_next_solution();
+      if(solution_found) {
+        clog << "Possibility " << ++solution_counter << " found:" << endl;
+        wordPuzzle.printPuzzle(std::cout);
+
+        clog << "Solution:" << endl;
+        wordPuzzle.printSolution(std::cout);
+      } else if(solution_counter == 0) {
+        clog << "No way to align letters to fit all " << wordPuzzle.wordCount()
+             << " words into a " << wordpuzzle_width << "x" << wordpuzzle_height
+             << " field!";
+      }
+      if(!exhaust)
+        solution_found = false;
+    }
+    if(exhaust) {
+      clog << "Found " << solution_counter << " solutions!" << endl;
     }
   }
 
   return 0;
 }
+
+#else
+
+int
+main(int argc, char* argv[]) {
+  return EXIT_SUCCESS;
+}
+
+#endif
