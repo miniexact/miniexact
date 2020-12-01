@@ -43,6 +43,9 @@ using std::clog;
 using std::cout;
 using std::endl;
 
+#define DANCINGLINKS_HTML_TD_STYLE \
+  "style='text-align: center; vertical-align: middle; font-family: monospace'"
+
 namespace dancing_links {
 
 template<typename T, typename N>
@@ -1593,12 +1596,81 @@ class WordPuzzle {
 
     for(size_t y = 0; y < height; ++y) {
       for(size_t x = 0; x < width; ++x) {
-        cout << WStringToUtf8Str(arr[x][y]) << " ";
+        outStream << WStringToUtf8Str(arr[x][y]) << " ";
       }
       outStream << endl;
 
       if(y + 1 < height) {
         outStream << endl;
+      }
+    }
+  }
+
+  template<class OutStream = decltype(std::cout)>
+  void printPuzzleHTML(OutStream& outStream = std::cout) {
+    assert(has_solution());
+
+    auto arr = getPuzzle();
+
+    outStream << "<section><table>";
+
+    for(size_t y = 0; y < height; ++y) {
+      outStream << "<tr>";
+      for(size_t x = 0; x < width; ++x) {
+        outStream << "<td " DANCINGLINKS_HTML_TD_STYLE ">"
+                  << WStringToUtf8Str(arr[x][y]) << "</td>";
+      }
+      outStream << "</tr>";
+    }
+
+    outStream << "</table></section>" << endl;
+  }
+
+  template<class OutStream = decltype(std::cout)>
+  void printSolutionHTML(OutStream& outStream = std::cout) {
+    assert(has_solution());
+
+    auto arr = getPuzzle();
+
+    size_t word = 0;
+    std::set<std::pair<size_t, size_t>> positions;
+    for(auto& o : xcc->current_selected_option_starts()) {
+      auto name = p->getMappedItem(p->hna[p->na[o].TOP].NAME);
+
+      // Only go over word options.
+      if((name & 0b11) != 0b01)
+        continue;
+
+      positions.clear();
+
+      outStream << "<section><h3>"
+                << WStringToUtf8Str(words[getWordFromItem(name)])
+                << "</h3><table>";
+
+      for(size_t i = o + 1; p->na[i + 1].TOP >= 0; ++i) {
+        auto mappedItem = p->getMappedItem(p->hna[p->na[i].TOP].NAME);
+        positions.insert(getCoordFromItem(mappedItem));
+      }
+
+      for(size_t y = 0; y < height; ++y) {
+        outStream << "<tr>";
+        for(size_t x = 0; x < width; ++x) {
+          if(positions.count(std::pair<size_t, size_t>(x, y))) {
+            outStream << "<td " DANCINGLINKS_HTML_TD_STYLE
+                         "><strong style='background-color: orange;'>"
+                      << WStringToUtf8Str(arr[x][y]) << "</strong></td>";
+          } else {
+            outStream << "<td " DANCINGLINKS_HTML_TD_STYLE ">"
+                      << WStringToUtf8Str(arr[x][y]) << "</td>";
+          }
+        }
+        outStream << "</tr>";
+      }
+
+      outStream << "</table></section>" << endl;
+
+      if(++word >= words.size()) {
+        break;
       }
     }
   }
@@ -1647,6 +1719,8 @@ class WordPuzzle {
 
   void printPuzzleToSTDOUT() { printPuzzle(std::cout); }
   void printSolutionToSTDOUT() { printSolution(std::cout); }
+  void printPuzzleHTMLToSTDOUT() { printPuzzleHTML(std::cout); }
+  void printSolutionHTMLToSTDOUT() { printSolutionHTML(std::cout); }
 
   size_t getOptionCount() {
     ensureRegen();
@@ -1826,6 +1900,8 @@ EMSCRIPTEN_BINDINGS(dancinglinks) {
     .function("getPuzzle", &WordPuzzle::getPuzzle)
     .function("printPuzzle", &WordPuzzle::printPuzzleToSTDOUT)
     .function("printSolution", &WordPuzzle::printSolutionToSTDOUT)
+    .function("printPuzzleHTML", &WordPuzzle::printPuzzleHTMLToSTDOUT)
+    .function("printSolutionHTML", &WordPuzzle::printSolutionHTMLToSTDOUT)
   ;
 
   register_vector<ColoredExactCoverProblemSolverWrapper::XCC::NodePointerArray::value_type>("NodePointerArray");
@@ -1881,6 +1957,7 @@ main(int argc, const char* argv[]) {
   std::string input_xcc = "";
   bool exhaust = false;
   bool use_mrv = false;
+  bool output_html = false;
 
   uint16_t wordpuzzle_width = 5;
   uint16_t wordpuzzle_height = 5;
@@ -1894,6 +1971,7 @@ main(int argc, const char* argv[]) {
     ("exhaust,e", bool_switch(&exhaust), "compute all solutions that are available")
     ("width", value<uint16_t>(&wordpuzzle_width), "specify width of the word puzzle")
     ("height", value<uint16_t>(&wordpuzzle_height), "specify height of the word puzzle")
+    ("html", bool_switch(&output_html), "activate HTML output for word puzzle")
     ("mrv", bool_switch(&use_mrv), "use the MRV heuristic")
   ;
   // clang-format on
@@ -1905,6 +1983,7 @@ main(int argc, const char* argv[]) {
     conflicting_options(vm, "xcc", "width");
     conflicting_options(vm, "xcc", "height");
     conflicting_options(vm, "wordpuzzle", "xcc");
+    conflicting_options(vm, "xcc", "html");
 
     if(vm.count("help")) {
       cout << desc << endl;
@@ -1922,6 +2001,8 @@ main(int argc, const char* argv[]) {
       exhaust = vm["exhaust"].as<bool>();
     if(vm.count("mrv"))
       use_mrv = vm["mrv"].as<bool>();
+    if(vm.count("html"))
+      output_html = vm["html"].as<bool>();
   } catch(std::exception& e) {
     cerr << "Could not parse parameters! Error: " << e.what() << endl;
     cerr << desc << endl;
@@ -2012,10 +2093,16 @@ main(int argc, const char* argv[]) {
       solution_found = wordPuzzle.compute_next_solution();
       if(solution_found) {
         clog << "Possibility " << ++solution_counter << " found:" << endl;
-        wordPuzzle.printPuzzle(std::cout);
+        if(output_html)
+          wordPuzzle.printPuzzleHTML(std::cout);
+        else
+          wordPuzzle.printPuzzle(std::cout);
 
         clog << "Solution:" << endl;
-        wordPuzzle.printSolution(std::cout);
+        if(output_html)
+          wordPuzzle.printSolutionHTML(std::cout);
+        else
+          wordPuzzle.printSolution(std::cout);
       } else if(solution_counter == 0) {
         clog << "No way to align letters to fit all " << wordPuzzle.wordCount()
              << " words into a " << wordpuzzle_width << "x" << wordpuzzle_height
