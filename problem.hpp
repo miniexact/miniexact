@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <iterator>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -46,6 +47,143 @@ struct ColoredExactCoveringProblem {
 
   void addPrimaryItem(PI i);
   void addSecondaryItem(PI i);
+
+  /** @brief Calls the provided visitor with all options and their colorings in
+   * this problem.
+   *
+   * Options are separated by an item = 0.
+   */
+  template<typename Functor>
+  void visitOptions(Functor f) {
+    for(size_t i = hna.size(); i < na.size(); ++i) {
+      const auto& n = na[i];
+      I item = 0;
+      C color = 0;
+      if(n.TOP > 0) {
+        item = hna[n.TOP].NAME;
+        if(n.COLOR > 0) {
+          color = n.COLOR;
+        }
+        f(item, color);
+      }
+    }
+  }
+
+  struct OptionIterator {
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = size_t;
+    using value_type = CI;
+    using reference = value_type;// or also value_type&
+    using pointer = value_type*;
+
+    OptionIterator(const ColoredExactCoveringProblem<I, C>& p, size_t pos)
+      : m_p(p)
+      , m_i(pos) {}
+
+    reference operator*() const {
+      assert(m_i < m_p.na.size());
+      auto& n = m_p.na[m_i];
+      assert(n.TOP != 0);
+      assert(n.COLOR >= 0);
+      assert(n.TOP < m_p.hna.size());
+      ColoredItem<I, C> ci{ m_p.hna[n.TOP].NAME, n.COLOR };
+      return ci;
+    }
+
+    OptionIterator& operator++() {
+      m_i++;
+      return *this;
+    }
+
+    OptionIterator operator++(int) {
+      OptionIterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    friend bool operator==(const OptionIterator& a, const OptionIterator& b) {
+      return &a.m_p == &b.m_p && a.m_i == b.m_i;
+    };
+    friend bool operator!=(const OptionIterator& a, const OptionIterator& b) {
+      return &a.m_p != &b.m_p || a.m_i != b.m_i;
+    };
+
+    private:
+    const ColoredExactCoveringProblem<I, C>& m_p;
+    size_t m_i;
+  };
+
+  struct OptionWrapper {
+    OptionWrapper(const ColoredExactCoveringProblem<I, C>& p,
+                  size_t startI,
+                  size_t endI)
+      : m_p(p)
+      , m_startI(startI)
+      , m_endI(endI) {}
+
+    OptionIterator begin() const { return OptionIterator(m_p, m_startI); }
+    OptionIterator end() const { return OptionIterator(m_p, m_endI); }
+
+    private:
+    const ColoredExactCoveringProblem<I, C>& m_p;
+    size_t m_startI, m_endI;
+  };
+
+  struct OptionsIterator {
+    friend class const_iterator;
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = size_t;
+    using value_type = OptionWrapper;
+    using self_type = OptionsIterator;
+    using reference = value_type;
+    using pointer = value_type*;
+    using iterator = self_type;
+
+    OptionsIterator(const ColoredExactCoveringProblem<I, C>& p, size_t startI)
+      : m_p(p)
+      , m_startI(startI) {
+      computeEndI();
+    }
+
+    reference operator*() const { return OptionWrapper(m_p, m_startI, m_endI); }
+
+    OptionsIterator& operator++() {
+      m_startI = m_endI + 1;
+      computeEndI();
+      return *this;
+    }
+
+    OptionsIterator operator++(int) {
+      OptionsIterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    friend bool operator==(const OptionsIterator& a, const OptionsIterator& b) {
+      return &a.m_p == &b.m_p && a.m_startI == b.m_startI;
+    };
+    friend bool operator!=(const OptionsIterator& a, const OptionsIterator& b) {
+      return &a.m_p != &b.m_p || a.m_startI != b.m_startI;
+    };
+
+    private:
+    const ColoredExactCoveringProblem<I, C>& m_p;
+    size_t m_startI = 0, m_endI = 0;
+
+    void computeEndI() {
+      m_endI = m_startI;
+      while(m_endI < m_p.na.size()) {
+        const auto& n = m_p.na[m_endI];
+        if(n.TOP <= 0) {
+          break;
+        }
+        ++m_endI;
+      }
+    }
+  };
+
+  OptionsIterator begin() const { return OptionsIterator(*this, hna.size()); }
+  OptionsIterator end() const { return OptionsIterator(*this, na.size()); }
 
   HNA hna = { HN(0, 0, 0) };
   NA na = { N(0, 0, 0) };

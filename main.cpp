@@ -10,6 +10,8 @@
 #ifndef __EMSCRIPTEN__
 #include <boost/program_options.hpp>
 
+#include "doctest.h"
+
 using std::cerr;
 using std::clog;
 using std::cout;
@@ -28,7 +30,6 @@ conflicting_options(const boost::program_options::variables_map& vm,
 int
 main(int argc, const char* argv[]) {
   if(argc > 1 && strcmp(argv[1], "--test") == 0) {
-#ifdef DEBUG
     doctest::Context ctx;
 
     ctx.setOption("no-breaks", false);
@@ -37,11 +38,6 @@ main(int argc, const char* argv[]) {
     int res = ctx.run();
     ctx.shouldExit();
     return res;
-#else
-    cout << "!! DEBUG undefined! No doctest and testing code included in "
-            "binary. Recompile with -DDEBUG to enable testing functionality."
-         << endl;
-#endif
   }
 
   using namespace dancing_links;
