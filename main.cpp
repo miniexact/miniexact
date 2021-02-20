@@ -11,6 +11,10 @@
 #ifndef __EMSCRIPTEN__
 #include <boost/program_options.hpp>
 
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/trivial.hpp>
+
 #include "doctest.h"
 
 using std::cerr;
@@ -30,17 +34,6 @@ conflicting_options(const boost::program_options::variables_map& vm,
 
 int
 main(int argc, const char* argv[]) {
-  if(argc > 1 && strcmp(argv[1], "--test") == 0) {
-    doctest::Context ctx;
-
-    ctx.setOption("no-breaks", false);
-
-    ctx.applyCommandLine(argc, argv);
-    int res = ctx.run();
-    ctx.shouldExit();
-    return res;
-  }
-
   using namespace dancing_links;
   using namespace boost::program_options;
 
@@ -50,9 +43,13 @@ main(int argc, const char* argv[]) {
   bool use_mrv = false;
   bool output_html = false;
   bool output_arrays = false;
+  bool debug = false;
+  bool verbose = false;
 
   bool dd_keep_sat = false;
   bool dd_make_sat = false;
+
+  bool run_tests = false;
 
   uint16_t wordpuzzle_width = 5;
   uint16_t wordpuzzle_height = 5;
@@ -71,12 +68,17 @@ main(int argc, const char* argv[]) {
     ("arrays", bool_switch(&output_arrays), "output the array encoding (2D linked lists)")
     ("dd-keep-sat", bool_switch(&dd_keep_sat), "try to minify formula using delta debugging while staying SAT")
     ("dd-make-sat", bool_switch(&dd_make_sat), "try to make formula SAT using delta debugging")
+    ("debug,d", bool_switch(&debug), "activate debug output")
+    ("verbose,v", bool_switch(&verbose), "activate verbose output")
+    ("test", bool_switch(&run_tests), "run unit-tests using doctest - parameters need to be prefixed with dt-")
   ;
   // clang-format on
 
   variables_map vm;
   try {
-    store(parse_command_line(argc, argv, desc), vm);
+    store(
+      command_line_parser(argc, argv).options(desc).allow_unregistered().run(),
+      vm);
 
     conflicting_options(vm, "xcc", "width");
     conflicting_options(vm, "xcc", "height");
@@ -110,10 +112,38 @@ main(int argc, const char* argv[]) {
       dd_make_sat = vm["dd-make-sat"].as<bool>();
     if(vm.count("dd-keep-sat"))
       dd_keep_sat = vm["dd-keep-sat"].as<bool>();
+    if(vm.count("debug"))
+      debug = vm["debug"].as<bool>();
+    if(vm.count("verbose"))
+      verbose = vm["verbose"].as<bool>();
+    if(vm.count("test"))
+      run_tests = vm["verbose"].as<bool>();
   } catch(std::exception& e) {
     cerr << "Could not parse parameters! Error: " << e.what() << endl;
     cerr << desc << endl;
     return EXIT_FAILURE;
+  }
+
+  boost::log::core::get()->set_filter(boost::log::trivial::severity >=
+                                      boost::log::trivial::info);
+
+  if(debug)
+    boost::log::core::get()->set_filter(boost::log::trivial::severity >=
+                                        boost::log::trivial::debug);
+
+  if(verbose)
+    boost::log::core::get()->set_filter(boost::log::trivial::severity >=
+                                        boost::log::trivial::trace);
+
+  if(run_tests) {
+    doctest::Context ctx;
+
+    ctx.setOption("no-breaks", false);
+
+    ctx.applyCommandLine(argc, argv);
+    int res = ctx.run();
+    ctx.shouldExit();
+    return res;
   }
 
   if(vm.count("xcc")) {

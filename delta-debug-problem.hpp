@@ -27,7 +27,8 @@ class DeltaDebugProblem {
   std::optional<CECP> ddmin(TestPredicate test,
                             const CECP& problem,
                             std::vector<char> activeOptions,
-                            size_t n);
+                            size_t n
+                            );
 
   static P getProblemFromCECP(const P& problem, const CECP& cecp);
 

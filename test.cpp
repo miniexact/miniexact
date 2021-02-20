@@ -9,6 +9,7 @@
 
 #define DOCTEST_CONFIG_NO_POSIX_SIGNALS
 #define DOCTEST_CONFIG_IMPLEMENT
+#define DOCTEST_CONFIG_NO_UNPREFIXED_OPTIONS
 #include "doctest.h"
 
 #define IGN 0
@@ -158,7 +159,7 @@ TEST_CASE("Delta Debug a Problem to Minify Required Options for SAT") {
 
   auto reducedOpt = dd.keep_sat_while_removing_options();
 
-  auto &reduced = *reducedOpt;
+  auto& reduced = *reducedOpt;
 
   std::cout << "Minified: " << std::endl;
   reduced.printMapped(std::cout);

@@ -15,7 +15,7 @@ ColoredExactCoveringProblem<I, C>::copyItems(
   return ColoredExactCoveringProblem<I, C>{
     HNA(o.hna.begin(), o.hna.begin() + o.hna.size() - 1),
     o.optionCount == 0 ? NA(o.na.begin(), o.na.begin() + o.hna.size() - 1)
-                     : o.na_originalHeader,
+                       : o.na_originalHeader,
     o.originalLinks,
     o.secondaryItemCount
   };

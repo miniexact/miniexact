@@ -5,7 +5,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-find_package(Boost COMPONENTS program_options filesystem REQUIRED)
+find_package(Boost COMPONENTS program_options filesystem log REQUIRED)
 
 add_library(libdancinglinks STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/wordpuzzle.cpp
@@ -19,8 +19,10 @@ add_library(libdancinglinks STATIC
 
 set_target_properties(libdancinglinks PROPERTIES OUTPUT_NAME "dancinglinks")
 
-target_link_libraries(libdancinglinks Boost::filesystem)
+target_link_libraries(libdancinglinks PUBLIC Boost::filesystem Boost::log)
 target_compile_features(libdancinglinks PUBLIC cxx_std_17)
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -DBOOST_LOG_DYN_LINK")
 
 add_executable(dancing-links
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
@@ -29,7 +31,7 @@ add_executable(dancing-links
 
 target_link_libraries(dancing-links libdancinglinks)
 
-target_link_libraries(dancing-links Boost::program_options)
+target_link_libraries(dancing-links Boost::program_options Boost::log)
 
 # Address Sanitizer for Debug Builds
 if(DEBUG_ENABLE_ADDRESS_SANITIZER)
@@ -40,6 +42,9 @@ if(DEBUG_ENABLE_ADDRESS_SANITIZER)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=address  -fsanitize=undefined -fsanitize=address -fno-sanitize-recover=undefined -fno-sanitize=vptr")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address  -fsanitize=undefined -fsanitize=address -fno-sanitize-recover=undefined -fno-sanitize=vptr")
 endif()
+
+enable_testing()
+add_test(NAME dancing-links-tests COMMAND dancing-links --test)
 
 # Thread Sanitizer for Debug Builds
 if(DEBUG_ENABLE_THREAD_SANITIZER)

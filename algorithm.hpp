@@ -48,9 +48,6 @@ class AlgorithmC {
 
   StepResult step();
 
-  friend std::ostream& operator<<(std::ostream& o,
-                                  const AlgorithmC<HNA, NA, HN, NodeT>& c);
-
   protected:
   AlgorithmState state = C1;
   L N;
@@ -98,6 +95,13 @@ class AlgorithmC {
 
   bool m_useMRV = false;
 };
+
+template<class HNA,
+         class NA,
+         class HN = typename HNA::value_type,
+         class NodeT = typename NA::value_type>
+std::ostream&
+operator<<(std::ostream& o, const AlgorithmC<HNA, NA, HN, NodeT>& c);
 
 template<typename C>
 using HNode = HeaderNode<std::int32_t, C>;

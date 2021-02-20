@@ -2,9 +2,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <set>
 #include <string>
-#include <iostream>
 
 #include "algorithm.hpp"
 #include "problem.hpp"

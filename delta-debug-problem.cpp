@@ -2,10 +2,22 @@
 #include "algorithm.hpp"
 #include <algorithm>
 
+#include <boost/log/trivial.hpp>
+
 using std::cerr;
 using std::clog;
 using std::cout;
 using std::endl;
+
+namespace std {
+std::ostream&
+operator<<(std::ostream& o, const std::vector<char> v) {
+  for(auto c : v) {
+    o << ((c == true) ? '1' : '0') << " ";
+  }
+  return o;
+}
+}
 
 namespace dancing_links {
 
@@ -57,14 +69,6 @@ DeltaDebugProblem<P>::make_sat_by_removing_options() {
   return std::nullopt;
 }
 
-std::ostream&
-operator<<(std::ostream& o, const std::vector<char> v) {
-  for(auto c : v) {
-    o << (c == true) << " ";
-  }
-  return o;
-}
-
 template<class P, class TGT>
 TGT
 MakeProblemFromProblemWithActiveOptions(const P& source,
@@ -82,7 +86,7 @@ MakeProblemFromProblemWithActiveOptions(const P& source,
 size_t
 getPhysNOffsetInActiveOptionVector(const std::vector<char>& v, size_t n) {
   size_t phys_i = 0;
-  for(size_t logical_i = 0; logical_i != n; ++logical_i) {
+  for(size_t logical_i = 0; logical_i != n; ++logical_i, ++phys_i) {
     while(!v[phys_i]) {
       ++phys_i;
       assert(phys_i < v.size());
@@ -98,24 +102,29 @@ DeltaDebugProblem<P>::ddmin(TestPredicate test,
                             std::vector<char> activeOptions,
                             size_t n) {
   size_t active = std::count(activeOptions.begin(), activeOptions.end(), true);
-  std::cout << "Active Options: " << active << " : " << activeOptions
-            << " - N = " << n << std::endl;
+
   if(active == 1) {
     return problem;
   }
 
   for(size_t i = 0; i <= n; ++i) {
-    cout << "I: " << i << endl;
 
     size_t phys_i = getPhysNOffsetInActiveOptionVector(activeOptions, i);
     activeOptions[phys_i] = false;
 
-    if(m_triedOptionSets.count(activeOptions))
+    if(m_triedOptionSets.count(activeOptions)) {
+      BOOST_LOG_TRIVIAL(debug) << "Already cached option configuration "
+                               << activeOptions << ", not checking again.";
+      activeOptions[phys_i] = true;
       continue;
+    }
 
     CECP reduced =
       MakeProblemFromProblemWithActiveOptions<P, CECP>(m_p, activeOptions);
-    if(!test(reduced, activeOptions)) {
+    bool testResult = !test(reduced, activeOptions);
+    BOOST_LOG_TRIVIAL(debug)
+      << "Testing with options " << activeOptions << ". Result: " << testResult;
+    if(!testResult) {
       return ddmin(test, reduced, activeOptions, std::max(n - 1, 2Lu));
     }
 
@@ -123,7 +132,6 @@ DeltaDebugProblem<P>::ddmin(TestPredicate test,
   }
 
   if(n < active) {
-    cout << "n < active" << endl;
     return ddmin(test, problem, activeOptions, std::min(2 * n, active));
   }
 
@@ -163,9 +171,8 @@ DeltaDebugProblem<P>::satisfiable(const CECP& cecp,
     typename CECP::HNA hna(cecp.hna);
     typename CECP::NA na(cecp.na);
 
-    std::cout << "Checking : " << std::endl;
-    auto p = getProblemFromCECP(m_p, cecp);
-    p.printMapped(std::cout);
+    // auto p = getProblemFromCECP(m_p, cecp);
+    // p.printMapped(std::cout);
 
     AlgorithmC algo(hna, na);
     sat = algo.compute_next_solution();
@@ -173,9 +180,6 @@ DeltaDebugProblem<P>::satisfiable(const CECP& cecp,
   } else {
     sat = it->second;
   }
-
-  std::cout << "Checking Formula with activations " << activeOptions
-            << " is SAT: " << sat << endl;
 
   return sat;
 }
