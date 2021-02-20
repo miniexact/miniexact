@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <unordered_map>
@@ -26,6 +27,8 @@ struct ColoredItem {
 
 template<typename I, typename C>
 struct ColoredExactCoveringProblem {
+  using ITEM = I;
+  using COLOR = I;
   using PI = PrimaryItem<I>;
   using CI = ColoredItem<I, C>;
   using Item = std::variant<PI, CI>;
@@ -36,10 +39,80 @@ struct ColoredExactCoveringProblem {
   using N = ColoredNode<I, C>;
   using HNA = std::vector<HN>;
   using NA = std::vector<N>;
-
   using Size = typename Option::size_type;
+  struct Link {
+    Size top = 0;
+    Size up = 0;
+  };
+  using LinksMap = std::unordered_map<I, Link>;
 
-  void addOption(Option o);
+  ColoredExactCoveringProblem() = default;
+  ColoredExactCoveringProblem(HNA hna,
+                              NA na,
+                              LinksMap links,
+                              size_t secondaryItemCount)
+    : hna(hna)
+    , na(na)
+    , links(links)
+    , secondaryItemCount(secondaryItemCount) {}
+
+  static ColoredExactCoveringProblem<I, C> copyItems(
+    const ColoredExactCoveringProblem<I, C>& o);
+
+  template<typename O>
+  void addOption(O o) {
+    if(optionCount == 0) {
+      na_originalHeader = na;
+
+      na.push_back(N(0, 0, 0));
+      lastSpacer = na.size() - 1;
+
+      hna.push_back(HN(hna.size() - 1, hna.size() - secondaryItemCount));
+      hna[hna.size() - 2].RLINK = hna.size() - 1;
+      hna[hna.size() - secondaryItemCount - 1].LLINK = hna.size() - 1;
+
+      originalLinks = links;
+    }
+    optionCount++;
+
+    Size beginningOfOption = na.size();
+    Size lastDLINK = 0;
+
+    for(const auto& i : o) {
+      I item = 0;
+      C color = 0;
+
+      if(std::holds_alternative<PI>(i)) {
+        const auto& pi = std::get<PI>(i);
+        item = pi.item;
+      }
+      if(std::holds_alternative<CI>(i)) {
+        const auto& ci = std::get<CI>(i);
+        item = ci.item;
+        color = ci.color;
+      }
+
+      Link& l = links[item];
+
+      N& t = na[l.top];
+      ++t.LEN;
+      t.ULINK = na.size();
+
+      if(t.LEN == 1) {
+        l.up = l.top;
+      }
+
+      na[l.up].DLINK = na.size();
+      na.push_back(N(l.top, l.up, l.top, color));
+      l.up = na.size() - 1;
+    }
+    na[lastSpacer].DLINK = na.size() - 1;
+    na.push_back(N(-optionCount, beginningOfOption, 0, 0));
+    lastSpacer = na.size() - 1;
+
+    // Options are added sequentially to the node array. Finalize at the end
+    // links up everything correctly.
+  }
 
   Size getOptionCount() const;
   Size getPrimaryItemCount() const;
@@ -47,6 +120,20 @@ struct ColoredExactCoveringProblem {
 
   void addPrimaryItem(PI i);
   void addSecondaryItem(PI i);
+
+  template<typename OutStream>
+  void printArrays(OutStream& o) {
+    o << "HEADERS: " << std::endl;
+    size_t i = 0;
+    for(auto& hn : hna) {
+      o << std::setw(6) << i++ << " " << hn << std::endl;
+    }
+    i = 0;
+    o << "NODES: " << std::endl;
+    for(auto& n : na) {
+      o << std::setw(6) << i++ << " " << n << std::endl;
+    }
+  }
 
   /** @brief Calls the provided visitor with all options and their colorings in
    * this problem.
@@ -72,7 +159,7 @@ struct ColoredExactCoveringProblem {
   struct OptionIterator {
     using iterator_category = std::forward_iterator_tag;
     using difference_type = size_t;
-    using value_type = CI;
+    using value_type = Item;
     using reference = value_type;// or also value_type&
     using pointer = value_type*;
 
@@ -86,8 +173,11 @@ struct ColoredExactCoveringProblem {
       assert(n.TOP != 0);
       assert(n.COLOR >= 0);
       assert(n.TOP < m_p.hna.size());
-      ColoredItem<I, C> ci{ m_p.hna[n.TOP].NAME, n.COLOR };
-      return ci;
+
+      if(n.COLOR > 0)
+        return CI{ m_p.hna[n.TOP].NAME, n.COLOR };
+      else
+        return PI{ m_p.hna[n.TOP].NAME };
     }
 
     OptionIterator& operator++() {
@@ -187,14 +277,11 @@ struct ColoredExactCoveringProblem {
 
   HNA hna = { HN(0, 0, 0) };
   NA na = { N(0, 0, 0) };
+  NA na_originalHeader;
 
-  private:
-  struct Link {
-    Size top = 0;
-    Size up = 0;
-  };
-
-  std::unordered_map<I, Link> links;
+  protected:
+  LinksMap links;
+  LinksMap originalLinks;
   Size secondaryItemCount = 0;
   Size optionCount = 0;
   Size lastSpacer = 0;
@@ -204,12 +291,34 @@ template<typename I, typename C, typename IM, typename CM>
 class MappedColoredExactCoveringProblem
   : public ColoredExactCoveringProblem<I, C> {
   public:
+  using ITEMMAPPED = IM;
+  using COLORMAPPED = CM;
   using B = ColoredExactCoveringProblem<I, C>;
   using MappedPI = PrimaryItem<IM>;
   using MappedCI = ColoredItem<IM, CM>;
   using MappedItem = std::variant<MappedPI, MappedCI>;
   using MappedOption = std::vector<MappedItem>;
   using MappedPrimaryItems = std::vector<PrimaryItem<IM>>;
+  using ItemMapping =
+    boost::bimap<boost::bimaps::set_of<IM>, boost::bimaps::set_of<I>>;
+  using ColorMapping =
+    boost::bimap<boost::bimaps::set_of<CM>, boost::bimaps::set_of<C>>;
+  using ItemMappingValue = typename ItemMapping::value_type;
+  using ColorMappingValue = typename ColorMapping::value_type;
+
+  MappedColoredExactCoveringProblem() = default;
+  MappedColoredExactCoveringProblem(typename B::HNA hna,
+                                    typename B::NA na,
+                                    typename B::LinksMap links,
+                                    size_t secondaryItemCount,
+                                    ItemMapping itemMappings,
+                                    ColorMapping colorMappings)
+    : B(hna, na, links, secondaryItemCount)
+    , itemMappings(itemMappings)
+    , colorMappings(colorMappings) {}
+
+  static MappedColoredExactCoveringProblem<I, C, IM, CM> copyItemsMapped(
+    const MappedColoredExactCoveringProblem<I, C, IM, CM>& o);
 
   I getItemMapping(IM n);
   C getColorMapping(CM n);
@@ -312,12 +421,6 @@ class MappedColoredExactCoveringProblem
   }
 
   private:
-  using ItemMapping =
-    boost::bimap<boost::bimaps::set_of<IM>, boost::bimaps::set_of<I>>;
-  using ColorMapping =
-    boost::bimap<boost::bimaps::set_of<CM>, boost::bimaps::set_of<C>>;
-  using ItemMappingValue = typename ItemMapping::value_type;
-  using ColorMappingValue = typename ColorMapping::value_type;
   ItemMapping itemMappings;
   ColorMapping colorMappings;
 

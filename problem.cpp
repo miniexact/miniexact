@@ -9,55 +9,16 @@ using std::endl;
 namespace dancing_links {
 
 template<typename I, typename C>
-void
-ColoredExactCoveringProblem<I, C>::addOption(Option o) {
-  if(optionCount == 0) {
-    na.push_back(N(0, 0, 0));
-    lastSpacer = na.size() - 1;
-
-    hna.push_back(HN(hna.size() - 1, hna.size() - secondaryItemCount));
-    hna[hna.size() - 2].RLINK = hna.size() - 1;
-    hna[hna.size() - secondaryItemCount - 1].LLINK = hna.size() - 1;
-  }
-  optionCount++;
-
-  Size beginningOfOption = na.size();
-  Size lastDLINK = 0;
-
-  for(const auto& i : o) {
-    I item = 0;
-    C color = 0;
-
-    if(std::holds_alternative<PI>(i)) {
-      const auto& pi = std::get<PI>(i);
-      item = pi.item;
-    }
-    if(std::holds_alternative<CI>(i)) {
-      const auto& ci = std::get<CI>(i);
-      item = ci.item;
-      color = ci.color;
-    }
-
-    Link& l = links[item];
-
-    N& t = na[l.top];
-    ++t.LEN;
-    t.ULINK = na.size();
-
-    if(t.LEN == 1) {
-      l.up = l.top;
-    }
-
-    na[l.up].DLINK = na.size();
-    na.push_back(N(l.top, l.up, l.top, color));
-    l.up = na.size() - 1;
-  }
-  na[lastSpacer].DLINK = na.size() - 1;
-  na.push_back(N(-optionCount, beginningOfOption, 0, 0));
-  lastSpacer = na.size() - 1;
-
-  // Options are added sequentially to the node array. Finalize at the end
-  // links up everything correctly.
+ColoredExactCoveringProblem<I, C>
+ColoredExactCoveringProblem<I, C>::copyItems(
+  const ColoredExactCoveringProblem<I, C>& o) {
+  return ColoredExactCoveringProblem<I, C>{
+    HNA(o.hna.begin(), o.hna.begin() + o.hna.size() - 1),
+    o.optionCount == 0 ? NA(o.na.begin(), o.na.begin() + o.hna.size() - 1)
+                     : o.na_originalHeader,
+    o.originalLinks,
+    o.secondaryItemCount
+  };
 }
 
 template<typename I, typename C>
@@ -83,11 +44,11 @@ void
 ColoredExactCoveringProblem<I, C>::addPrimaryItem(PI i) {
   assert(secondaryItemCount == 0);
   assert(optionCount == 0);
-  hna.push_back(HN(i.item, hna.size() - 1, 0));
+  hna.emplace_back(i.item, hna.size() - 1, 0);
   hna[hna.size() - 2].RLINK = hna.size() - 1;
   hna[0].LLINK = hna.size() - 1;
 
-  na.push_back(N(0, 0, 0));
+  na.emplace_back(0, 0, 0);
   links[i.item].top = na.size() - 1;
 }
 
@@ -95,16 +56,32 @@ template<typename I, typename C>
 void
 ColoredExactCoveringProblem<I, C>::addSecondaryItem(PI i) {
   assert(optionCount == 0);
-  hna.push_back(HN(i.item, hna.size() - 1, hna.size() - secondaryItemCount));
+  hna.emplace_back(i.item, hna.size() - 1, hna.size() - secondaryItemCount);
   if(secondaryItemCount > 0) {
     hna[hna.size() - 2].RLINK = hna.size() - 1;
     hna[hna.size() - secondaryItemCount - 1].LLINK = hna.size() - 1;
   }
 
-  na.push_back(N(0, 0, 0));
+  na.emplace_back(0, 0, 0);
   links[i.item].top = na.size() - 1;
 
   ++secondaryItemCount;
+}
+
+template<typename I, typename C, typename IM, typename CM>
+MappedColoredExactCoveringProblem<I, C, IM, CM>
+MappedColoredExactCoveringProblem<I, C, IM, CM>::copyItemsMapped(
+  const MappedColoredExactCoveringProblem<I, C, IM, CM>& o) {
+  return MappedColoredExactCoveringProblem<I, C, IM, CM>{
+    typename B::HNA(o.hna.begin(), o.hna.begin() + o.hna.size() - 1),
+    o.optionCount == 0
+      ? typename B::NA(o.na.begin(), o.na.begin() + o.hna.size() - 1)
+      : o.na_originalHeader,
+    o.originalLinks,
+    o.secondaryItemCount,
+    o.itemMappings,
+    o.colorMappings
+  };
 }
 
 template<typename I, typename C, typename IM, typename CM>

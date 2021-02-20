@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 
+#include "delta-debug-problem.hpp"
 #include "parser.hpp"
 #include "wordpuzzle.hpp"
 
@@ -48,6 +49,10 @@ main(int argc, const char* argv[]) {
   bool exhaust = false;
   bool use_mrv = false;
   bool output_html = false;
+  bool output_arrays = false;
+
+  bool dd_keep_sat = false;
+  bool dd_make_sat = false;
 
   uint16_t wordpuzzle_width = 5;
   uint16_t wordpuzzle_height = 5;
@@ -63,6 +68,9 @@ main(int argc, const char* argv[]) {
     ("height", value<uint16_t>(&wordpuzzle_height), "specify height of the word puzzle")
     ("html", bool_switch(&output_html), "activate HTML output for word puzzle")
     ("mrv", bool_switch(&use_mrv), "use the MRV heuristic")
+    ("arrays", bool_switch(&output_arrays), "output the array encoding (2D linked lists)")
+    ("dd-keep-sat", bool_switch(&dd_keep_sat), "try to minify formula using delta debugging while staying SAT")
+    ("dd-make-sat", bool_switch(&dd_make_sat), "try to make formula SAT using delta debugging")
   ;
   // clang-format on
 
@@ -74,6 +82,9 @@ main(int argc, const char* argv[]) {
     conflicting_options(vm, "xcc", "height");
     conflicting_options(vm, "wordpuzzle", "xcc");
     conflicting_options(vm, "xcc", "html");
+    conflicting_options(vm, "wordpuzzle", "dd-keep-sat");
+    conflicting_options(vm, "wordpuzzle", "dd-make-sat");
+    conflicting_options(vm, "dd-make-sat", "dd-keep-sat");
 
     if(vm.count("help")) {
       cout << desc << endl;
@@ -93,6 +104,12 @@ main(int argc, const char* argv[]) {
       use_mrv = vm["mrv"].as<bool>();
     if(vm.count("html"))
       output_html = vm["html"].as<bool>();
+    if(vm.count("arrays"))
+      output_arrays = vm["arrays"].as<bool>();
+    if(vm.count("dd-make-sat"))
+      dd_make_sat = vm["dd-make-sat"].as<bool>();
+    if(vm.count("dd-keep-sat"))
+      dd_keep_sat = vm["dd-keep-sat"].as<bool>();
   } catch(std::exception& e) {
     cerr << "Could not parse parameters! Error: " << e.what() << endl;
     cerr << desc << endl;
@@ -114,34 +131,65 @@ main(int argc, const char* argv[]) {
         clog << "  Using MRV heuristic." << endl;
       }
 
-      AlgorithmC xcc(problem.hna, problem.na);
-      xcc.setUseMRV(use_mrv);
+      if(!dd_make_sat && !dd_keep_sat) {
+        AlgorithmC xcc(problem.hna, problem.na);
+        xcc.setUseMRV(use_mrv);
 
-      int solution_counter = 0;
-      bool solution_found = true;
-      while(solution_found) {
-        solution_found = xcc.compute_next_solution();
-
-        if(solution_found) {
-          clog << "  Solution " << ++solution_counter
-               << " found! Printing solution:" << endl;
-          const auto& s = xcc.current_selected_options();
-          clog << "  Selected Options: ";
-          std::for_each(s.begin(), s.end(), [](auto& s) { clog << s << " "; });
-          clog << endl;
-          clog << "  Stringified Selected Options: " << endl;
-          problem.printMappedSolution(xcc.current_selected_option_starts(),
-                                      std::cout);
-        } else if(solution_counter == 0) {
-          clog << "  No Solution Found!" << endl;
+        if(output_arrays) {
+          problem.printArrays(std::clog);
         }
 
-        if(!exhaust) {
-          solution_found = false;
+        int solution_counter = 0;
+        bool solution_found = true;
+        while(solution_found) {
+          solution_found = xcc.compute_next_solution();
+
+          if(solution_found) {
+            clog << "  Solution " << ++solution_counter
+                 << " found! Printing solution:" << endl;
+            const auto& s = xcc.current_selected_options();
+            clog << "  Selected Options: ";
+            std::for_each(
+              s.begin(), s.end(), [](auto& s) { clog << s << " "; });
+            clog << endl;
+            clog << "  Stringified Selected Options: " << endl;
+            problem.printMappedSolution(xcc.current_selected_option_starts(),
+                                        std::cout);
+          } else if(solution_counter == 0) {
+            clog << "  No Solution Found!" << endl;
+          }
+
+          if(!exhaust) {
+            solution_found = false;
+          }
         }
-      }
-      if(exhaust) {
-        clog << "Found " << solution_counter << " solutions." << endl;
+        if(exhaust) {
+          clog << "Found " << solution_counter << " solutions." << endl;
+        }
+      } else {
+        DeltaDebugProblem dd(problem);
+        if(dd_make_sat) {
+          clog << "Try to make SAT using delta debugger..." << endl;
+          auto resOpt = dd.make_sat_by_removing_options();
+          if(resOpt) {
+            clog << "Result: ";
+            resOpt->printMapped(std::cout);
+          } else {
+            clog << "No result!" << endl;
+          }
+        }
+
+        if(dd_keep_sat) {
+          clog << "Try to minify while staying SAT using delta debugger..."
+               << endl;
+          auto resOpt = dd.keep_sat_while_removing_options();
+          if(resOpt) {
+            clog << "Result: ";
+            resOpt->printMapped(std::cout);
+          } else {
+            clog << "No result!" << endl;
+          }
+        }
       }
     }
   } else if(vm.count("wordpuzzle")) {

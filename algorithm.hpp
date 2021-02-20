@@ -48,7 +48,8 @@ class AlgorithmC {
 
   StepResult step();
 
-  friend std::ostream& operator<<(std::ostream& o, const AlgorithmC& c);
+  friend std::ostream& operator<<(std::ostream& o,
+                                  const AlgorithmC<HNA, NA, HN, NodeT>& c);
 
   protected:
   AlgorithmState state = C1;
@@ -111,11 +112,15 @@ using HNodeVectorChar = HNodeVector<char>;
 using NodeVectorChar = NodeVector<char>;
 using HNodeVectorInt32 = HNodeVector<std::int32_t>;
 using NodeVectorInt32 = NodeVector<std::int32_t>;
+using HNodeVectorInt = std::vector<HeaderNode<int, int>>;
+using NodeVectorInt = std::vector<ColoredNode<int, int>>;
 
 using AlgorithmCInt32Char = AlgorithmC<HNodeVectorChar, NodeVectorChar>;
 using AlgorithmCInt32Int32 = AlgorithmC<HNodeVectorInt32, NodeVectorInt32>;
+using AlgorithmCInt32Int = AlgorithmC<HNodeVectorInt, NodeVectorInt>;
 
 extern template class AlgorithmC<HNodeVectorChar, NodeVectorChar>;
 extern template class AlgorithmC<HNodeVectorInt32, NodeVectorInt32>;
+extern template class AlgorithmC<HNodeVectorInt, NodeVectorInt>;
 
 }

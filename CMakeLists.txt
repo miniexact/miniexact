@@ -14,6 +14,7 @@ add_library(libdancinglinks STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/emscripten.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/util.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/delta-debug-problem.cpp
 )
 
 set_target_properties(libdancinglinks PROPERTIES OUTPUT_NAME "dancinglinks")

@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 
 #include "algorithm.hpp"
 
@@ -61,12 +63,17 @@ AlgorithmC<HNA, NA, HN, NodeT>::current_selected_option_starts() const {
 template<class HNA, class NA, class HN, class NodeT>
 bool
 AlgorithmC<HNA, NA, HN, NodeT>::compute_next_solution() {
-  StepResult res;
-  do {
-    res = step();
-  } while(res == CallAgain);
+  try {
+    StepResult res;
+    do {
+      res = step();
+    } while(res == CallAgain);
 
-  return res == ResultAvailable;
+    return res == ResultAvailable;
+  } catch(std::invalid_argument& e) {
+    last_result = NoResultAvailable;
+    return false;
+  }
 }
 
 template<class HNA, class NA, class HN, class NodeT>
@@ -118,6 +125,9 @@ AlgorithmC<HNA, NA, HN, NodeT>::stepExec() {
   L p;
   switch(state) {
     case C1:
+      if(hn.size() == n.size())
+        return NoResultAvailable;
+
       N = n.size();
       Z = last_spacer_node();
       l = 0;
@@ -385,10 +395,8 @@ AlgorithmC<HNA, NA, HN, NodeT>::COLOR(AlgorithmC::L i) {
   assert(i < n.size());
   auto& c = n[i].COLOR;
   if(c == NodeT::color_undefined) {
-    cerr << "ENCODING ERROR! Visited undefined color. This means, some items "
-            "never occur in options and the problem statement is invalid!"
-         << endl;
-    exit(EXIT_FAILURE);
+    throw std::invalid_argument(
+      "Undefined Color! This means an item never occurs in the options!");
   }
   return c;
 }

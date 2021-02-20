@@ -1,9 +1,11 @@
 #include "algorithm.hpp"
+#include "delta-debug-problem.hpp"
 #include "parser.hpp"
 #include "problem.hpp"
 #include "wordpuzzle.hpp"
 #include <algorithm>
 #include <iterator>
+#include <variant>
 
 #define DOCTEST_CONFIG_NO_POSIX_SIGNALS
 #define DOCTEST_CONFIG_IMPLEMENT
@@ -125,7 +127,13 @@ TEST_CASE("Parse example problem from page 87") {
   for(auto o : problem) {
     std::vector<int> items;
     for(auto i : o) {
-      items.push_back(i.item);
+      if(auto pi = std::get_if<PrimaryItem<int>>(&i)) {
+        items.push_back(pi->item);
+      } else if(auto ci = std::get_if<ColoredItem<int, int>>(&i)) {
+        items.push_back(ci->item);
+      } else {
+        REQUIRE(false);
+      }
     }
     optionsVec.push_back(items);
   }
@@ -136,5 +144,23 @@ TEST_CASE("Parse example problem from page 87") {
   CHECK(optionsVec[0][3] == 5);
   CHECK(optionsVec[1][0] == 1);
   CHECK(optionsVec[1][1] == 3);
+}
+
+TEST_CASE("Delta Debug a Problem to Minify Required Options for SAT") {
+  std::string_view problemStr = "<a b c> [ d ] a; b; c; a b; a b d;";
+  auto problemOpt = parse_string_mapped_int32(problemStr);
+
+  REQUIRE(problemOpt);
+
+  auto& problem = *problemOpt;
+
+  DeltaDebugProblem dd(problem);
+
+  auto reducedOpt = dd.keep_sat_while_removing_options();
+
+  auto &reduced = *reducedOpt;
+
+  std::cout << "Minified: " << std::endl;
+  reduced.printMapped(std::cout);
 }
 }
