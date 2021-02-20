@@ -210,7 +210,7 @@ template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::L
 AlgorithmC<HNA, NA, HN, NodeT>::last_spacer_node() {
   L last_spacer = 0;
-  for(L i = 0; i < n.size(); ++i) {
+  for(L i = 0; i < static_cast<decltype(i)>(n.size()); ++i) {
     if(TOP(i) < 0) {
       last_spacer = i;
     }
@@ -336,63 +336,63 @@ AlgorithmC<HNA, NA, HN, NodeT>::unpurify(AlgorithmC::L p) {
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::L&
 AlgorithmC<HNA, NA, HN, NodeT>::LLINK(AlgorithmC::L i) {
-  assert(i < hn.size());
+  assert(i < static_cast<decltype(i)>(hn.size()));
   return hn[i].LLINK;
 }
 
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::L&
 AlgorithmC<HNA, NA, HN, NodeT>::RLINK(AlgorithmC::L i) {
-  assert(i < hn.size());
+  assert(i < static_cast<decltype(i)>(hn.size()));
   return hn[i].RLINK;
 }
 
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::NameT&
 AlgorithmC<HNA, NA, HN, NodeT>::NAME(AlgorithmC::L i) {
-  assert(i < hn.size());
+  assert(i < static_cast<decltype(i)>(hn.size()));
   return hn[i].NAME;
 }
 
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::L&
 AlgorithmC<HNA, NA, HN, NodeT>::ULINK(AlgorithmC::L i) {
-  assert(i < n.size());
+  assert(i < static_cast<decltype(i)>(n.size()));
   return n[i].ULINK;
 }
 
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::L&
 AlgorithmC<HNA, NA, HN, NodeT>::DLINK(AlgorithmC::L i) {
-  assert(i < n.size());
+  assert(i < static_cast<decltype(i)>(n.size()));
   return n[i].DLINK;
 }
 
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::L&
 AlgorithmC<HNA, NA, HN, NodeT>::TOP(AlgorithmC::L i) {
-  assert(i < n.size());
+  assert(i < static_cast<decltype(i)>(n.size()));
   return n[i].TOP;
 }
 
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::L
 AlgorithmC<HNA, NA, HN, NodeT>::TOP(AlgorithmC::L i) const {
-  assert(i < n.size());
+  assert(i < static_cast<decltype(i)>(n.size()));
   return n[i].TOP;
 }
 
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::L&
 AlgorithmC<HNA, NA, HN, NodeT>::LEN(AlgorithmC::L i) {
-  assert(i < n.size());
+  assert(i < static_cast<decltype(i)>(n.size()));
   return n[i].LEN;
 }
 
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::C&
 AlgorithmC<HNA, NA, HN, NodeT>::COLOR(AlgorithmC::L i) {
-  assert(i < n.size());
+  assert(i < static_cast<decltype(i)>(n.size()));
   auto& c = n[i].COLOR;
   if(c == NodeT::color_undefined) {
     throw std::invalid_argument(
@@ -404,7 +404,7 @@ AlgorithmC<HNA, NA, HN, NodeT>::COLOR(AlgorithmC::L i) {
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::NodePointerArray::value_type&
 AlgorithmC<HNA, NA, HN, NodeT>::x(AlgorithmC::L i) {
-  if(i >= xarr.size()) {
+  if(i >= static_cast<decltype(i)>(xarr.size())) {
     xarr.resize(i + 1);
   }
   return xarr[i];
@@ -413,7 +413,7 @@ AlgorithmC<HNA, NA, HN, NodeT>::x(AlgorithmC::L i) {
 template<class HNA, class NA, class HN, class NodeT>
 typename AlgorithmC<HNA, NA, HN, NodeT>::NodePointerArray::value_type
 AlgorithmC<HNA, NA, HN, NodeT>::x(AlgorithmC::L i) const {
-  assert(i < xarr.size());
+  assert(i < static_cast<decltype(i)>(xarr.size()));
   return xarr[i];
 }
 
@@ -436,7 +436,6 @@ template<class HNA, class NA, class HN, class NodeT>
 std::ostream&
 operator<<(std::ostream& o, const AlgorithmC<HNA, NA, HN, NodeT>& c) {
   using L = typename NodeT::link_type;
-  using C = typename NodeT::color_type;
 
   if(c.hn.size() < 1 || c.n.size() < 1)
     return o << "{[],[]}";

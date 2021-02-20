@@ -51,11 +51,10 @@ class WordPuzzle {
     explicit Painter(const WS& w,
                      size_t i,
                      size_t uniqueWord,
-                     const Alphabet& a,
                      size_t width,
                      size_t height);
 
-    void paint(P& p, Alphabet& alphabet, Orientation o);
+    void paint(P& p, Orientation o);
 
     void paintRect(P& p, size_t x, size_t y, Orientation o);
 
@@ -63,18 +62,18 @@ class WordPuzzle {
     void paintRectWrapper(P& p, size_t x, size_t y, Functor f) {
       Option option;
       option.push_back(PI{ getItemFromWord(wPI) });
-      (this->*f)(option, p, x, y);
+      (this->*f)(option, x, y);
       p.addMappedOption(option);
     }
 
-    void paintRectLeftToRight(Option& o, P& p, size_t x, size_t y);
-    void paintRectRightToLeft(Option& o, P& p, size_t x, size_t y);
-    void paintRectTopToBottom(Option& o, P& p, size_t x, size_t y);
-    void paintRectBottomToTop(Option& o, P& p, size_t x, size_t y);
-    void paintRectUpperLeftToLowerRight(Option& o, P& p, size_t x, size_t y);
-    void paintRectLowerRightToUpperLeft(Option& o, P& p, size_t x, size_t y);
-    void paintRectLowerLeftToUpperRight(Option& o, P& p, size_t x, size_t y);
-    void paintRectUpperRightToLowerLeft(Option& o, P& p, size_t x, size_t y);
+    void paintRectLeftToRight(Option& o, size_t x, size_t y);
+    void paintRectRightToLeft(Option& o, size_t x, size_t y);
+    void paintRectTopToBottom(Option& o, size_t x, size_t y);
+    void paintRectBottomToTop(Option& o, size_t x, size_t y);
+    void paintRectUpperLeftToLowerRight(Option& o, size_t x, size_t y);
+    void paintRectLowerRightToUpperLeft(Option& o, size_t x, size_t y);
+    void paintRectLowerLeftToUpperRight(Option& o, size_t x, size_t y);
+    void paintRectUpperRightToLowerLeft(Option& o, size_t x, size_t y);
 
     const WS& w;
     const size_t wPI;

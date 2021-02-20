@@ -15,9 +15,9 @@ struct HeaderNode {
     , RLINK(r) {}
 
   HeaderNode(N n, T l, T r)
-    : LLINK(l)
-    , RLINK(r)
-    , NAME(n) {}
+    : NAME(n)
+    , LLINK(l)
+    , RLINK(r) {}
 
   N NAME = 0;
   T LLINK;

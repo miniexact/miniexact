@@ -76,7 +76,6 @@ struct ColoredExactCoveringProblem {
     optionCount++;
 
     Size beginningOfOption = na.size();
-    Size lastDLINK = 0;
 
     for(const auto& i : o) {
       I item = 0;
@@ -172,7 +171,7 @@ struct ColoredExactCoveringProblem {
       auto& n = m_p.na[m_i];
       assert(n.TOP != 0);
       assert(n.COLOR >= 0);
-      assert(n.TOP < m_p.hna.size());
+      assert(n.TOP < static_cast<decltype(n.TOP)>(m_p.hna.size()));
 
       if(n.COLOR > 0)
         return CI{ m_p.hna[n.TOP].NAME, n.COLOR };

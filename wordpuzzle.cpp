@@ -261,9 +261,8 @@ WordPuzzle::regen() {
   }
 
   for(size_t i = 0; i < words.size(); ++i) {
-    Painter painter(
-      words[i], i, uniqueWords[words[i]], alphabet, width, height);
-    painter.paint(*p, alphabet, orientation);
+    Painter painter(words[i], i, uniqueWords[words[i]], width, height);
+    painter.paint(*p, orientation);
   }
 
   for(size_t y = 0; y < height; ++y) {
@@ -287,22 +286,19 @@ WordPuzzle::regen() {
 WordPuzzle::Painter::Painter(const WordPuzzle::WS& w,
                              size_t i,
                              size_t uniqueWord,
-                             const WordPuzzle::Alphabet& a,
                              size_t width,
                              size_t height)
   : w(w)
   , wPI(i)
-  , uniqueWord(uniqueWord)
   , width(width)
   , height(height)
-  , side(w.length()) {
+  , side(w.length())
+  , uniqueWord(uniqueWord) {
   assert(uniqueWord != 0);
 }
 
 void
-WordPuzzle::Painter::paint(WordPuzzle::P& p,
-                           WordPuzzle::Alphabet& alphabet,
-                           WordPuzzle::Orientation o) {
+WordPuzzle::Painter::paint(WordPuzzle::P& p, WordPuzzle::Orientation o) {
   for(size_t y = 0; y < height; ++y) {
     for(size_t x = 0; x < width; ++x) {
       paintRect(p, x, y, o);
@@ -339,7 +335,6 @@ WordPuzzle::Painter::paintRect(WordPuzzle::P& p,
 
 void
 WordPuzzle::Painter::paintRectLeftToRight(WordPuzzle::Option& o,
-                                          WordPuzzle::P& p,
                                           size_t x,
                                           size_t y) {
   assert(x + side <= width);
@@ -351,7 +346,6 @@ WordPuzzle::Painter::paintRectLeftToRight(WordPuzzle::Option& o,
 
 void
 WordPuzzle::Painter::paintRectRightToLeft(WordPuzzle::Option& o,
-                                          WordPuzzle::P& p,
                                           size_t x,
                                           size_t y) {
   assert(x + side <= width);
@@ -363,7 +357,6 @@ WordPuzzle::Painter::paintRectRightToLeft(WordPuzzle::Option& o,
 
 void
 WordPuzzle::Painter::paintRectTopToBottom(WordPuzzle::Option& o,
-                                          WordPuzzle::P& p,
                                           size_t x,
                                           size_t y) {
   assert(y + side <= height);
@@ -375,7 +368,6 @@ WordPuzzle::Painter::paintRectTopToBottom(WordPuzzle::Option& o,
 
 void
 WordPuzzle::Painter::paintRectBottomToTop(WordPuzzle::Option& o,
-                                          WordPuzzle::P& p,
                                           size_t x,
                                           size_t y) {
   assert(y + side <= height);
@@ -387,7 +379,6 @@ WordPuzzle::Painter::paintRectBottomToTop(WordPuzzle::Option& o,
 
 void
 WordPuzzle::Painter::paintRectUpperLeftToLowerRight(WordPuzzle::Option& o,
-                                                    WordPuzzle::P& p,
                                                     size_t x,
                                                     size_t y) {
   assert(x + side <= width);
@@ -400,7 +391,6 @@ WordPuzzle::Painter::paintRectUpperLeftToLowerRight(WordPuzzle::Option& o,
 
 void
 WordPuzzle::Painter::paintRectLowerRightToUpperLeft(WordPuzzle::Option& o,
-                                                    WordPuzzle::P& p,
                                                     size_t x,
                                                     size_t y) {
   assert(x + side <= width);
@@ -414,7 +404,6 @@ WordPuzzle::Painter::paintRectLowerRightToUpperLeft(WordPuzzle::Option& o,
 
 void
 WordPuzzle::Painter::paintRectLowerLeftToUpperRight(WordPuzzle::Option& o,
-                                                    WordPuzzle::P& p,
                                                     size_t x,
                                                     size_t y) {
   assert(x + side <= width);
@@ -427,7 +416,6 @@ WordPuzzle::Painter::paintRectLowerLeftToUpperRight(WordPuzzle::Option& o,
 
 void
 WordPuzzle::Painter::paintRectUpperRightToLowerLeft(WordPuzzle::Option& o,
-                                                    WordPuzzle::P& p,
                                                     size_t x,
                                                     size_t y) {
   assert(x + side <= width);
