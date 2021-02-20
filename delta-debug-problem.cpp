@@ -1,6 +1,7 @@
 #include "delta-debug-problem.hpp"
 #include "algorithm.hpp"
 #include <algorithm>
+#include <sstream>
 
 #include <boost/log/trivial.hpp>
 
@@ -8,6 +9,8 @@ using std::cerr;
 using std::clog;
 using std::cout;
 using std::endl;
+
+extern bool log_verbose;
 
 namespace std {
 std::ostream&
@@ -171,8 +174,12 @@ DeltaDebugProblem<P>::satisfiable(const CECP& cecp,
     typename CECP::HNA hna(cecp.hna);
     typename CECP::NA na(cecp.na);
 
-    // auto p = getProblemFromCECP(m_p, cecp);
-    // p.printMapped(std::cout);
+    if(log_verbose) {
+      auto p = getProblemFromCECP(m_p, cecp);
+      std::stringstream sstream;
+      p.printMapped(sstream, true);
+      BOOST_LOG_TRIVIAL(trace) << "Checking problem: " << sstream.str();
+    }
 
     AlgorithmC algo(hna, na);
     sat = algo.compute_next_solution();

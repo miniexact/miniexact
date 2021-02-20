@@ -373,12 +373,14 @@ class MappedColoredExactCoveringProblem
   }
 
   template<class OutStream>
-  void printMapped(OutStream& o) {
+  void printMapped(OutStream& o, bool compact = false) {
+    auto sep = compact ? " " : "\n";
+
     o << "< ";
     for(size_t i = 1; i < B::getPrimaryItemCount() + 1; ++i) {
       o << WStringToUtf8Str(getMappedItem(B::hna[i].NAME)) << " ";
     }
-    o << ">" << std::endl;
+    o << ">" << sep;
 
     o << "[ ";
     for(size_t i = 1 + B::getPrimaryItemCount();
@@ -386,7 +388,7 @@ class MappedColoredExactCoveringProblem
         ++i) {
       o << WStringToUtf8Str(getMappedItem(B::hna[i].NAME)) << " ";
     }
-    o << "]" << std::endl;
+    o << "]" << sep;
 
     for(size_t i = B::hna.size(); i < B::na.size(); ++i) {
       const auto& n = B::na[i];
@@ -397,9 +399,9 @@ class MappedColoredExactCoveringProblem
         }
         o << " ";
       } else if(i + 1 < B::na.size()) {
-        o << ";" << std::endl;
+        o << ";" << sep;
       } else {
-        o << "." << std::endl;
+        o << "." << sep;
       }
     }
   }

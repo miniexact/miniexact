@@ -22,6 +22,9 @@ using std::clog;
 using std::cout;
 using std::endl;
 
+bool log_debug = false;
+bool log_verbose = false;
+
 void
 conflicting_options(const boost::program_options::variables_map& vm,
                     const char* opt1,
@@ -43,8 +46,6 @@ main(int argc, const char* argv[]) {
   bool use_mrv = false;
   bool output_html = false;
   bool output_arrays = false;
-  bool debug = false;
-  bool verbose = false;
 
   bool dd_keep_sat = false;
   bool dd_make_sat = false;
@@ -68,8 +69,8 @@ main(int argc, const char* argv[]) {
     ("arrays", bool_switch(&output_arrays), "output the array encoding (2D linked lists)")
     ("dd-keep-sat", bool_switch(&dd_keep_sat), "try to minify formula using delta debugging while staying SAT")
     ("dd-make-sat", bool_switch(&dd_make_sat), "try to make formula SAT using delta debugging")
-    ("debug,d", bool_switch(&debug), "activate debug output")
-    ("verbose,v", bool_switch(&verbose), "activate verbose output")
+    ("debug,d", bool_switch(&log_debug), "activate debug output")
+    ("verbose,v", bool_switch(&log_verbose), "activate verbose output")
     ("test", bool_switch(&run_tests), "run unit-tests using doctest - parameters need to be prefixed with dt-")
   ;
   // clang-format on
@@ -113,11 +114,11 @@ main(int argc, const char* argv[]) {
     if(vm.count("dd-keep-sat"))
       dd_keep_sat = vm["dd-keep-sat"].as<bool>();
     if(vm.count("debug"))
-      debug = vm["debug"].as<bool>();
+      log_debug = vm["debug"].as<bool>();
     if(vm.count("verbose"))
-      verbose = vm["verbose"].as<bool>();
+      log_verbose = vm["verbose"].as<bool>();
     if(vm.count("test"))
-      run_tests = vm["verbose"].as<bool>();
+      run_tests = vm["test"].as<bool>();
   } catch(std::exception& e) {
     cerr << "Could not parse parameters! Error: " << e.what() << endl;
     cerr << desc << endl;
@@ -127,11 +128,11 @@ main(int argc, const char* argv[]) {
   boost::log::core::get()->set_filter(boost::log::trivial::severity >=
                                       boost::log::trivial::info);
 
-  if(debug)
+  if(log_debug)
     boost::log::core::get()->set_filter(boost::log::trivial::severity >=
                                         boost::log::trivial::debug);
 
-  if(verbose)
+  if(log_verbose)
     boost::log::core::get()->set_filter(boost::log::trivial::severity >=
                                         boost::log::trivial::trace);
 
