@@ -67,9 +67,11 @@ struct ColoredExactCoveringProblem {
       na.push_back(N(0, 0, 0));
       lastSpacer = na.size() - 1;
 
-      hna.push_back(HN(hna.size() - 1, hna.size() - secondaryItemCount));
-      hna[hna.size() - 2].RLINK = hna.size() - 1;
-      hna[hna.size() - secondaryItemCount - 1].LLINK = hna.size() - 1;
+      if(secondaryItemCount > 0) {
+        hna.push_back(HN(hna.size() - 1, hna.size() - secondaryItemCount));
+        hna[hna.size() - 2].RLINK = hna.size() - 1;
+        hna[hna.size() - secondaryItemCount - 1].LLINK = hna.size() - 1;
+      }
 
       originalLinks = links;
     }

@@ -109,8 +109,8 @@ class MappedColoredExactCoveringProblemParser
                            char_('>') - char_(' ') - char_('.'))];
 
     problemWrapper %= problem >> -(char_('.') | char_(';'));
-    problem %= ('<' > primaryItemMapList(_val) > '>' >>
-                -('[' > secondaryItemMapList(_val) > ']') > (option % ";"));
+    problem %= ('<' > primaryItemMapList(_val) > '>') >
+               -('[' > secondaryItemMapList(_val) > ']') > (option % ";");
     option %= +item;
     item %= mappedCI | mappedPI;
     mappedCI %= im >> ':' > cm;
@@ -119,7 +119,7 @@ class MappedColoredExactCoveringProblemParser
     primaryItemMapList %=
       +(mappedPI[boost::phoenix::bind(&XX::addMappedPrimaryItem, _r1, _1)]);
     secondaryItemMapList %=
-      +(mappedPI[boost::phoenix::bind(&XX::addMappedSecondaryItem, _r1, _1)]);
+      *(mappedPI[boost::phoenix::bind(&XX::addMappedSecondaryItem, _r1, _1)]);
 
     // Only if mapping is to string, identifier is used. If some other type is
     // used, the parser should use that type.

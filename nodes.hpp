@@ -24,7 +24,8 @@ struct HeaderNode {
   T RLINK;
 
   friend std::ostream& operator<<(std::ostream& o, HeaderNode& n) {
-    return o << "[" << n.NAME << "," << n.LLINK << "," << n.RLINK << "]";
+    return o << "{\"NAME:\"\"" << n.NAME << "\",\"LLINK\":" << n.LLINK
+             << ",\"RLINK\":" << n.RLINK << "}";
   }
 };
 
@@ -54,8 +55,8 @@ struct ColoredNode {
   C COLOR;
 
   friend std::ostream& operator<<(std::ostream& o, ColoredNode& n) {
-    return o << "[" << n.TOP << "," << n.ULINK << "," << n.DLINK << ","
-             << n.COLOR << "]";
+    return o << "{\"TOP\":" << n.TOP << ",\"ULINK\":" << n.ULINK
+             << ",\"DLINK\":" << n.DLINK << ",\"COLOR\":" << n.COLOR << "}";
   }
 };
 

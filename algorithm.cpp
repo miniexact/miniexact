@@ -3,6 +3,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <boost/log/trivial.hpp>
+
 #include "algorithm.hpp"
 
 using std::cerr;
@@ -127,6 +129,22 @@ AlgorithmC<HNA, NA, HN, NodeT>::stepExec() {
     case C1:
       if(hn.size() == n.size())
         return NoResultAvailable;
+
+      // Check if there could be a solution or if there are primary items with
+      // no options. This is an early exit without asking the rest of the
+      // solver.
+      {
+        size_t i = 0;
+        do {
+          i = RLINK(i);
+          if(n[i].DLINK == 0 && n[i].ULINK == 0) {
+            BOOST_LOG_TRIVIAL(debug)
+              << "Some items never occur in the options! "
+                 "Early abort Algorithm C.";
+            return NoResultAvailable;
+          }
+        } while(RLINK(i) != 0);
+      }
 
       N = n.size();
       Z = last_spacer_node();
@@ -467,5 +485,4 @@ using NodeVectorInt32 = NodeVector<std::int32_t>;
 
 template class AlgorithmC<HNodeVectorChar, NodeVectorChar>;
 template class AlgorithmC<HNodeVectorInt32, NodeVectorInt32>;
-
 }
