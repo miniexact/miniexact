@@ -1,8 +1,12 @@
 #include "delta-debug-problem.hpp"
 #include "algorithm.hpp"
 #include <algorithm>
+#include <limits>
+#include <mutex>
 #include <sstream>
+#include <thread>
 
+#include <boost/dynamic_bitset.hpp>
 #include <boost/log/trivial.hpp>
 
 using std::cerr;
@@ -25,8 +29,9 @@ operator<<(std::ostream& o, const std::vector<char> v) {
 namespace dancing_links {
 
 template<class P>
-DeltaDebugProblem<P>::DeltaDebugProblem(P& p, AlgoOptionsApplier o)
+DeltaDebugProblem<P>::DeltaDebugProblem(P& p, bool deep, AlgoOptionsApplier o)
   : m_p(p)
+  , m_deep(deep)
   , m_o(o) {}
 
 template<class P>
@@ -42,15 +47,20 @@ BooleanTrueOfLengthN(size_t n) {
 template<class P>
 std::optional<P>
 DeltaDebugProblem<P>::keep_sat_while_removing_options() {
-  std::optional<CECP> cecp = ddmin(
-    [this](const CECP& problem, std::vector<char> activeOptions) -> bool {
-      return !satisfiable(problem, activeOptions);
-    },
-    m_p,
-    BooleanTrueOfLengthN(m_p.getOptionCount()),
-    2);
+  auto test = [this](const CECP& problem,
+                     std::vector<char> activeOptions) -> bool {
+    return !satisfiable(problem, activeOptions);
+  };
 
-  if(cecp) {
+  std::optional<CECP> cecp = [this, &test]() {
+    if(m_deep) {
+      return deep_explore(test);
+    } else {
+      return ddmin(test, m_p, BooleanTrueOfLengthN(m_p.getOptionCount()), 2);
+    }
+  }();
+
+  if(cecp && cecp->getOptionCount() > 0) {
     return getProblemFromCECP(m_p, cecp.value());
   }
   return std::nullopt;
@@ -59,15 +69,20 @@ DeltaDebugProblem<P>::keep_sat_while_removing_options() {
 template<class P>
 std::optional<P>
 DeltaDebugProblem<P>::make_sat_by_removing_options() {
-  std::optional<CECP> cecp = ddmin(
-    [this](const CECP& problem, std::vector<char> activeOptions) -> bool {
-      return satisfiable(problem, activeOptions);
-    },
-    m_p,
-    BooleanTrueOfLengthN(m_p.getOptionCount()),
-    2);
+  auto test = [this](const CECP& problem,
+                     std::vector<char> activeOptions) -> bool {
+    return satisfiable(problem, activeOptions);
+  };
 
-  if(cecp) {
+  std::optional<CECP> cecp = [this, &test]() {
+    if(m_deep) {
+      return deep_explore(test);
+    } else {
+      return ddmin(test, m_p, BooleanTrueOfLengthN(m_p.getOptionCount()), 2);
+    }
+  }();
+
+  if(cecp && cecp->getOptionCount() > 0) {
     return getProblemFromCECP(m_p, cecp.value());
   }
   return std::nullopt;
@@ -142,6 +157,105 @@ DeltaDebugProblem<P>::ddmin(TestPredicate test,
   return problem;
 }
 
+static bool
+increment_bitset(boost::dynamic_bitset<>& bitset, size_t size) {
+  size_t i;
+  for(i = 0; i < size; ++i) {
+    if(!bitset.test(i)) {
+      bitset.set(i);
+      break;
+    }
+    bitset.reset(i);
+  }
+  return i < size;
+}
+
+template<class P>
+std::optional<typename DeltaDebugProblem<P>::CECP>
+DeltaDebugProblem<P>::deep_explore(TestPredicate test) {
+  struct GenerateActiveOptionsArr {
+    GenerateActiveOptionsArr(size_t numberOfOptions)
+      : m_size(numberOfOptions)
+      , m_bitset(numberOfOptions) {}
+    bool generate(std::vector<char>& targetActiveOptionsArr) {
+      std::unique_lock lock(m_mtx);
+      assert(targetActiveOptionsArr.size() == m_size);
+
+      if(m_done) {
+        return false;
+      }
+
+      if(!increment_bitset(m_bitset, m_size)) {
+        m_done = true;
+      }
+
+      for(size_t i = 0; i < m_size; ++i) {
+        targetActiveOptionsArr[i] = m_bitset[i];
+      }
+
+      return true;
+    }
+
+    std::vector<char> initArr() { return std::vector<char>(m_size); }
+
+    void insertResultWithNegativeTest(CECP& res,
+                                      std::vector<char>& activeOptions) {
+      size_t size =
+        std::count(activeOptions.begin(), activeOptions.end(), true);
+
+      std::unique_lock lock(m_currentShortestMtx);
+
+      if(size < m_currentShortestSize) {
+        m_currentShortest = res;
+        m_currentShortestSize = size;
+        m_currentShortestActiveOptions = activeOptions;
+      }
+    }
+
+    CECP& shortest() { return m_currentShortest; }
+    std::vector<char>& shortestActiveOptions() {
+      return m_currentShortestActiveOptions;
+    }
+
+    private:
+    size_t m_size;
+    boost::dynamic_bitset<> m_bitset;
+    std::mutex m_mtx;
+    bool m_done = false;
+
+    std::mutex m_currentShortestMtx;
+    CECP m_currentShortest;
+    size_t m_currentShortestSize = std::numeric_limits<size_t>::max();
+    std::vector<char> m_currentShortestActiveOptions;
+  };
+
+  GenerateActiveOptionsArr generator(m_p.getOptionCount());
+
+  auto workerFunc = [&generator, &test, this]() {
+    std::vector<char> activeOptions = generator.initArr();
+    while(generator.generate(activeOptions)) {
+      CECP reduced =
+        MakeProblemFromProblemWithActiveOptions<P, CECP>(m_p, activeOptions);
+      bool testResult = !test(reduced, activeOptions);
+      BOOST_LOG_TRIVIAL(trace)
+        << "Result of options: " << activeOptions << " is " << testResult;
+      if(!testResult) {
+        generator.insertResultWithNegativeTest(reduced, activeOptions);
+      }
+    }
+  };
+
+  std::vector<std::thread> threads;
+  threads.reserve(std::thread::hardware_concurrency());
+  for(size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
+    threads.emplace_back(workerFunc);
+  }
+
+  std::for_each(threads.begin(), threads.end(), [](auto& t) { t.join(); });
+
+  return generator.shortest();
+}
+
 template<class P>
 P
 DeltaDebugProblem<P>::getProblemFromCECP(const P& p, const CECP& cecp) {
@@ -167,7 +281,14 @@ template<class P>
 bool
 DeltaDebugProblem<P>::satisfiable(const CECP& cecp,
                                   const std::vector<char>& activeOptions) {
-  auto it = m_triedOptionSets.find(activeOptions);
+  if(cecp.getOptionCount() == 0)
+    return false;
+
+  typename TriedOptionSetsMap::iterator it;
+  {
+    std::unique_lock lock(m_triedOptionSetsMtx);
+    it = m_triedOptionSets.find(activeOptions);
+  }
 
   bool sat;
 
@@ -189,7 +310,11 @@ DeltaDebugProblem<P>::satisfiable(const CECP& cecp,
     }
 
     sat = algo.compute_next_solution();
-    m_triedOptionSets[activeOptions] = sat;
+
+    {
+      std::unique_lock lock(m_triedOptionSetsMtx);
+      m_triedOptionSets[activeOptions] = sat;
+    }
   } else {
     sat = it->second;
   }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <mutex>
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -18,7 +19,7 @@ class DeltaDebugProblem {
   using Algo = AlgorithmC<decltype(CECP::hna), decltype(CECP::na)>;
   using AlgoOptionsApplier = std::function<void(Algo& a)>;
 
-  DeltaDebugProblem(P& p, AlgoOptionsApplier o = nullptr);
+  DeltaDebugProblem(P& p, bool deep = false, AlgoOptionsApplier o = nullptr);
   ~DeltaDebugProblem();
 
   std::optional<P> keep_sat_while_removing_options();
@@ -33,9 +34,12 @@ class DeltaDebugProblem {
                             std::vector<char> activeOptions,
                             size_t n);
 
+  std::optional<CECP> deep_explore(TestPredicate test);
+
   static P getProblemFromCECP(const P& problem, const CECP& cecp);
 
   P& m_p;
+  bool m_deep;
   AlgoOptionsApplier m_o;
 
   bool satisfiable(const CECP& p, const std::vector<char>& activeOptions);
@@ -48,8 +52,10 @@ class DeltaDebugProblem {
     }
   };
 
-  std::unordered_map<std::vector<char>, bool, container_hash<std::vector<char>>>
-    m_triedOptionSets;
+  using TriedOptionSetsMap = std::
+    unordered_map<std::vector<char>, bool, container_hash<std::vector<char>>>;
+  TriedOptionSetsMap m_triedOptionSets;
+  std::mutex m_triedOptionSetsMtx;
 };
 
 extern template class DeltaDebugProblem<

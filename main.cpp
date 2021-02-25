@@ -49,6 +49,7 @@ main(int argc, const char* argv[]) {
 
   bool dd_keep_sat = false;
   bool dd_make_sat = false;
+  bool deep_explore = false;
 
   bool run_tests = false;
 
@@ -69,6 +70,7 @@ main(int argc, const char* argv[]) {
     ("arrays", bool_switch(&output_arrays), "output the array encoding (2D linked lists)")
     ("dd-keep-sat", bool_switch(&dd_keep_sat), "try to minify formula using delta debugging while staying SAT")
     ("dd-make-sat", bool_switch(&dd_make_sat), "try to make formula SAT using delta debugging")
+    ("deep-explore", bool_switch(&deep_explore), "make delta debugger not use ddmin but instead explore all possibilities to minimize the problem and return the smallest one")
     ("debug,d", bool_switch(&log_debug), "activate debug output")
     ("verbose,v", bool_switch(&log_verbose), "activate verbose output")
     ("test", bool_switch(&run_tests), "run unit-tests using doctest - parameters need to be prefixed with dt-")
@@ -113,6 +115,8 @@ main(int argc, const char* argv[]) {
       dd_make_sat = vm["dd-make-sat"].as<bool>();
     if(vm.count("dd-keep-sat"))
       dd_keep_sat = vm["dd-keep-sat"].as<bool>();
+    if(vm.count("deep-explore"))
+      deep_explore = vm["deep-explore"].as<bool>();
     if(vm.count("debug"))
       log_debug = vm["debug"].as<bool>();
     if(vm.count("verbose"))
@@ -199,7 +203,7 @@ main(int argc, const char* argv[]) {
         }
       } else {
         auto algoOptionApplier = [use_mrv](auto& a) { a.setUseMRV(use_mrv); };
-        DeltaDebugProblem dd(problem, algoOptionApplier);
+        DeltaDebugProblem dd(problem, deep_explore, algoOptionApplier);
         if(dd_make_sat) {
           clog << "Try to make SAT using delta debugger..." << endl;
           auto resOpt = dd.make_sat_by_removing_options();
