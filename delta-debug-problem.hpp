@@ -1,9 +1,11 @@
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <unordered_map>
 #include <vector>
 
+#include "algorithm.hpp"
 #include "problem.hpp"
 
 namespace dancing_links {
@@ -13,8 +15,10 @@ class DeltaDebugProblem {
   using I = typename P::ITEM;
   using C = typename P::COLOR;
   using CECP = ColoredExactCoveringProblem<I, C>;
+  using Algo = AlgorithmC<decltype(CECP::hna), decltype(CECP::na)>;
+  using AlgoOptionsApplier = std::function<void(Algo& a)>;
 
-  DeltaDebugProblem(P& p);
+  DeltaDebugProblem(P& p, AlgoOptionsApplier o = nullptr);
   ~DeltaDebugProblem();
 
   std::optional<P> keep_sat_while_removing_options();
@@ -32,6 +36,7 @@ class DeltaDebugProblem {
   static P getProblemFromCECP(const P& problem, const CECP& cecp);
 
   P& m_p;
+  AlgoOptionsApplier m_o;
 
   bool satisfiable(const CECP& p, const std::vector<char>& activeOptions);
 

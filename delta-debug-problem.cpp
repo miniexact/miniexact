@@ -25,8 +25,9 @@ operator<<(std::ostream& o, const std::vector<char> v) {
 namespace dancing_links {
 
 template<class P>
-DeltaDebugProblem<P>::DeltaDebugProblem(P& p)
-  : m_p(p) {}
+DeltaDebugProblem<P>::DeltaDebugProblem(P& p, AlgoOptionsApplier o)
+  : m_p(p)
+  , m_o(o) {}
 
 template<class P>
 DeltaDebugProblem<P>::~DeltaDebugProblem() {}
@@ -110,9 +111,9 @@ DeltaDebugProblem<P>::ddmin(TestPredicate test,
     return problem;
   }
 
-  for(size_t i = 0; i <= n; ++i) {
-
+  for(size_t i = 0; i < n; ++i) {
     size_t phys_i = getPhysNOffsetInActiveOptionVector(activeOptions, i);
+    assert(phys_i < activeOptions.size());
     activeOptions[phys_i] = false;
 
     if(m_triedOptionSets.count(activeOptions)) {
@@ -181,7 +182,12 @@ DeltaDebugProblem<P>::satisfiable(const CECP& cecp,
       BOOST_LOG_TRIVIAL(trace) << "Checking problem: " << sstream.str();
     }
 
-    AlgorithmC algo(hna, na);
+    Algo algo(hna, na);
+
+    if(m_o) {
+      m_o(algo);
+    }
+
     sat = algo.compute_next_solution();
     m_triedOptionSets[activeOptions] = sat;
   } else {

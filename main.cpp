@@ -198,7 +198,8 @@ main(int argc, const char* argv[]) {
           clog << "Found " << solution_counter << " solutions." << endl;
         }
       } else {
-        DeltaDebugProblem dd(problem);
+        auto algoOptionApplier = [use_mrv](auto& a) { a.setUseMRV(use_mrv); };
+        DeltaDebugProblem dd(problem, algoOptionApplier);
         if(dd_make_sat) {
           clog << "Try to make SAT using delta debugger..." << endl;
           auto resOpt = dd.make_sat_by_removing_options();
