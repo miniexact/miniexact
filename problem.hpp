@@ -136,6 +136,8 @@ struct ColoredExactCoveringProblem {
     }
   }
 
+  void printArraysSTDOUT() { printArrays(std::cout); }
+
   /** @brief Calls the provided visitor with all options and their colorings in
    * this problem.
    *
@@ -270,10 +272,16 @@ struct ColoredExactCoveringProblem {
         }
         ++m_endI;
       }
+      assert(m_endI != m_startI || m_endI == m_p.na.size());
     }
   };
 
-  OptionsIterator begin() const { return OptionsIterator(*this, hna.size()); }
+  OptionsIterator begin() const {
+    return OptionsIterator(*this,
+                           secondaryItemCount == 0
+                             ? hna.size() + (optionCount > 0 ? 1 : 2)
+                             : hna.size());
+  }
   OptionsIterator end() const { return OptionsIterator(*this, na.size()); }
 
   HNA hna = { HN(0, 0, 0) };
@@ -289,7 +297,7 @@ struct ColoredExactCoveringProblem {
 };
 
 template<typename I, typename C, typename IM, typename CM>
-class MappedColoredExactCoveringProblem
+struct MappedColoredExactCoveringProblem
   : public ColoredExactCoveringProblem<I, C> {
   public:
   using ITEMMAPPED = IM;

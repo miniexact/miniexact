@@ -13,9 +13,12 @@ ColoredExactCoveringProblem<I, C>
 ColoredExactCoveringProblem<I, C>::copyItems(
   const ColoredExactCoveringProblem<I, C>& o) {
   return ColoredExactCoveringProblem<I, C>{
-    HNA(o.hna.begin(), o.hna.begin() + o.hna.size() - 1),
-    o.optionCount == 0 ? NA(o.na.begin(), o.na.begin() + o.hna.size() - 1)
-                       : o.na_originalHeader,
+    HNA(o.hna.begin(),
+        o.hna.begin() + o.hna.size() - (o.secondaryItemCount > 0 ? 1 : 0)),
+    o.optionCount == 0
+      ? NA(o.na.begin(),
+           o.na.begin() + o.hna.size() - (o.secondaryItemCount > 0 ? 1 : 0))
+      : o.na_originalHeader,
     o.originalLinks,
     o.secondaryItemCount
   };
@@ -31,7 +34,8 @@ typename ColoredExactCoveringProblem<I, C>::Size
 ColoredExactCoveringProblem<I, C>::getPrimaryItemCount() const {
   // Two spacer nodes. The second spacer node is only there if options have
   // been added.
-  return hna.size() - secondaryItemCount - !(optionCount == 0) - 1;
+  return hna.size() - secondaryItemCount - !(optionCount == 0) -
+         (secondaryItemCount > 0 ? 1 : 0);
 }
 template<typename I, typename C>
 typename ColoredExactCoveringProblem<I, C>::Size
@@ -73,10 +77,13 @@ MappedColoredExactCoveringProblem<I, C, IM, CM>
 MappedColoredExactCoveringProblem<I, C, IM, CM>::copyItemsMapped(
   const MappedColoredExactCoveringProblem<I, C, IM, CM>& o) {
   return MappedColoredExactCoveringProblem<I, C, IM, CM>{
-    typename B::HNA(o.hna.begin(), o.hna.begin() + o.hna.size() - 1),
-    o.optionCount == 0
-      ? typename B::NA(o.na.begin(), o.na.begin() + o.hna.size() - 1)
-      : o.na_originalHeader,
+    typename B::HNA(o.hna.begin(),
+                    o.hna.begin() + o.hna.size() -
+                      (o.secondaryItemCount > 0 ? 1 : 0)),
+    o.optionCount == 0 ? typename B::NA(o.na.begin(),
+                                        o.na.begin() + o.hna.size() -
+                                          (o.secondaryItemCount > 0 ? 1 : 0))
+                       : o.na_originalHeader,
     o.originalLinks,
     o.secondaryItemCount,
     o.itemMappings,

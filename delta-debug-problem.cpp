@@ -41,7 +41,7 @@ std::vector<char>
 BooleanTrueOfLengthN(size_t n) {
   std::vector<char> v(n);
   std::fill(v.begin(), v.end(), true);
-  return std::move(v);
+  return v;
 }
 
 template<class P>
@@ -86,6 +86,19 @@ DeltaDebugProblem<P>::make_sat_by_removing_options() {
     return getProblemFromCECP(m_p, cecp.value());
   }
   return std::nullopt;
+}
+
+template<typename I, typename C>
+std::ostream&
+operator<<(std::ostream& o,
+           const std::variant<PrimaryItem<I>, ColoredItem<I, C>>& v) {
+  if(std::holds_alternative<PrimaryItem<I>>(v)) {
+    o << std::get<PrimaryItem<I>>(v).item;
+  } else {
+    o << std::get<ColoredItem<I, C>>(v).item << ":"
+      << std::get<ColoredItem<I, C>>(v).color;
+  }
+  return o;
 }
 
 template<class P, class TGT>

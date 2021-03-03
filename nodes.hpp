@@ -24,7 +24,7 @@ struct HeaderNode {
   T RLINK;
 
   friend std::ostream& operator<<(std::ostream& o, HeaderNode& n) {
-    return o << "{\"NAME:\"\"" << n.NAME << "\",\"LLINK\":" << n.LLINK
+    return o << "{\"NAME\":\"" << n.NAME << "\",\"LLINK\":" << n.LLINK
              << ",\"RLINK\":" << n.RLINK << "}";
   }
 };
