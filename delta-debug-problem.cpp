@@ -88,19 +88,6 @@ DeltaDebugProblem<P>::make_sat_by_removing_options() {
   return std::nullopt;
 }
 
-template<typename I, typename C>
-std::ostream&
-operator<<(std::ostream& o,
-           const std::variant<PrimaryItem<I>, ColoredItem<I, C>>& v) {
-  if(std::holds_alternative<PrimaryItem<I>>(v)) {
-    o << std::get<PrimaryItem<I>>(v).item;
-  } else {
-    o << std::get<ColoredItem<I, C>>(v).item << ":"
-      << std::get<ColoredItem<I, C>>(v).color;
-  }
-  return o;
-}
-
 template<class P, class TGT>
 TGT
 MakeProblemFromProblemWithActiveOptions(const P& source,

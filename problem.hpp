@@ -26,6 +26,19 @@ struct ColoredItem {
 };
 
 template<typename I, typename C>
+std::ostream&
+operator<<(std::ostream& o,
+           const std::variant<PrimaryItem<I>, ColoredItem<I, C>>& v) {
+  if(std::holds_alternative<PrimaryItem<I>>(v)) {
+    o << std::get<PrimaryItem<I>>(v).item;
+  } else {
+    o << std::get<ColoredItem<I, C>>(v).item << ":"
+      << std::get<ColoredItem<I, C>>(v).color;
+  }
+  return o;
+}
+
+template<typename I, typename C>
 struct ColoredExactCoveringProblem {
   using ITEM = I;
   using COLOR = I;
@@ -277,10 +290,8 @@ struct ColoredExactCoveringProblem {
   };
 
   OptionsIterator begin() const {
-    return OptionsIterator(*this,
-                           secondaryItemCount == 0
-                             ? hna.size() + (optionCount > 0 ? 1 : 2)
-                             : hna.size());
+    return OptionsIterator(
+      *this, secondaryItemCount == 0 ? hna.size() + 1 : hna.size());
   }
   OptionsIterator end() const { return OptionsIterator(*this, na.size()); }
 
@@ -400,19 +411,11 @@ struct MappedColoredExactCoveringProblem
     }
     o << "]" << sep;
 
-    for(size_t i = B::hna.size(); i < B::na.size(); ++i) {
-      const auto& n = B::na[i];
-      if(n.TOP > 0) {
-        o << WStringToUtf8Str(getMappedItem(B::hna[n.TOP].NAME));
-        if(n.COLOR > 0) {
-          o << ":" << WStringToUtf8Str(getMappedColor(n.COLOR));
-        }
-        o << " ";
-      } else if(i + 1 < B::na.size()) {
-        o << ";" << sep;
-      } else {
-        o << "." << sep;
+    for(const auto& opt : *this) {
+      for(const auto& i : opt) {
+        o << mapItem(i) << " ";
       }
+      o << ";" << sep;
     }
   }
 
@@ -428,6 +431,17 @@ struct MappedColoredExactCoveringProblem
         out << " ";
       }
       out << ";" << std::endl;
+    }
+  }
+
+  MappedItem mapItem(const typename B::Item& v) {
+    if(std::holds_alternative<typename B::PI>(v)) {
+      const auto& i = std::get<typename B::PI>(v);
+      return MappedItem{ MappedPI{ getMappedItem(i.item) } };
+    } else {
+      const auto& i = std::get<typename B::CI>(v);
+      return MappedItem{ MappedCI{ getMappedItem(i.item),
+                                   getMappedColor(i.color) } };
     }
   }
 

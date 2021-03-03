@@ -15,10 +15,8 @@ ColoredExactCoveringProblem<I, C>::copyItems(
   return ColoredExactCoveringProblem<I, C>{
     HNA(o.hna.begin(),
         o.hna.begin() + o.hna.size() - (o.secondaryItemCount > 0 ? 1 : 0)),
-    o.optionCount == 0
-      ? NA(o.na.begin(),
-           o.na.begin() + o.hna.size() - (o.secondaryItemCount > 0 ? 1 : 0))
-      : o.na_originalHeader,
+    o.optionCount == 0 ? NA(o.na.begin(), o.na.begin() + o.hna.size() - 1)
+                       : o.na_originalHeader,
     o.originalLinks,
     o.secondaryItemCount
   };
@@ -80,10 +78,9 @@ MappedColoredExactCoveringProblem<I, C, IM, CM>::copyItemsMapped(
     typename B::HNA(o.hna.begin(),
                     o.hna.begin() + o.hna.size() -
                       (o.secondaryItemCount > 0 ? 1 : 0)),
-    o.optionCount == 0 ? typename B::NA(o.na.begin(),
-                                        o.na.begin() + o.hna.size() -
-                                          (o.secondaryItemCount > 0 ? 1 : 0))
-                       : o.na_originalHeader,
+    o.optionCount == 0
+      ? typename B::NA(o.na.begin(), o.na.begin() + o.hna.size() - 1)
+      : o.na_originalHeader,
     o.originalLinks,
     o.secondaryItemCount,
     o.itemMappings,
