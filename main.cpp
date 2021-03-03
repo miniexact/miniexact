@@ -61,7 +61,7 @@ main(int argc, const char* argv[]) {
   desc.add_options()
     ("help,h", "print help message")
     ("wordpuzzle,w", value<std::string>(&input_wordpuzzle), "specify word puzzle definition to parse and generate puzzle")
-    ("xcc,x", value<std::string>(&input_xcc), "specify xcc problem file to parse and solve problem")
+    ("xcc,x", value<std::string>(&input_xcc)->default_value("-")->implicit_value("-"), "specify xcc problem file to parse and solve problem. The argument \"-\" is the implicit default and reads from STDIN")
     ("exhaust,e", bool_switch(&exhaust), "compute all solutions that are available")
     ("width", value<uint16_t>(&wordpuzzle_width), "specify width of the word puzzle")
     ("height", value<uint16_t>(&wordpuzzle_height), "specify height of the word puzzle")
@@ -153,6 +153,10 @@ main(int argc, const char* argv[]) {
 
   if(vm.count("xcc")) {
     auto problemOpt = parse_string_mapped_int32_from_file(input_xcc);
+
+    if(input_xcc == "-")
+      input_xcc = "(stdin)";
+
     if(!problemOpt) {
       cerr << "Could not parse file \"" << input_xcc << "\"!" << endl;
     } else {

@@ -246,9 +246,8 @@ ParseMappedColoredExactCoveringProblem(Begin begin, End end) {
   }
 }
 
-std::optional<MappedColoredExactCoveringProblemInt32String>
-parse_string_mapped_int32_from_file(const std::string& filepath) {
-  std::ifstream ifs(filepath);
+static std::optional<MappedColoredExactCoveringProblemInt32String>
+parse_string_mapped_int32_from_istream(std::istream& ifs) {
   ifs >> std::noskipws;
   boost::spirit::istream_iterator f(ifs), l;
 
@@ -256,6 +255,20 @@ parse_string_mapped_int32_from_file(const std::string& filepath) {
                                                 int32_t,
                                                 std::string,
                                                 std::string>(f, l);
+}
+
+std::optional<MappedColoredExactCoveringProblemInt32String>
+parse_string_mapped_int32_from_file(const std::string& filepath) {
+  if(filepath == "-") {
+    auto res = parse_string_mapped_int32_from_istream(std::cin);
+    if(!res) {
+      std::cin.eof();
+    }
+    return res;
+  } else {
+    std::ifstream ifs(filepath);
+    return parse_string_mapped_int32_from_istream(ifs);
+  }
 }
 std::optional<MappedColoredExactCoveringProblemInt32String>
 parse_string_mapped_int32(const std::string& str) {
