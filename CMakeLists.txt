@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.12)
 project(DancingLinks)
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -6,6 +6,9 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
 find_package(Boost COMPONENTS program_options filesystem log REQUIRED)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(libdancinglinks STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/wordpuzzle.cpp
@@ -20,7 +23,6 @@ add_library(libdancinglinks STATIC
 set_target_properties(libdancinglinks PROPERTIES OUTPUT_NAME "dancinglinks")
 
 target_link_libraries(libdancinglinks PUBLIC Boost::filesystem Boost::log)
-target_compile_features(libdancinglinks PUBLIC cxx_std_17)
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -DBOOST_LOG_DYN_LINK")
 

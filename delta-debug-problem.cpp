@@ -323,7 +323,6 @@ DeltaDebugProblem<P>::satisfiable(const CECP& cecp,
 }
 
 template class DeltaDebugProblem<MappedColoredExactCoveringProblemInt32String>;
-template class DeltaDebugProblem<MappedColoredExactCoveringProblemInt32Char32>;
 // template class DeltaDebugProblem<ColoredExactCoveringProblem<int32_t,
 // int32_t>>;
 }
