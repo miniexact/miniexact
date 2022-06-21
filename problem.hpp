@@ -19,9 +19,14 @@ struct PrimaryItem {
   I item;
 };
 
+template<typename I, typename M>
+struct IntervalItem : public PrimaryItem<I> {
+  M slack;
+  M bound;
+};
+
 template<typename I, typename C>
-struct ColoredItem {
-  I item;
+struct ColoredItem : public PrimaryItem<I> {
   C color;
 };
 
