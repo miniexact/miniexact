@@ -54,25 +54,45 @@
     int xcclex(void *lval, const void *s);
 }
 
+%token <num> NUM
 %token <str> ID
 %token <item> ITEM
 
 %destructor { free($$); } <str>
-%destructor { xcc_problem_free($$); } <problem>
 
-%type <problem> start
-%type <problem> problem
-%type <item> primary_item
+%type	start
+%type	problem
+%type primary_items
+%type primary_item
+%type secondary_items
+%type secondary_item
 
 %%
 
 start :
-  problem   { *result = $$ = $1; return 0; }
+  problem
 ;
 
-problem: '<' primary_item '>' { $$ = NULL; };
+problem:	{ *result = xcc_problem_allocate(); }
+		'<' primary_items '>'
+		'[' secondary_items ']'
+	;
 
-primary_item: ID { $$.item = 0; }
+primary_items:	primary_item
+	|	primary_item primary_items
+	;
+
+primary_item: 	ID { algorithm->define_primary_item(algorithm, *result, $1); }
+        |	ID ':' '[' NUM ';' NUM ']'
+		{ algorithm->define_primary_item_with_range(algorithm, *result, $1, $4, $6); }
+	;
+
+secondary_items:
+		secondary_item
+	|	secondary_item secondary_items
+	;
+
+secondary_item:	ID { algorithm->define_secondary_item(algorithm, *result, $1); }
 	;
 
 %%

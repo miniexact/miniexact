@@ -1,8 +1,8 @@
 #ifndef XCC_H
 #define XCC_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef int32_t xcc_link;
 typedef xcc_link xcc_color;
@@ -34,13 +34,28 @@ typedef struct xcc_problem {
   xcc_node node;
 } xcc_problem;
 
-typedef bool (*xcc_define_primary_item)(xcc_item* i);
-typedef bool (*xcc_define_secondary_item)(xcc_item* i);
+typedef struct xcc_algorithm xcc_algorithm;
+
+typedef bool (*xcc_define_primary_item)(xcc_algorithm* a,
+                                        xcc_problem* p,
+                                        xcc_name n);
+typedef bool (*xcc_define_primary_item_with_range)(xcc_algorithm* a,
+                                                   xcc_problem* p,
+                                                   xcc_name n,
+                                                   xcc_link slack,
+                                                   xcc_link bound);
+typedef bool (*xcc_define_secondary_item)(xcc_algorithm* a,
+                                          xcc_problem* p,
+                                          xcc_name n);
 
 typedef struct xcc_algorithm {
   xcc_define_primary_item define_primary_item;
+  xcc_define_primary_item_with_range define_primary_item_with_range;
   xcc_define_secondary_item define_secondary_item;
 } xcc_algorithm;
+
+xcc_problem*
+xcc_problem_allocate();
 
 void
 xcc_problem_free(xcc_problem* p);
