@@ -31,6 +31,10 @@
 
 %code requires {
 #include <xcc.h>
+
+typedef void *yyscan_t;
+int xcclex_init(yyscan_t*);
+int xcclex_destroy(yyscan_t);
 }
 
 %union
@@ -51,7 +55,9 @@
 		 void *problem,
 		 const void* scanner,
 		 char const *msg);
-    int xcclex(void *lval, const void *s);
+
+#define YYSTYPE XCCSTYPE
+#include <xcc_lexer.h>
 }
 
 %token <num> NUM
@@ -66,6 +72,8 @@
 %type primary_item
 %type secondary_items
 %type secondary_item
+%type options
+%type option
 
 %%
 
@@ -76,6 +84,7 @@ start :
 problem:	{ *result = xcc_problem_allocate(); }
 		'<' primary_items '>'
 		'[' secondary_items ']'
+		options
 	;
 
 primary_items:	primary_item
@@ -95,6 +104,21 @@ secondary_items:
 secondary_item:	ID { algorithm->define_secondary_item(algorithm, *result, $1); }
 	;
 
+options:	option ';'
+	|	options option
+	;
+
+option:		ID { algorithm->add_option(algorithm,
+					   *result,
+					   xcc_option_from_ident(*result, $1));
+		}
+	|	ID ':' NUM { algorithm->add_option_with_color(algorithm,
+							      *result,
+							      xcc_option_from_ident(*result, $1),
+							      $3);
+		}
+	;
+
 %%
 
 int xccerror(void *algorithm,
@@ -106,4 +130,9 @@ int xccerror(void *algorithm,
     (void)problem;
     (void)scanner;
     return fprintf(stderr, "XCC: %s\n", msg);
+}
+
+void xcc_yy_parse_string(const char* str, yyscan_t *scanner)
+{
+    xcc_switch_to_buffer(xcc_scan_string(str, scanner), scanner);
 }

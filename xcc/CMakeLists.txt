@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(xcc)
 
 set(SRCS
+  parse.c
+  xcc.c
   algorithm_x.c
 )
 
@@ -25,3 +27,8 @@ add_library(xcc STATIC
 )
 
 target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+add_executable(xccsolve main.c)
+
+target_link_libraries(xccsolve xcc)

@@ -5,14 +5,15 @@
    https://begriffs.com/posts/2021-11-28-practical-parsing.html#using-a-scanner-as-a-library
  */
 
-%option noyywrap nounput noinput
-%option noyyalloc noyyrealloc noyyfree
+%option noyywrap
 
 %option prefix="xcc"
 
 /* use the pure parser calling convention */
 
 %option reentrant bison-bridge
+
+%option header-file="xcc_lexer.h"
 
 %{
 #include "xcc_parser.h"

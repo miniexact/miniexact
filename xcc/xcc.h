@@ -44,14 +44,24 @@ typedef bool (*xcc_define_primary_item_with_range)(xcc_algorithm* a,
                                                    xcc_name n,
                                                    xcc_link slack,
                                                    xcc_link bound);
+
 typedef bool (*xcc_define_secondary_item)(xcc_algorithm* a,
                                           xcc_problem* p,
                                           xcc_name n);
+
+typedef bool (*xcc_add_option)(xcc_algorithm* a, xcc_problem* p, xcc_link l);
+typedef bool (*xcc_add_option_with_color)(xcc_algorithm* a,
+                                          xcc_problem* p,
+                                          xcc_link l,
+                                          xcc_color color);
 
 typedef struct xcc_algorithm {
   xcc_define_primary_item define_primary_item;
   xcc_define_primary_item_with_range define_primary_item_with_range;
   xcc_define_secondary_item define_secondary_item;
+
+  xcc_add_option add_option;
+  xcc_add_option_with_color add_option_with_color;
 } xcc_algorithm;
 
 xcc_problem*
@@ -59,5 +69,8 @@ xcc_problem_allocate();
 
 void
 xcc_problem_free(xcc_problem* p);
+
+xcc_link
+xcc_option_from_ident(xcc_problem* p, const char* ident);
 
 #endif
