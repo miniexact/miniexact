@@ -7,8 +7,29 @@
 %}
 
 
-%code requires {
+%code top {
+/* XOPEN for strdup */
+#define _XOPEN_SOURCE 600
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* Bison versions 3.7.5 and above provide the YYNOMEM
+    macro to allow our actions to signal the unlikely
+    event that they couldn't allocate memory. Thanks
+    to the Bison team for adding this feature at my
+    request. :) YYNOMEM causes yyparse() to return 2.
+
+    The following conditional define allows us to use
+    the functionality in earlier versions too. */
+
+#ifndef YYNOMEM
+#define YYNOMEM goto yyexhaustedlab
+#endif
+}
+
+
+%code requires {
 #include <xcc.h>
 }
 
@@ -20,12 +41,16 @@
     xcc_problem *problem;
 }
 
+%parse-param {struct xcc_algorithm *algorithm}
 %parse-param {struct xcc_problem **result}
 
 %param {void *scanner}
 
 %code {
-    int xccerror(void *foo, char const *msg, const void *s);
+    int xccerror(void *algorithm,
+		 void *problem,
+		 const void* scanner,
+		 char const *msg);
     int xcclex(void *lval, const void *s);
 }
 
@@ -37,6 +62,7 @@
 
 %type <problem> start
 %type <problem> problem
+%type <item> primary_item
 
 %%
 
@@ -44,13 +70,20 @@ start :
   problem   { *result = $$ = $1; return 0; }
 ;
 
-problem: '<' "sd" ID ">" { $$ = NULL; };
+problem: '<' primary_item '>' { $$ = NULL; };
+
+primary_item: ID { $$.item = 0; }
+	;
 
 %%
 
-int xccerror(void *yylval, char const *msg, const void *s)
+int xccerror(void *algorithm,
+		void *problem,
+		const void* scanner,
+		char const *msg)
 {
-  (void)yylval;
-	(void)s;
-	return fprintf(stderr, "%s\n", msg);
+    (void)algorithm;
+    (void)problem;
+    (void)scanner;
+    return fprintf(stderr, "XCC: %s\n", msg);
 }
