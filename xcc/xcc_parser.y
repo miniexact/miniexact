@@ -1,6 +1,9 @@
-%define api.pure true
+%define api.pure full
+%locations
 %define api.prefix {xcc}
 %define parse.error verbose
+
+
 
 %{
 
@@ -32,9 +35,18 @@
 %code requires {
 #include <xcc.h>
 
+#ifndef YYSTYPE
+#define YYSTYPE XCCSTYPE
+#endif
+
+#ifndef YYLTYPE
+#define YYLTYPE XCCLTYPE
+#endif
+
 typedef void *yyscan_t;
 int xcclex_init(yyscan_t*);
 int xcclex_destroy(yyscan_t);
+ void xcc_yy_parse_string(const char* str, xcc_algorithm *a, xcc_problem** p);
 }
 
 %union
@@ -47,17 +59,33 @@ int xcclex_destroy(yyscan_t);
 
 %parse-param {struct xcc_algorithm *algorithm}
 %parse-param {struct xcc_problem **result}
-
-%param {void *scanner}
+%parse-param {void *scanner}
 
 %code {
-    int xccerror(void *algorithm,
+
+#include <xcc_lexer.h>
+
+YY_BUFFER_STATE xcc_scan_string ( const char *yy_str , yyscan_t yyscanner );
+void xcc_switch_to_buffer ( YY_BUFFER_STATE new_buffer , yyscan_t yyscanner );
+
+ void xcc_yy_parse_string(const char* str, xcc_algorithm *a, xcc_problem** p)
+{
+    yyscan_t scanner;
+    xcclex_init(&scanner);
+    xccparse(a, p, scanner);
+    xcclex_destroy(scanner);
+}
+}
+
+%code provides {
+    //#define YY_DECL							\
+    //int yylex(YYSTYPE* yylval, YYLTYPE* yylloc, xcc_algorithm* a, xcc_problem **result, yyscan_t *yyscanner)
+    //YY_DECL;
+
+   int xccerror(XCCLTYPE *loc, void *algorithm,
 		 void *problem,
 		 const void* scanner,
 		 char const *msg);
-
-#define YYSTYPE XCCSTYPE
-#include <xcc_lexer.h>
 }
 
 %token <num> NUM
@@ -121,7 +149,7 @@ option:		ID { algorithm->add_option(algorithm,
 
 %%
 
-int xccerror(void *algorithm,
+int xccerror(XCCLTYPE *loc, void *algorithm,
 		void *problem,
 		const void* scanner,
 		char const *msg)
@@ -130,9 +158,4 @@ int xccerror(void *algorithm,
     (void)problem;
     (void)scanner;
     return fprintf(stderr, "XCC: %s\n", msg);
-}
-
-void xcc_yy_parse_string(const char* str, yyscan_t *scanner)
-{
-    xcc_switch_to_buffer(xcc_scan_string(str, scanner), scanner);
 }

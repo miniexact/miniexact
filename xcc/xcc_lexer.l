@@ -25,11 +25,6 @@
 #include <string.h>
 
 #include <xcc.h>
-
-#define YYSTYPE XCCSTYPE
-
-int xccerror(const char *msg);
-
 %}
 
 %%
