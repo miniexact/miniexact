@@ -76,13 +76,17 @@ int yyerror();
 
 %%
 
-start :
+start : { *problem = xcc_problem_allocate(); algorithm->init_problem(algorithm, *problem); }
   problem
 ;
 
-problem:	{ *problem = xcc_problem_allocate(); }
-		LPRIMLIST primary_items RPRIMLIST
+problem:
+		LPRIMLIST primary_items RPRIMLIST { (*problem)->N_1 = (*problem)->i - 1; }
 		LSECLIST secondary_items RSECLIST
+		{ CALL(algorithm->prepare_options, algorithm, *problem); }
+		options
+	|	LPRIMLIST primary_items RPRIMLIST
+		{ CALL(algorithm->prepare_options, algorithm, *problem); }
 		options
 	;
 

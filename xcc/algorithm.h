@@ -24,6 +24,7 @@ typedef bool (*xcc_add_item_with_color)(xcc_algorithm* a,
                                         xcc_link l,
                                         xcc_color color);
 typedef bool (*xcc_end_option)(xcc_algorithm* a, xcc_problem* p);
+typedef bool (*xcc_prepare_options)(xcc_algorithm* a, xcc_problem* p);
 
 typedef bool (*xcc_init_problem)(xcc_algorithm* a, xcc_problem* p);
 
@@ -31,6 +32,8 @@ typedef struct xcc_algorithm {
   xcc_define_primary_item define_primary_item;
   xcc_define_primary_item_with_range define_primary_item_with_range;
   xcc_define_secondary_item define_secondary_item;
+
+  xcc_prepare_options prepare_options;
 
   xcc_add_item add_item;
   xcc_add_item_with_color add_item_with_color;
