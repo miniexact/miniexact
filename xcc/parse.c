@@ -9,6 +9,8 @@
 
 #include <xcc_lexer.h>
 
+#include <algorithm_x.h>
+
 int
 xcc_parse_problem() {
   int i;
@@ -17,11 +19,13 @@ xcc_parse_problem() {
   xcc_problem* problem = NULL;
   memset(&algorithm, 0, sizeof(xcc_algorithm));
 
+  xcc_algoritihm_x_set(&algorithm);
+
   yyscan_t scanner;
   if(xcclex_init(&scanner))
     goto DESTROY_SCANNER;
 
-  YY_BUFFER_STATE buf = xcc_scan_string("< test", scanner);
+  YY_BUFFER_STATE buf = xcc_scan_string("< test test2 >", scanner);
   if(xccparse(scanner, &algorithm, &problem))
     goto DELETE_BUFFER;
 

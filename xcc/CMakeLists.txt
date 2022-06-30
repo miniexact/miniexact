@@ -4,6 +4,7 @@ project(xcc)
 set(SRCS
   parse.c
   xcc.c
+  algorithm.c
   algorithm_x.c
 )
 

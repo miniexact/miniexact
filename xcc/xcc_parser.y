@@ -1,6 +1,7 @@
 %define api.pure full
 %define api.prefix {xcc}
-%define parse.error verbose
+%define parse.error detailed
+%define parse.lac full
 
 %lex-param {yyscan_t scanner}
 %parse-param {yyscan_t scanner}
@@ -9,6 +10,7 @@
 
 %code requires {
 #include <xcc.h>
+#include <algorithm.h>
 #define YYSTYPE XCCSTYPE
 #ifndef YY_TYPEDEF_YY_SCANNER_T
 #define YY_TYPEDEF_YY_SCANNER_T
@@ -40,6 +42,16 @@ int yyerror();
 %code {
 #include <xcc_parser.h>
 #include <xcc_lexer.h>
+
+#define xstr(s) str(s)
+#define str(s) #s
+
+#define ERR(MSG) xccerror(algorithm, problem, scanner, MSG)
+#define CALL(FUNC, args...) \
+    if(!FUNC) \
+    { ERR("Function " str(FUNC) " undefined! Cannot call."); return 0;} \
+			else if(!FUNC(args)) \
+			{ ERR("Function " str(FUNC) " returned unsuccessfully!"); return 0;}
 }
 
 %token <num> NUM
@@ -77,9 +89,9 @@ primary_items:	primary_item
 	|	primary_item primary_items
 	;
 
-primary_item: 	ID { algorithm->define_primary_item(algorithm, *problem, $1); }
+primary_item: 	ID { CALL(algorithm->define_primary_item, algorithm, *problem, $1); }
         |	ID ':' '[' NUM ';' NUM ']'
-		{ algorithm->define_primary_item_with_range(algorithm, *problem, $1, $4, $6); }
+        	{ CALL(algorithm->define_primary_item_with_range, algorithm, *problem, $1, $4, $6); }
 	;
 
 secondary_items:
@@ -108,12 +120,12 @@ option:		ID { algorithm->add_option(algorithm,
 %%
 
 int xccerror(void *algorithm,
-		void *problem,
-		const void* scanner,
-		char const *msg)
+	     void *problem,
+	     const void* scanner,
+	     char const *msg)
 {
     (void)algorithm;
     (void)problem;
     (void)scanner;
-    return fprintf(stderr, "XCC: %s\n", msg);
+    return fprintf(stderr, "[XCC] Parser Error: %s\n", msg);
 }
