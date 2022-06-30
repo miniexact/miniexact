@@ -61,8 +61,10 @@ int yyerror();
 %token UNKNOWN
 %token LPRIMLIST
 %token RPRIMLIST
-
-%destructor { free($$); } <str>
+%token LSECLIST
+%token RSECLIST
+%token COLORSEP
+%token ENDOPTION
 
 %type	start
 %type	problem
@@ -81,7 +83,7 @@ start :
 
 problem:	{ *problem = xcc_problem_allocate(); }
 		LPRIMLIST primary_items RPRIMLIST
-		'[' secondary_items ']'
+		LSECLIST secondary_items RSECLIST
 		options
 	;
 
@@ -102,18 +104,20 @@ secondary_items:
 secondary_item:	ID { algorithm->define_secondary_item(algorithm, *problem, $1); }
 	;
 
-options:	option ';'
+options:	option ENDOPTION { CALL(algorithm->end_option, algorithm, *problem); }
 	|	options option
 	;
 
-option:		ID { algorithm->add_option(algorithm,
-					   *problem,
-					   xcc_option_from_ident(*problem, $1));
+option:		ID { CALL(algorithm->add_item,
+		    algorithm,
+		    *problem,
+		    xcc_item_from_ident(*problem, $1));
 		}
-	|	ID ':' NUM { algorithm->add_option_with_color(algorithm,
-							      *problem,
-							      xcc_option_from_ident(*problem, $1),
-							      $3);
+	|	ID ':' NUM { CALL(algorithm->add_item_with_color,
+				  algorithm,
+				  *problem,
+				  xcc_item_from_ident(*problem, $1),
+				  $3);
 		}
 	;
 

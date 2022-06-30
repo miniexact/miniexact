@@ -26,9 +26,13 @@ letter        [a-zA-Z]
 %%
 "<" { return LPRIMLIST; };
 ">" { return RPRIMLIST; };
+"[" { return LSECLIST; };
+"]" { return RSECLIST; };
+":" { return COLORSEP; };
+";" { return ENDOPTION; };
 
 {letter}({letter}|{digit})* {
-  yylval->str = strdup(yytext);
+  yylval->str = yytext;
   return ID;
 }
 

@@ -41,6 +41,6 @@ void
 xcc_problem_free(xcc_problem* p);
 
 xcc_link
-xcc_option_from_ident(xcc_problem* p, const char* ident);
+xcc_item_from_ident(xcc_problem* p, const char* ident);
 
 #endif

@@ -25,7 +25,7 @@ xcc_parse_problem() {
   if(xcclex_init(&scanner))
     goto DESTROY_SCANNER;
 
-  YY_BUFFER_STATE buf = xcc_scan_string("< test test2 >", scanner);
+  YY_BUFFER_STATE buf = xcc_scan_string("< test test2 > [ test3 test4 ] test;", scanner);
   if(xccparse(scanner, &algorithm, &problem))
     goto DELETE_BUFFER;
 
