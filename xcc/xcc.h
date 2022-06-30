@@ -2,37 +2,41 @@
 #define XCC_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 typedef int32_t xcc_link;
 typedef xcc_link xcc_color;
 typedef char* xcc_name;
-
-typedef struct xcc_item {
-  xcc_link item;
-  union {
-    struct {
-      xcc_link slack;
-      xcc_link bound;
-    };
-    xcc_color color;
-  };
-} xcc_item;
-
-typedef struct xcc_header_node {
-  xcc_name name;
-  xcc_link llink, rlink;
-} xcc_header_node;
-
 typedef struct xcc_node {
   xcc_link ulink, dlink;
   xcc_color color;
 } xcc_node;
 
+#define ARR(TYPE, NAME) \
+  TYPE* NAME;           \
+  size_t NAME##_size;   \
+  size_t NAME##_capacity;
+
+#define XCC_ARR_ALLOC(TYPE, ARR)                     \
+  p->ARR##_capacity = 65536;                         \
+  p->ARR = malloc(p->ARR##_capacity * sizeof(TYPE)); \
+  p->ARR##_size = 0;
+
+#define XCC_ARR_REALLOC(ARR)                 \
+  p->ARR##_capacity = p->ARR##_capacity * 4; \
+  p->ARR = realloc(p->ARR, p->ARR##_capacity * sizeof(p->ARR[0]));
+
 typedef struct xcc_problem {
-  xcc_header_node header_node;
-  xcc_node node;
+  ARR(xcc_link, llink)
+  ARR(xcc_link, rlink)
+  ARR(xcc_link, ulink)
+  ARR(xcc_link, dlink)
+  ARR(xcc_link, top)
+  ARR(xcc_name, name)
 } xcc_problem;
+
+#undef ARR
 
 xcc_problem*
 xcc_problem_allocate();

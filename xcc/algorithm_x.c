@@ -23,6 +23,12 @@ end_option(xcc_algorithm* a, xcc_problem* p) {
   return true;
 }
 
+static bool
+init_problem(xcc_algorithm* a, xcc_problem* p) {
+  XCC_ARR_ALLOC(xcc_link, llink)
+  XCC_ARR_ALLOC(xcc_link, rlink)
+}
+
 void
 xcc_algoritihm_x_set(xcc_algorithm* a) {
   a->add_item = &add_item;
@@ -31,4 +37,6 @@ xcc_algoritihm_x_set(xcc_algorithm* a) {
 
   a->define_primary_item = &define_primary_item;
   a->define_secondary_item = &define_secondary_item;
+
+  a->init_problem = &init_problem;
 }

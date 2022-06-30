@@ -35,7 +35,6 @@ int yyerror();
 {
     int32_t num;
     char *str;
-    xcc_item item;
     xcc_problem *problem;
 }
 
