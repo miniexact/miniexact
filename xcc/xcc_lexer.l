@@ -32,7 +32,7 @@ letter        [a-zA-Z]
 ";" { return ENDOPTION; };
 
 {letter}({letter}|{digit})* {
-  yylval->str = yytext;
+  yylval->str = strdup(yytext);
   return ID;
 }
 

@@ -25,7 +25,7 @@ xcc_parse_problem() {
   if(xcclex_init(&scanner))
     goto DESTROY_SCANNER;
 
-  YY_BUFFER_STATE buf = xcc_scan_string("< test test2 > [ test3 test4 ] test;", scanner);
+  YY_BUFFER_STATE buf = xcc_scan_string("<a b c d e f g> c e; a d g; b c f; a d f; b g; d e g;", scanner);
   if(xccparse(scanner, &algorithm, &problem))
     goto DELETE_BUFFER;
 
@@ -33,8 +33,10 @@ xcc_parse_problem() {
 
   xcclex_destroy(scanner);
 
-  if(problem)
+  if(problem) {
+    xcc_print_problem_matrix(problem);
     xcc_problem_free(problem);
+  }
 
   return EXIT_SUCCESS;
 

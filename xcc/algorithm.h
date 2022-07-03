@@ -5,28 +5,30 @@
 
 typedef struct xcc_algorithm xcc_algorithm;
 
-typedef bool (*xcc_define_primary_item)(xcc_algorithm* a,
-                                        xcc_problem* p,
-                                        xcc_name n);
-typedef bool (*xcc_define_primary_item_with_range)(xcc_algorithm* a,
-                                                   xcc_problem* p,
-                                                   xcc_name n,
-                                                   xcc_link slack,
-                                                   xcc_link bound);
+typedef const char* (*xcc_define_primary_item)(xcc_algorithm* a,
+                                               xcc_problem* p,
+                                               xcc_name n);
+typedef const char* (*xcc_define_primary_item_with_range)(xcc_algorithm* a,
+                                                          xcc_problem* p,
+                                                          xcc_name n,
+                                                          xcc_link slack,
+                                                          xcc_link bound);
 
-typedef bool (*xcc_define_secondary_item)(xcc_algorithm* a,
-                                          xcc_problem* p,
-                                          xcc_name n);
+typedef const char* (*xcc_define_secondary_item)(xcc_algorithm* a,
+                                                 xcc_problem* p,
+                                                 xcc_name n);
 
-typedef bool (*xcc_add_item)(xcc_algorithm* a, xcc_problem* p, xcc_link l);
-typedef bool (*xcc_add_item_with_color)(xcc_algorithm* a,
-                                        xcc_problem* p,
-                                        xcc_link l,
-                                        xcc_color color);
-typedef bool (*xcc_end_option)(xcc_algorithm* a, xcc_problem* p);
-typedef bool (*xcc_prepare_options)(xcc_algorithm* a, xcc_problem* p);
+typedef const char* (*xcc_add_item)(xcc_algorithm* a,
+                                    xcc_problem* p,
+                                    xcc_link l);
+typedef const char* (*xcc_add_item_with_color)(xcc_algorithm* a,
+                                               xcc_problem* p,
+                                               xcc_link l,
+                                               xcc_color color);
+typedef const char* (*xcc_end_option)(xcc_algorithm* a, xcc_problem* p);
+typedef const char* (*xcc_prepare_options)(xcc_algorithm* a, xcc_problem* p);
 
-typedef bool (*xcc_init_problem)(xcc_algorithm* a, xcc_problem* p);
+typedef const char* (*xcc_init_problem)(xcc_algorithm* a, xcc_problem* p);
 
 typedef struct xcc_algorithm {
   xcc_define_primary_item define_primary_item;

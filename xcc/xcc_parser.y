@@ -47,15 +47,17 @@ int yyerror();
 
 #define ERR(MSG) xccerror(algorithm, problem, scanner, MSG)
 #define CALL(FUNC, args...) \
-    if(!FUNC) \
+    do{ const char* e; if(!FUNC) \
     { ERR("Function " str(FUNC) " undefined! Cannot call."); return 0;} \
-			else if(!FUNC(args)) \
-			{ ERR("Function " str(FUNC) " returned unsuccessfully!"); return 0;}
+			else if((e = FUNC(args))) \
+			    { ERR("Function " str(FUNC) " returned error!"); ERR(e); return 0;}} while(false);
 }
 
 %token <num> NUM
 %token <str> ID
 %token <item> ITEM
+
+%destructor { free($$); } <str>
 
 %token UNKNOWN
 %token LPRIMLIST
@@ -73,6 +75,11 @@ int yyerror();
 %type secondary_item
 %type options
 %type option
+
+%type option_items
+%type option_item
+%type option_item_without_color
+%type option_item_with_color
 
 %%
 
@@ -107,20 +114,40 @@ secondary_items:
 secondary_item:	ID { algorithm->define_secondary_item(algorithm, *problem, $1); }
 	;
 
-options:	option ENDOPTION { CALL(algorithm->end_option, algorithm, *problem); }
+options:	option
 	|	options option
 	;
 
-option:		ID { CALL(algorithm->add_item,
+option:
+		option_items ENDOPTION { CALL(algorithm->end_option, algorithm, *problem); }
+	;
+
+option_items:
+		option_items option_item
+	|	option_item
+	;
+
+option_item:
+		option_item_with_color
+	|	option_item_without_color
+	;
+
+option_item_without_color:
+		ID { CALL(algorithm->add_item,
 		    algorithm,
 		    *problem,
 		    xcc_item_from_ident(*problem, $1));
+		    free($1);
 		}
-	|	ID ':' NUM { CALL(algorithm->add_item_with_color,
+	;
+
+option_item_with_color:
+		ID ':' NUM { CALL(algorithm->add_item_with_color,
 				  algorithm,
 				  *problem,
 				  xcc_item_from_ident(*problem, $1),
 				  $3);
+		    free($1);
 		}
 	;
 

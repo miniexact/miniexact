@@ -6,7 +6,15 @@
 #include "algorithm.h"
 #include "algorithm_x.h"
 
-static inline bool
+#define NAME(n) p->name[n]
+#define LLINK(n) p->llink[n]
+#define RLINK(n) p->rlink[n]
+#define ULINK(n) p->ulink[n]
+#define DLINK(n) p->dlink[n]
+#define LEN(n) p->len[n]
+#define TOP(n) p->top[n]
+
+static inline const char*
 define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
   assert(a);
   assert(p);
@@ -15,10 +23,11 @@ define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
   assert(p->llink);
   assert(p->rlink);
 
+  printf("Define item: %s\n", n);
+
   int found = 0;
   if((found = xcc_search_for_name(n, p->name, p->name_size - 1) >= 0)) {
-    fprintf(stderr, "Name %s already defined as item number %d!\n", n, found);
-    return false;
+    return "Name already defined as item!";
   }
 
   XCC_ARR_PLUS1(name)
@@ -26,69 +35,113 @@ define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
   XCC_ARR_PLUS1(rlink)
 
   p->i = p->i + 1;
-  p->name[p->i] = strdup(n);
-  p->llink[p->i] = p->i - 1;
-  p->rlink[p->i - 1] = p->i;
+  NAME(p->i) = n;
+  LLINK(p->i) = p->i - 1;
+  RLINK(p->i - 1) = p->i;
 
-  return true;
+  return NULL;
 }
 
-static bool
+static const char*
 define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
-  if(!define_item(a, p, n))
-    return false;
+  const char* e;
+  if((e = define_item(a, p, n)))
+    return e;
 
   ++p->primary_item_count;
 
-  return true;
+  return NULL;
 }
 
-static bool
+static const char*
 define_secondary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
-  if(!define_item(a, p, n))
-    return false;
+  const char* e;
+  if((e = define_item(a, p, n)))
+    return e;
 
   ++p->secondary_item_count;
 
-  return true;
+  return NULL;
+  ;
 }
 
-static bool
+static const char*
 prepare_options(xcc_algorithm* a, xcc_problem* p) {
   // Step I2
   p->N = p->i;
   if(p->N_1 < 0)
     p->N_1 = p->N;
-  p->llink[p->N + 1] = p->N;
-  p->rlink[p->N] = p->N + 1;
-  p->llink[p->N_1 + 1] = p->N + 1;
-  p->rlink[p->N + 1] = p->N_1 + 1;
-  p->llink[0] = p->N_1;
-  p->rlink[p->N_1] = 0;
+  LLINK(p->N + 1) = p->N;
+  RLINK(p->N) = p->N + 1;
+  LLINK(p->N_1 + 1) = p->N + 1;
+  RLINK(p->N + 1) = p->N_1 + 1;
+  LLINK(0) = p->N_1;
+  RLINK(p->N_1) = 0;
 
   // Step N3
-  XCC_ARR_PLUSN(len, p->N)
-  XCC_ARR_PLUSN(ulink, p->N)
-  XCC_ARR_PLUSN(dlink, p->N)
+  XCC_ARR_PLUSN(len, p->N + 2)
+  XCC_ARR_PLUSN(ulink, p->N + 2)
+  XCC_ARR_PLUSN(dlink, p->N + 2)
+
+  LEN(0) = 0;
+  ULINK(0) = 0;
+  DLINK(0) = 0;
+
   for(int i = 1; i <= p->N; ++i) {
-    p->len[i] = 0;
-    p->ulink[i] = i;
-    p->dlink[i] = i;
+    LEN(i) = 0;
+    ULINK(i) = i;
+    DLINK(i) = i;
   }
-  return true;
+
+  p->M = 0;
+  p->p = p->N;
+  TOP(p->p) = 0;
+
+  p->Z = p->p;
+  return NULL;
 }
 
-static bool
-add_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
-  return true;
+static const char*
+add_item(xcc_algorithm* a, xcc_problem* p, xcc_link ij) {
+  if(ij < 1)
+    return "Invalid ij given for add_item!";
+
+  XCC_ARR_PLUS1(len)
+  XCC_ARR_PLUS1(dlink)
+  XCC_ARR_PLUS1(ulink)
+
+  ++p->j;
+
+  LEN(ij) = LEN(ij) + 1;
+  p->q = ULINK(ij);
+  ULINK(p->p + p->j) = p->q;
+  DLINK(p->q) = p->p + p->j;
+  DLINK(p->p + p->j) = ij;
+  ULINK(ij) = p->p + p->j;
+  TOP(p->p + p->j) = ij;
+
+  return NULL;
 }
 
-static bool
+static const char*
 end_option(xcc_algorithm* a, xcc_problem* p) {
-  return true;
+  XCC_ARR_PLUS1(len)
+  XCC_ARR_PLUS1(dlink)
+  XCC_ARR_PLUS1(ulink)
+
+  p->M = p->M + 1;
+  DLINK(p->p) = p->p + p->j;
+  p->p = p->p + p->j + 1;
+  TOP(p->p) = -p->M;
+  ULINK(p->p) = p->p - p->j;
+
+  p->j = 0;
+  p->Z = p->p;
+
+  return NULL;
 }
 
-static bool
+static const char*
 init_problem(xcc_algorithm* a, xcc_problem* p) {
   assert(a);
   assert(p);
@@ -100,17 +153,19 @@ init_problem(xcc_algorithm* a, xcc_problem* p) {
   XCC_ARR_ALLOC(xcc_name, ulink)
   XCC_ARR_ALLOC(xcc_name, dlink)
 
-  p->llink[0] = 0;
-  p->rlink[0] = 0;
-  p->name[0] = NULL;
+  LLINK(0) = 0;
+  RLINK(0) = 0;
+  NAME(0) = NULL;
 
   p->name_size = 1;
   p->llink_size = 1;
   p->rlink_size = 1;
 
   p->i = 0;
+  p->j = 1;
   p->N_1 = -1;
-  return true;
+
+  return NULL;
 }
 
 void

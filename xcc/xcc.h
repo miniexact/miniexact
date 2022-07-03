@@ -51,7 +51,7 @@ typedef struct xcc_problem {
 
   ARR(xcc_name, name)
 
-  int N, N_1, i;
+  int N, N_1, M, i, j, p, q, Z;
   int primary_item_count;
   int secondary_item_count;
 } xcc_problem;
@@ -59,7 +59,12 @@ typedef struct xcc_problem {
 #undef ARR
 
 int
-xcc_search_for_name(xcc_name needle, xcc_name* names, size_t names_size);
+xcc_search_for_name(const xcc_name needle,
+                    const xcc_name* names,
+                    size_t names_size);
+
+bool
+xcc_has_item(xcc_link needle, xcc_link* list, size_t len);
 
 xcc_problem*
 xcc_problem_allocate();
@@ -68,6 +73,9 @@ void
 xcc_problem_free(xcc_problem* p);
 
 xcc_link
-xcc_item_from_ident(xcc_problem* p, const char* ident);
+xcc_item_from_ident(xcc_problem* p, xcc_name ident);
+
+void
+xcc_print_problem_matrix(xcc_problem* p);
 
 #endif
