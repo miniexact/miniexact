@@ -6,13 +6,7 @@
 #include "algorithm.h"
 #include "algorithm_x.h"
 
-#define NAME(n) p->name[n]
-#define LLINK(n) p->llink[n]
-#define RLINK(n) p->rlink[n]
-#define ULINK(n) p->ulink[n]
-#define DLINK(n) p->dlink[n]
-#define LEN(n) p->len[n]
-#define TOP(n) p->top[n]
+#include "ops.h"
 
 static inline const char*
 define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
@@ -22,8 +16,6 @@ define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
   assert(p->name);
   assert(p->llink);
   assert(p->rlink);
-
-  printf("Define item: %s\n", n);
 
   int found = 0;
   if((found = xcc_search_for_name(n, p->name, p->name_size - 1) >= 0)) {
@@ -94,7 +86,7 @@ prepare_options(xcc_algorithm* a, xcc_problem* p) {
   }
 
   p->M = 0;
-  p->p = p->N;
+  p->p = p->N + 1;
   TOP(p->p) = 0;
 
   p->Z = p->p;
@@ -162,7 +154,7 @@ init_problem(xcc_algorithm* a, xcc_problem* p) {
   p->rlink_size = 1;
 
   p->i = 0;
-  p->j = 1;
+  p->j = 0;
   p->N_1 = -1;
 
   return NULL;
