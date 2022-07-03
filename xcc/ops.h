@@ -9,4 +9,16 @@
 #define LEN(n) p->len[n]
 #define TOP(n) p->top[n]
 
+#define COVER(i)                         \
+  do {                                   \
+    xcc_link p = DLINK(i);               \
+    while(p != p->i) {                   \
+      HIDE(p);                           \
+      p = DLINK(p);                      \
+    }                                    \
+    xcc_link l = LLINK(i), r = RLINK(i); \
+    RLINK(l) = r;                        \
+    LLINK(r) = l;                        \
+  } while(false)
+
 #endif

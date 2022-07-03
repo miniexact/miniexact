@@ -119,7 +119,7 @@ options:	option
 	;
 
 option:
-		option_items ENDOPTION { CALL(algorithm->end_option, algorithm, *problem); }
+		option_items ENDOPTION { CALL(algorithm->end_option, algorithm, *problem); ++(*problem)->option_count;}
 	;
 
 option_items:

@@ -49,6 +49,8 @@ xcc_problem_free(xcc_problem* p) {
         free(p->name[i]);
     free(p->name);
   }
+  if(p->x)
+    free(p->x);
 
   free(p);
 }

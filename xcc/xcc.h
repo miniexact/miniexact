@@ -51,9 +51,13 @@ typedef struct xcc_problem {
 
   ARR(xcc_name, name)
 
+  // Solution
+  ARR(xcc_link, x)
+
   int N, N_1, M, i, j, p, q, Z;
   int primary_item_count;
   int secondary_item_count;
+  int option_count;
 } xcc_problem;
 
 #undef ARR

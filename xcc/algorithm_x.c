@@ -144,6 +144,7 @@ init_problem(xcc_algorithm* a, xcc_problem* p) {
   XCC_ARR_ALLOC(xcc_name, len)
   XCC_ARR_ALLOC(xcc_name, ulink)
   XCC_ARR_ALLOC(xcc_name, dlink)
+  XCC_ARR_ALLOC(xcc_name, x)
 
   LLINK(0) = 0;
   RLINK(0) = 0;
@@ -158,6 +159,19 @@ init_problem(xcc_algorithm* a, xcc_problem* p) {
   p->N_1 = -1;
 
   return NULL;
+}
+
+static bool
+compute_next_result(xcc_algorithm* a, xcc_problem* p) {
+  if(p->x_capacity < p->option_count) {
+    p->x = realloc(p->x, sizeof(xcc_link) * p->option_count);
+    p->x_capacity = p->option_count;
+    p->x_size = 0;
+  }
+
+
+
+  return false;
 }
 
 void

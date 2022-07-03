@@ -30,6 +30,8 @@ typedef const char* (*xcc_prepare_options)(xcc_algorithm* a, xcc_problem* p);
 
 typedef const char* (*xcc_init_problem)(xcc_algorithm* a, xcc_problem* p);
 
+typedef bool (*xcc_compute_next_result)(xcc_algorithm* a, xcc_problem* p);
+
 typedef struct xcc_algorithm {
   xcc_define_primary_item define_primary_item;
   xcc_define_primary_item_with_range define_primary_item_with_range;
@@ -42,6 +44,8 @@ typedef struct xcc_algorithm {
   xcc_end_option end_option;
 
   xcc_init_problem init_problem;
+
+  xcc_compute_next_result compute_next_result;
 } xcc_algorithm;
 
 #endif
