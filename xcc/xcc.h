@@ -52,6 +52,7 @@ typedef struct xcc_problem {
   };
 
   ARR(xcc_name, name)
+  ARR(xcc_color, color)
 
   // Solution
   ARR(xcc_link, x)
