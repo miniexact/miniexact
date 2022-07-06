@@ -177,14 +177,26 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
 
   while(true) {
     switch(p->state) {
-      case X1:
+      case X1: {
+        xcc_link i = 0;
+        do {
+          i = RLINK(i);
+          if(DLINK(i) == 0 && ULINK(i) == 0) {
+            fprintf(stderr, "Some item never occurs in the options!\n");
+            return false;
+          }
+        } while(RLINK(i) != 0);
+
         p->l = 0;
         p->state = X2;
+        p->i = 0;
+        p->N = p->dlink_size;
         break;
+      }
       case X2:
         if(RLINK(0) == 0) {
           p->state = X8;
-	  p->x_size = p->l;
+          p->x_size = p->l;
           return true;
         }
         p->state = X3;

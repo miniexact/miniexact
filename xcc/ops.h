@@ -12,6 +12,9 @@
 
 #include "xcc.h"
 
+#include <assert.h>
+#include <stdio.h>
+
 inline static void
 xcc_cover(xcc_problem*, xcc_link);
 inline static void
@@ -63,9 +66,13 @@ inline static void
 xcc_hide(xcc_problem* p, xcc_link p_) {
   xcc_link q = p_ + 1;
   while(q != p_) {
+    printf("Hide. p:%d, q:%d\n", p_, q);
+    assert(q >= 0);
+    assert(q < p->top_size);
     xcc_link x = TOP(q);
     xcc_link u = ULINK(q);
     xcc_link d = DLINK(q);
+    printf("Hide. x:%d, u:%d, d:%d\n", x, u, d);
 
     if(x <= 0) {
       q = u; /* q was a spacer */
