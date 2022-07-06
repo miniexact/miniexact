@@ -25,7 +25,8 @@ xcc_parse_problem() {
   if(xcclex_init(&scanner))
     goto DESTROY_SCANNER;
 
-  YY_BUFFER_STATE buf = xcc_scan_string("<a b c d e f g> c e; a d g; b c f; a d f; b g; d e g;", scanner);
+  YY_BUFFER_STATE buf = xcc_scan_string(
+    "<a b c d e f g> c e; a d g; b c f; a d f; b g; d e g;", scanner);
   if(xccparse(scanner, &algorithm, &problem))
     goto DELETE_BUFFER;
 
@@ -35,6 +36,11 @@ xcc_parse_problem() {
 
   if(problem) {
     xcc_print_problem_matrix(problem);
+    bool has_solution = algorithm.compute_next_result(&algorithm, problem);
+    if(has_solution)
+      xcc_print_problem_solution(problem);
+    else
+      printf("No solution found!\n");
     xcc_problem_free(problem);
   }
 

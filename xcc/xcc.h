@@ -13,6 +13,8 @@ typedef struct xcc_node {
   xcc_color color;
 } xcc_node;
 
+#define XCC_LINK_MAX INT32_MAX
+
 #define ARR(TYPE, NAME) \
   TYPE* NAME;           \
   size_t NAME##_size;   \
@@ -54,10 +56,11 @@ typedef struct xcc_problem {
   // Solution
   ARR(xcc_link, x)
 
-  int N, N_1, M, i, j, p, q, Z;
+  int N, N_1, M, i, j, l, p, q, Z;
   int primary_item_count;
   int secondary_item_count;
   int option_count;
+  int state;
 } xcc_problem;
 
 #undef ARR
@@ -81,5 +84,8 @@ xcc_item_from_ident(xcc_problem* p, xcc_name ident);
 
 void
 xcc_print_problem_matrix(xcc_problem* p);
+
+void
+xcc_print_problem_solution(xcc_problem* p);
 
 #endif

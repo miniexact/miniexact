@@ -8,6 +8,8 @@
 
 #include "ops.h"
 
+typedef enum x_state { X1, X2, X3, X4, X5, X6, X7, X8 } x_state;
+
 static inline const char*
 define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
   assert(a);
@@ -158,6 +160,8 @@ init_problem(xcc_algorithm* a, xcc_problem* p) {
   p->j = 0;
   p->N_1 = -1;
 
+  p->state = X1;
+
   return NULL;
 }
 
@@ -169,7 +173,77 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
     p->x_size = 0;
   }
 
+  assert(a->choose_i);
 
+  while(true) {
+    switch(p->state) {
+      case X1:
+        p->l = 0;
+        p->state = X2;
+        break;
+      case X2:
+        if(RLINK(0) == 0) {
+          p->state = X8;
+	  p->x_size = p->l;
+          return true;
+        }
+        p->state = X3;
+        break;
+      case X3:
+        p->i = a->choose_i(a, p);
+        p->state = X4;
+        break;
+      case X4:
+        COVER(p->i);
+        p->x[p->l] = DLINK(p->i);
+        p->state = X5;
+        break;
+      case X5:
+        if(p->x[p->l] == p->i) {
+          p->state = X7;
+        } else {
+          p->p = p->x[p->l] + 1;
+          while(p->p != p->x[p->l]) {
+            xcc_link j = TOP(p->p);
+            if(j <= 0) {
+              p->p = ULINK(p->p);
+            } else {
+              COVER(j);
+              p->p = p->p + 1;
+            }
+          }
+        }
+        p->l = p->l + 1;
+        p->state = X2;
+        break;
+      case X6:
+        p->p = p->x[p->l] - 1;
+        while(p->p != p->x[p->l]) {
+          xcc_link j = TOP(p->p);
+          if(j <= 0) {
+            p->p = DLINK(p->p);
+          } else {
+            UNCOVER(j);
+            p->p = p->p - 1;
+          }
+        }
+        p->i = TOP(p->x[p->l]);
+        p->x[p->l] = DLINK(p->x[p->l]);
+        p->state = X5;
+        break;
+      case X7:
+        UNCOVER(p->i);
+        p->state = X8;
+        break;
+      case X8:
+        if(p->l == 0) {
+          return false;
+        }
+        p->l = p->l - 1;
+        p->state = X6;
+        break;
+    }
+  }
 
   return false;
 }
@@ -185,4 +259,6 @@ xcc_algoritihm_x_set(xcc_algorithm* a) {
   a->define_secondary_item = &define_secondary_item;
 
   a->init_problem = &init_problem;
+  a->compute_next_result = &compute_next_result;
+  a->choose_i = &xcc_choose_i_mrv;
 }

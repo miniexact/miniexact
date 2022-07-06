@@ -79,3 +79,12 @@ xcc_print_problem_matrix(xcc_problem* p) {
            p->dlink[x]);
   }
 }
+
+void
+xcc_print_problem_solution(xcc_problem* p) {
+  printf("Solution:\n");
+  for(size_t i = 0; i < p->x_size; ++i) {
+    printf("%d ", p->x[i]);
+  }
+  printf("\n");
+}
