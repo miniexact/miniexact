@@ -213,6 +213,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
       case X5:
         if(p->x[p->l] == p->i) {
           p->state = X7;
+          break;
         } else {
           p->p = p->x[p->l] + 1;
           while(p->p != p->x[p->l]) {

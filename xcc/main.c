@@ -1,7 +1,9 @@
 #include "parse.h"
 #include "xcc.h"
 
+#include <stdlib.h>
+
 int
 main() {
-  return xcc_parse_problem();
+  return EXIT_SUCCESS;
 }

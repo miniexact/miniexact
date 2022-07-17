@@ -3,6 +3,10 @@
 
 #include "xcc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct xcc_algorithm xcc_algorithm;
 
 typedef const char* (*xcc_define_primary_item)(xcc_algorithm* a,
@@ -57,5 +61,9 @@ typedef struct xcc_algorithm {
 
   xcc_choose_i choose_i;
 } xcc_algorithm;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

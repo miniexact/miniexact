@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ops.h"
 #include "xcc.h"
 
 xcc_problem*
@@ -87,4 +88,17 @@ xcc_print_problem_solution(xcc_problem* p) {
     printf("%d ", p->x[i]);
   }
   printf("\n");
+}
+
+void
+xcc_extract_solution_option_indices(xcc_problem* p, xcc_link* solution) {
+  assert(p);
+  assert(solution);
+
+  for(xcc_link j = 0; j < p->l; ++j) {
+    xcc_link r = p->x[j];
+    while(TOP(r) >= 0)
+      ++r;
+    solution[j] = -TOP(r);
+  }
 }

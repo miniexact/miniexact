@@ -15,6 +15,8 @@ set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointe
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
 
+add_subdirectory(../third_party third_party)
+
 flex_target(xcc_lexer
   "${CMAKE_CURRENT_SOURCE_DIR}/xcc_lexer.l"
   "${CMAKE_CURRENT_BINARY_DIR}/xcc_lexer.c")
@@ -26,14 +28,22 @@ bison_target(xcc_parser
 add_flex_bison_dependency(xcc_lexer xcc_parser)
 
 add_library(xcc STATIC
-    ${SRCS}
-    "${CMAKE_CURRENT_BINARY_DIR}/xcc_lexer.c"
-    "${CMAKE_CURRENT_BINARY_DIR}/xcc_parser.c"
+  ${SRCS}
+  "${CMAKE_CURRENT_BINARY_DIR}/xcc_lexer.c"
+  "${CMAKE_CURRENT_BINARY_DIR}/xcc_parser.c"
 )
 
-target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(xcc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(xccsolve main.c)
 
 target_link_libraries(xccsolve xcc)
+
+add_subdirectory(test)
+set_target_properties(tests
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)

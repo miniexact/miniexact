@@ -1,6 +1,10 @@
 #ifndef XCC_H
 #define XCC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -88,5 +92,21 @@ xcc_print_problem_matrix(xcc_problem* p);
 
 void
 xcc_print_problem_solution(xcc_problem* p);
+
+/** @brief Extract a valid solution, consisting of the option indices
+ *
+ * Requires p to be in a valid solved state and solution to be a pointer to an
+ * array with at least p->l elements.
+ *
+ * This is basically exercise 13.
+ */
+void
+xcc_extract_solution_option_indices(xcc_problem* p, xcc_link* solution);
+
+#ifdef __cplusplus
+}
+
+#include "xcc.hpp"
+#endif
 
 #endif

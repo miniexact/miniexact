@@ -1,6 +1,10 @@
 #ifndef XCC_OPS_H
 #define XCC_OPS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define NAME(n) p->name[n]
 #define LLINK(n) p->llink[n]
 #define RLINK(n) p->rlink[n]
@@ -38,13 +42,13 @@ xcc_unhide_prime(xcc_problem*, xcc_link);
 #define UNHIDE_PRIME(P) xcc_unhide_prime(p, P)
 
 inline static void
-xcc_cover(xcc_problem* p, xcc_link i_) {
-  xcc_link p_ = DLINK(i_);
-  while(p_ != p->i) {
+xcc_cover(xcc_problem* p, xcc_link i) {
+  xcc_link p_ = DLINK(i);
+  while(p_ != i) {
     HIDE(p_);
     p_ = DLINK(p_);
   }
-  xcc_link l = LLINK(i_), r = RLINK(i_);
+  xcc_link l = LLINK(i), r = RLINK(i);
   RLINK(l) = r;
   LLINK(r) = l;
 }
@@ -66,13 +70,13 @@ inline static void
 xcc_hide(xcc_problem* p, xcc_link p_) {
   xcc_link q = p_ + 1;
   while(q != p_) {
-    printf("Hide. p:%d, q:%d\n", p_, q);
     assert(q >= 0);
     assert(q < p->top_size);
     xcc_link x = TOP(q);
     xcc_link u = ULINK(q);
     xcc_link d = DLINK(q);
-    printf("Hide. x:%d, u:%d, d:%d\n", x, u, d);
+
+    assert(x != 0);
 
     if(x <= 0) {
       q = u; /* q was a spacer */
@@ -143,5 +147,9 @@ xcc_unhide_prime(xcc_problem* p, xcc_link p_) {
     }
   }
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
