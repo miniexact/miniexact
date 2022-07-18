@@ -112,6 +112,16 @@ xcc_print_problem_solution(xcc_problem* p);
 void
 xcc_extract_solution_option_indices(xcc_problem* p, xcc_link* solution);
 
+typedef void (*xcc_link_visitor)(xcc_problem* p,
+                                 void* userdata,
+                                 xcc_link item_index,
+                                 const char* item_name);
+
+void
+xcc_extract_selected_options(xcc_problem* p,
+                             void* userdata,
+                             xcc_link_visitor visitor);
+
 #ifdef __cplusplus
 }
 
