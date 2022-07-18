@@ -16,6 +16,7 @@ extern "C" {
 
 #include "xcc.h"
 
+#include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
 

@@ -92,9 +92,11 @@ problem:
 		LSECLIST secondary_items RSECLIST
 		{ CALL(algorithm->prepare_options, algorithm, *problem); }
 		options
+		{ CALL(algorithm->end_options, algorithm, *problem); }
 	|	LPRIMLIST primary_items RPRIMLIST
 		{ CALL(algorithm->prepare_options, algorithm, *problem); }
 		options
+		{ CALL(algorithm->end_options, algorithm, *problem); }
 	;
 
 primary_items:	primary_item
