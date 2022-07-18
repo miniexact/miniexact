@@ -1,58 +1,49 @@
-cmake_minimum_required(VERSION 3.12)
-project(DancingLinks)
+cmake_minimum_required(VERSION 3.10)
+project(xcc)
 
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-
-find_package(Boost COMPONENTS program_options filesystem log REQUIRED)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-add_library(libdancinglinks STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/wordpuzzle.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/problem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/emscripten.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/util.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/delta-debug-problem.cpp
+set(SRCS
+  parse.c
+  xcc.c
+  algorithm.c
+  algorithm_x.c
 )
 
-set_target_properties(libdancinglinks PROPERTIES OUTPUT_NAME "dancinglinks")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
-target_link_libraries(libdancinglinks PUBLIC Boost::filesystem Boost::log)
+find_package(FLEX REQUIRED)
+find_package(BISON REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -DBOOST_LOG_DYN_LINK")
+add_subdirectory(third_party)
 
-add_executable(dancing-links
-    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp
+flex_target(xcc_lexer
+  "${CMAKE_CURRENT_SOURCE_DIR}/xcc_lexer.l"
+  "${CMAKE_CURRENT_BINARY_DIR}/xcc_lexer.c")
+
+bison_target(xcc_parser
+  "${CMAKE_CURRENT_SOURCE_DIR}/xcc_parser.y"
+  "${CMAKE_CURRENT_BINARY_DIR}/xcc_parser.c")
+
+add_flex_bison_dependency(xcc_lexer xcc_parser)
+
+add_library(xcc STATIC
+  ${SRCS}
+  "${CMAKE_CURRENT_BINARY_DIR}/xcc_lexer.c"
+  "${CMAKE_CURRENT_BINARY_DIR}/xcc_parser.c"
 )
 
-target_link_libraries(dancing-links libdancinglinks)
+target_include_directories(xcc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(dancing-links Boost::program_options Boost::log)
+add_executable(xccsolve main.c)
 
-# Address Sanitizer for Debug Builds
-if(DEBUG_ENABLE_ADDRESS_SANITIZER)
-    set(CMAKE_BUILD_TYPE Debug)
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DBOOST_USE_ASAN")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address  -fsanitize=undefined -fsanitize=address -fno-sanitize-recover=undefined -fno-sanitize=vptr")
-    set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address  -fsanitize=undefined -fsanitize=address -fno-sanitize-recover=undefined -fno-sanitize=vptr")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=address  -fsanitize=undefined -fsanitize=address -fno-sanitize-recover=undefined -fno-sanitize=vptr")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address  -fsanitize=undefined -fsanitize=address -fno-sanitize-recover=undefined -fno-sanitize=vptr")
-endif()
+target_link_libraries(xccsolve xcc)
 
-enable_testing()
-add_test(NAME dancing-links-tests COMMAND dancing-links --test)
-
-# Thread Sanitizer for Debug Builds
-if(DEBUG_ENABLE_THREAD_SANITIZER)
-    set(CMAKE_BUILD_TYPE Debug)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
-    set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=thread")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=thread")
-endif()
+add_subdirectory(test)
+set_target_properties(tests
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
