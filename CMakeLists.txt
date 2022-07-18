@@ -6,6 +6,7 @@ set(SRCS
   xcc.c
   algorithm.c
   algorithm_x.c
+  log.c
 )
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")

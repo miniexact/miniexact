@@ -1,4 +1,5 @@
 #include "algorithm.h"
+#include "algorithm_x.h"
 #include "ops.h"
 
 xcc_link
@@ -25,4 +26,14 @@ xcc_choose_i_mrv(xcc_algorithm* a, xcc_problem* p) {
   }
 
   return i;
+}
+
+bool
+xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
+  if(algorithm_select & XCC_ALGORITHM_X) {
+    xcc_algoritihm_x_set(algorithm);
+    return true;
+  }
+
+  return false;
 }

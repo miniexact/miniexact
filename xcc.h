@@ -41,6 +41,15 @@ typedef struct xcc_node {
 
 #define XCC_ARR_PLUS1(ARR) XCC_ARR_PLUSN(ARR, 1)
 
+typedef struct xcc_config {
+  int verbose;
+  int solve;
+  int algorithm_select;
+  const char* input_file;
+} xcc_config;
+
+typedef enum xcc_algorithm_id { XCC_ALGORITHM_X = 1 << 0 } xcc_algorithm_id;
+
 typedef struct xcc_problem {
   ARR(xcc_link, llink)
   ARR(xcc_link, rlink)

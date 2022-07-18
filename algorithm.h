@@ -62,6 +62,9 @@ typedef struct xcc_algorithm {
   xcc_choose_i choose_i;
 } xcc_algorithm;
 
+bool
+xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm);
+
 #ifdef __cplusplus
 }
 #endif
