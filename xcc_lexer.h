@@ -2,9 +2,9 @@
 #define xccHEADER_H 1
 #define xccIN_HEADER 1
 
-#line 6 "xcc_lexer.h"
+#line 5 "xcc_lexer.h"
 
-#line 8 "xcc_lexer.h"
+#line 7 "xcc_lexer.h"
 
 #define  YY_INT_ALIGNED short int
 
@@ -715,6 +715,6 @@ extern int yylex \
 #line 43 "/home/maximaximal/sai/xcc/xcc_lexer.l"
 
 
-#line 719 "xcc_lexer.h"
+#line 718 "xcc_lexer.h"
 #undef xccIN_HEADER
 #endif /* xccHEADER_H */

@@ -9,6 +9,16 @@
 #include "xcc.h"
 
 static void
+print_help() {
+  printf("xccsolve -- solve XCC problems using different algorithms\n");
+  printf("OPTIONS:\n");
+  printf("  -h\t\tprint help\n");
+  printf("  --file/-f\tset input file (also takes first positional arg)\n");
+  printf("ALGORITHM SELECTORS:\n");
+  printf("  -x\t\tuse Algorithm X\n");
+}
+
+static void
 parse_cli(xcc_config* cfg, int argc, char* argv[]) {
   int c;
 
@@ -18,7 +28,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
     /* These options don’t set a flag.
        We distinguish them by their indices. */
     { "file", required_argument, 0, 'f' },
-    { "solve", no_argument, &cfg->solve, 1 },
+    { "help", no_argument, 0, 'h' },
     { "x", no_argument, &cfg->algorithm_select, XCC_ALGORITHM_X },
     { 0, 0, 0, 0 }
   };
@@ -27,7 +37,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "sx", long_options, &option_index);
+    c = getopt_long(argc, argv, "sxhf:", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -36,9 +46,9 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
       case 'v':
         cfg->verbose = 1;
         break;
-      case 's':
-        cfg->solve = 1;
-        break;
+      case 'h':
+	print_help();
+	exit(EXIT_SUCCESS);
       case 'x':
         cfg->algorithm_select |= XCC_ALGORITHM_X;
         break;
@@ -46,7 +56,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
         cfg->input_file = optarg;
         break;
       default:
-	break;
+        break;
     }
   }
 
@@ -71,25 +81,23 @@ process_file(xcc_config* cfg) {
 
   int return_code = EXIT_SUCCESS;
 
-  if(cfg->solve) {
-    if(!a.compute_next_result) {
-      err("Algorithm does not support solving!");
-      return EXIT_FAILURE;
-    }
+  if(!a.compute_next_result) {
+    err("Algorithm does not support solving!");
+    return EXIT_FAILURE;
+  }
 
-    bool has_solution = a.compute_next_result(&a, p);
-    if(!has_solution) {
-      return_code = 20;
-    } else {
-      return_code = 10;
+  bool has_solution = a.compute_next_result(&a, p);
+  if(!has_solution) {
+    return_code = 20;
+  } else {
+    return_code = 10;
 
-      xcc_link solution[p->l];
-      xcc_extract_solution_option_indices(p, solution);
-      for(size_t i = 0; i < p->l; ++i) {
-	printf("%d ", solution[i]);
-      }
-      printf("\n");
+    xcc_link solution[p->l];
+    xcc_extract_solution_option_indices(p, solution);
+    for(size_t i = 0; i < p->l; ++i) {
+      printf("%d ", solution[i]);
     }
+    printf("\n");
   }
 
   xcc_problem_free(p);

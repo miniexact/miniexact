@@ -43,7 +43,6 @@ typedef struct xcc_node {
 
 typedef struct xcc_config {
   int verbose;
-  int solve;
   int algorithm_select;
   const char* input_file;
 } xcc_config;
