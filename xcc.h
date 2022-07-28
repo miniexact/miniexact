@@ -47,7 +47,11 @@ typedef struct xcc_config {
   const char* input_file;
 } xcc_config;
 
-typedef enum xcc_algorithm_id { XCC_ALGORITHM_X = 1 << 0 } xcc_algorithm_id;
+typedef enum xcc_algorithm_id {
+  XCC_ALGORITHM_MRV = 1 << 1,
+  XCC_ALGORITHM_X = 1 << 2,
+  XCC_ALGORITHM_C = 1 << 3
+} xcc_algorithm_id;
 
 typedef struct xcc_problem {
   ARR(xcc_link, llink)

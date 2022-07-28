@@ -65,6 +65,9 @@ typedef struct xcc_algorithm {
 void
 xcc_algorithm_standard_functions(xcc_algorithm* algorithm);
 
+static const char*
+xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p);
+
 bool
 xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm);
 

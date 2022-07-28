@@ -36,6 +36,11 @@ letter        [a-zA-Z]
   return ID;
 }
 
+{digit}+ {
+  yylval->num = atoi(yytext);
+  return NUM;
+}
+
 [[:space:]]  ; /* ignore */
 
 .                    { printf("Unknown character [%c]\n",yytext[0]);

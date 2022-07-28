@@ -30,23 +30,54 @@ inline static void
 xcc_unhide(xcc_problem*, xcc_link);
 
 inline static void
+xcc_cover_prime(xcc_problem*, xcc_link);
+inline static void
+xcc_uncover_prime(xcc_problem*, xcc_link);
+inline static void
 xcc_hide_prime(xcc_problem*, xcc_link);
 inline static void
 xcc_unhide_prime(xcc_problem*, xcc_link);
+inline static void
+xcc_commit(xcc_problem* p, xcc_link p_, xcc_link j_);
+inline static void
+xcc_uncommit(xcc_problem* p, xcc_link p_, xcc_link j_);
+inline static void
+xcc_purify(xcc_problem* p, xcc_link p_);
+inline static void
+xcc_unpurify(xcc_problem* p, xcc_link p_);
 
 #define COVER(I) xcc_cover(p, I)
 #define UNCOVER(I) xcc_uncover(p, I)
 #define HIDE(P) xcc_hide(p, P)
 #define UNHIDE(P) xcc_unhide(p, P)
 
+#define COVER_PRIME(I) xcc_cover_prime(p, I)
+#define UNCOVER_PRIME(I) xcc_uncover_prime(p, I)
 #define HIDE_PRIME(P) xcc_hide_prime(p, P)
 #define UNHIDE_PRIME(P) xcc_unhide_prime(p, P)
+
+#define COMMIT(P, J) xcc_commit(p, P, J)
+#define UNCOMMIT(P, J) xcc_uncommit(p, P, J)
+#define PURIFY(P) xcc_purify(p, P)
+#define UNPURIFY(P) xcc_unpurify(p, P)
 
 inline static void
 xcc_cover(xcc_problem* p, xcc_link i) {
   xcc_link p_ = DLINK(i);
   while(p_ != i) {
     HIDE(p_);
+    p_ = DLINK(p_);
+  }
+  xcc_link l = LLINK(i), r = RLINK(i);
+  RLINK(l) = r;
+  LLINK(r) = l;
+}
+
+inline static void
+xcc_cover_prime(xcc_problem* p, xcc_link i) {
+  xcc_link p_ = DLINK(i);
+  while(p_ != i) {
+    HIDE_PRIME(p_);
     p_ = DLINK(p_);
   }
   xcc_link l = LLINK(i), r = RLINK(i);
@@ -63,6 +94,19 @@ xcc_uncover(xcc_problem* p, xcc_link i) {
   xcc_link p_ = ULINK(i);
   while(p_ != i) {
     UNHIDE(p_);
+    p_ = ULINK(p_);
+  }
+}
+
+inline static void
+xcc_uncover_prime(xcc_problem* p, xcc_link i) {
+  xcc_link l = LLINK(i);
+  xcc_link r = RLINK(i);
+  RLINK(l) = i;
+  LLINK(r) = i;
+  xcc_link p_ = ULINK(i);
+  while(p_ != i) {
+    UNHIDE_PRIME(p_);
     p_ = ULINK(p_);
   }
 }
@@ -146,6 +190,48 @@ xcc_unhide_prime(xcc_problem* p, xcc_link p_) {
       LEN(x) = LEN(x) + 1;
       q = q - 1;
     }
+  }
+}
+
+inline static void
+xcc_commit(xcc_problem* p, xcc_link p_, xcc_link j_) {
+  if(COLOR(p_) == 0)
+    COVER_PRIME(j_);
+  else if(COLOR(p_) > 0)
+    PURIFY(p_);
+  else
+    assert(false);
+}
+
+inline static void
+xcc_uncommit(xcc_problem* p, xcc_link p_, xcc_link j_) {
+  if(COLOR(p_) == 0)
+    UNCOVER_PRIME(j_);
+  else if(COLOR(p_) > 0)
+    UNPURIFY(p_);
+  else
+    assert(false);
+}
+
+inline static void xcc_purify(xcc_problem* p, xcc_link p_) {
+  xcc_link c = COLOR(p_), i = TOP(p_), q = DLINK(p_);
+  while(q != i) {
+    if(COLOR(q) == c)
+      COLOR(q) = -1;
+    else
+      HIDE_PRIME(q);
+    q = DLINK(q);
+  }
+}
+
+inline static void xcc_unpurify(xcc_problem* p, xcc_link p_) {
+  xcc_link c = COLOR(p_), i = TOP(p_), q = ULINK(p_);
+  while(q != i) {
+    if(COLOR(q) < 0)
+      COLOR(q) = c;
+    else
+      UNHIDE_PRIME(q);
+    q = ULINK(q);
   }
 }
 

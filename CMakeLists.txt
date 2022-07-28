@@ -18,6 +18,7 @@ set(SRCS
   xcc.c
   algorithm.c
   algorithm_x.c
+  algorithm_c.c
   log.c
 )
 

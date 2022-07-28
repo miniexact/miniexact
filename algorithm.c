@@ -1,5 +1,6 @@
 #include "algorithm.h"
 #include "algorithm_x.h"
+#include "algorithm_c.h"
 #include "ops.h"
 
 static inline const char*
@@ -92,7 +93,7 @@ prepare_options(xcc_algorithm* a, xcc_problem* p) {
 }
 
 static const char*
-add_item(xcc_algorithm* a, xcc_problem* p, xcc_link ij) {
+add_item_with_color(xcc_algorithm* a, xcc_problem* p, xcc_link ij, xcc_color c) {
   if(ij < 1)
     return "Invalid ij given for add_item!";
 
@@ -109,8 +110,14 @@ add_item(xcc_algorithm* a, xcc_problem* p, xcc_link ij) {
   DLINK(p->p + p->j) = ij;
   ULINK(ij) = p->p + p->j;
   TOP(p->p + p->j) = ij;
+  COLOR(p->p + p->j) = c;
 
   return NULL;
+}
+
+static const char*
+add_item(xcc_algorithm* a, xcc_problem* p, xcc_link ij) {
+  return add_item_with_color(a, p, ij, 0);
 }
 
 static const char*
@@ -134,6 +141,37 @@ end_option(xcc_algorithm* a, xcc_problem* p) {
 static const char*
 end_options(xcc_algorithm* a, xcc_problem* p) {
   DLINK(p->dlink_size - 1) = 0;
+  return NULL;
+}
+
+const char*
+xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p) {
+  assert(a);
+  assert(p);
+
+  XCC_ARR_ALLOC(xcc_link, llink)
+  XCC_ARR_ALLOC(xcc_link, rlink)
+  XCC_ARR_ALLOC(xcc_name, name)
+  XCC_ARR_ALLOC(xcc_name, len)
+  XCC_ARR_ALLOC(xcc_name, ulink)
+  XCC_ARR_ALLOC(xcc_name, dlink)
+  XCC_ARR_ALLOC(xcc_name, x)
+  XCC_ARR_ALLOC(xcc_color, color)
+
+  LLINK(0) = 0;
+  RLINK(0) = 0;
+  NAME(0) = NULL;
+
+  p->name_size = 1;
+  p->llink_size = 1;
+  p->rlink_size = 1;
+
+  p->i = 0;
+  p->j = 0;
+  p->N_1 = -1;
+
+  p->state = 0;
+
   return NULL;
 }
 
@@ -166,18 +204,23 @@ xcc_choose_i_mrv(xcc_algorithm* a, xcc_problem* p) {
 void
 xcc_algorithm_standard_functions(xcc_algorithm* a) {
   a->add_item = &add_item;
-  a->add_item_with_color = NULL;
+  a->add_item_with_color = &add_item_with_color;
   a->prepare_options = &prepare_options;
   a->end_option = &end_option;
   a->define_primary_item = &define_primary_item;
   a->define_secondary_item = &define_secondary_item;
   a->end_options = &end_options;
+  a->init_problem = &xcc_default_init_problem;
 }
 
 bool
 xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
   if(algorithm_select & XCC_ALGORITHM_X) {
     xcc_algoritihm_x_set(algorithm);
+    return true;
+  }
+  if(algorithm_select & XCC_ALGORITHM_C) {
+    xcc_algoritihm_c_set(algorithm);
     return true;
   }
 

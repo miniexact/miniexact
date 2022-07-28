@@ -44,6 +44,8 @@ xcc_problem_free(xcc_problem* p) {
     free(p->dlink);
   if(p->top)
     free(p->top);
+  if(p->color)
+    free(p->color);
   if(p->name) {
     for(size_t i = 0; i < p->name_size; ++i)
       if(p->name[i])

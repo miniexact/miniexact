@@ -104,7 +104,7 @@ primary_items:	primary_item
 	;
 
 primary_item: 	ID { CALL(algorithm->define_primary_item, algorithm, *problem, $1); }
-        |	ID ':' '[' NUM ';' NUM ']'
+        |	ID COLORSEP '[' NUM ';' NUM ']'
         	{ CALL(algorithm->define_primary_item_with_range, algorithm, *problem, $1, $4, $6); }
 	;
 
@@ -144,7 +144,7 @@ option_item_without_color:
 	;
 
 option_item_with_color:
-		ID ':' NUM { CALL(algorithm->add_item_with_color,
+		ID COLORSEP NUM { CALL(algorithm->add_item_with_color,
 				  algorithm,
 				  *problem,
 				  xcc_item_from_ident(*problem, $1),

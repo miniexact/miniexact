@@ -4,11 +4,11 @@
 #include <string.h>
 
 #include "algorithm.h"
-#include "algorithm_x.h"
+#include "algorithm_c.h"
 
 #include "ops.h"
 
-typedef enum x_state { X1, X2, X3, X4, X5, X6, X7, X8 } x_state;
+typedef enum c_state { X1, X2, X3, X4, X5, X6, X7, X8 } c_state;
 
 static bool
 compute_next_result(xcc_algorithm* a, xcc_problem* p) {
@@ -51,7 +51,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         p->state = X4;
         break;
       case X4:
-        COVER(p->i);
+        COVER_PRIME(p->i);
         p->x[p->l] = DLINK(p->i);
         p->state = X5;
         break;
@@ -66,7 +66,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
             if(j <= 0) {
               p->p = ULINK(p->p);
             } else {
-              COVER(j);
+              COVER_PRIME(j);
               p->p = p->p + 1;
             }
           }
@@ -81,7 +81,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
           if(j <= 0) {
             p->p = DLINK(p->p);
           } else {
-            UNCOVER(j);
+            UNCOVER_PRIME(j);
             p->p = p->p - 1;
           }
         }
@@ -90,7 +90,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         p->state = X5;
         break;
       case X7:
-        UNCOVER(p->i);
+        UNCOVER_PRIME(p->i);
         p->state = X8;
         break;
       case X8:
@@ -107,7 +107,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
 }
 
 void
-xcc_algoritihm_x_set(xcc_algorithm* a) {
+xcc_algoritihm_c_set(xcc_algorithm* a) {
   xcc_algorithm_standard_functions(a);
 
   a->compute_next_result = &compute_next_result;
