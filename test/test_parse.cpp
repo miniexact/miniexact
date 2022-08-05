@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm.h>
-#include <algorithm_x.h>
 #include <algorithm_c.h>
+#include <algorithm_x.h>
 #include <parse.h>
 #include <xcc.h>
 
@@ -92,7 +92,8 @@ TEST_CASE("parse standard XCC example") {
 }
 
 TEST_CASE("parse standard colored XCC example") {
-  const char* str = "< p q r > [ x y ] p q x y:1; p r x:1 y; p x:2; q x:1; r y:2;";
+  const char* str =
+    "< p q r > [ x y ] p q x y:1; p r x:1 y; p x:2; q x:1; r y:2;";
 
   xcc_algorithm algorithm;
   xcc_algoritihm_c_set(&algorithm);
