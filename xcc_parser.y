@@ -88,7 +88,7 @@ start : { *problem = xcc_problem_allocate(); algorithm->init_problem(algorithm, 
 ;
 
 problem:
-		LPRIMLIST primary_items RPRIMLIST { (*problem)->N_1 = (*problem)->i - 1; }
+		LPRIMLIST primary_items RPRIMLIST
 		LSECLIST secondary_items RSECLIST
 		{ CALL(algorithm->prepare_options, algorithm, *problem); }
 		options

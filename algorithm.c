@@ -43,8 +43,13 @@ define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
 static const char*
 define_secondary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
   const char* e;
+
   if((e = define_item(a, p, n)))
     return e;
+
+  if(p->secondary_item_count == 0) {
+    p->N_1 = p->i - 1;
+  }
 
   ++p->secondary_item_count;
 
@@ -131,6 +136,7 @@ end_option(xcc_algorithm* a, xcc_problem* p) {
   p->p = p->p + p->j + 1;
   TOP(p->p) = -p->M;
   ULINK(p->p) = p->p - p->j;
+  COLOR(p->p) = 0;
 
   p->j = 0;
   p->Z = p->p;
