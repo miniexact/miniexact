@@ -8,7 +8,7 @@
 
 #include "ops.h"
 
-typedef enum c_state { X1, X2, X3, X4, X5, X6, X7, X8 } c_state;
+typedef enum c_state { C1, C2, C3, C4, C5, C6, C7, C8 } c_state;
 
 static bool
 compute_next_result(xcc_algorithm* a, xcc_problem* p) {
@@ -22,7 +22,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
 
   while(true) {
     switch(p->state) {
-      case X1: {
+      case C1: {
         xcc_link i = 0;
         do {
           i = RLINK(i);
@@ -33,72 +33,71 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         } while(RLINK(i) != 0);
 
         p->l = 0;
-        p->state = X2;
+        p->state = C2;
         p->i = 0;
         p->N = p->dlink_size;
         break;
       }
-      case X2:
+      case C2:
         if(RLINK(0) == 0) {
-          p->state = X8;
+          p->state = C8;
           p->x_size = p->l;
           return true;
         }
-        p->state = X3;
+        p->state = C3;
         break;
-      case X3:
+      case C3:
         p->i = a->choose_i(a, p);
-        p->state = X4;
+        p->state = C4;
         break;
-      case X4:
+      case C4:
         COVER_PRIME(p->i);
         p->x[p->l] = DLINK(p->i);
-        p->state = X5;
+        p->state = C5;
         break;
-      case X5:
+      case C5:
         if(p->x[p->l] == p->i) {
-          p->state = X7;
+          p->state = C7;
           break;
-        } else {
-          p->p = p->x[p->l] + 1;
-          while(p->p != p->x[p->l]) {
-            xcc_link j = TOP(p->p);
-            if(j <= 0) {
-              p->p = ULINK(p->p);
-            } else {
-              COVER_PRIME(j);
-              p->p = p->p + 1;
-            }
+        }
+        p->p = p->x[p->l] + 1;
+        while(p->p != p->x[p->l]) {
+          xcc_link j = TOP(p->p);
+          if(j <= 0) {
+            p->p = ULINK(p->p);
+          } else {
+            COMMIT(p->p, j);
+            p->p = p->p + 1;
           }
         }
         p->l = p->l + 1;
-        p->state = X2;
+        p->state = C2;
         break;
-      case X6:
+      case C6:
         p->p = p->x[p->l] - 1;
         while(p->p != p->x[p->l]) {
           xcc_link j = TOP(p->p);
           if(j <= 0) {
             p->p = DLINK(p->p);
           } else {
-            UNCOVER_PRIME(j);
+            UNCOMMIT(p->p, j);
             p->p = p->p - 1;
           }
         }
         p->i = TOP(p->x[p->l]);
         p->x[p->l] = DLINK(p->x[p->l]);
-        p->state = X5;
+        p->state = C5;
         break;
-      case X7:
+      case C7:
         UNCOVER_PRIME(p->i);
-        p->state = X8;
+        p->state = C8;
         break;
-      case X8:
+      case C8:
         if(p->l == 0) {
           return false;
         }
         p->l = p->l - 1;
-        p->state = X6;
+        p->state = C6;
         break;
     }
   }
