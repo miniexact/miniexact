@@ -5,6 +5,7 @@
 
 #include "algorithm.h"
 #include "log.h"
+#include "ops.h"
 #include "parse.h"
 #include "xcc.h"
 
@@ -14,6 +15,7 @@ print_help() {
   printf("OPTIONS:\n");
   printf("  -h\t\tprint help\n");
   printf("  --file/-f\tset input file (also takes first positional arg)\n");
+  printf("  -p\t\tprint selected options\n");
   printf("ALGORITHM SELECTORS:\n");
   printf("  --naive\tuse naive in-order for i selection\n");
   printf("  --mrv\t\tuse MRV for i selection (default)\n");
@@ -33,6 +35,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
     { "verbose", no_argument, &cfg->verbose, 1 },
     { "file", required_argument, 0, 'f' },
     { "help", no_argument, 0, 'h' },
+    { "print", no_argument, 0, 'p' },
     { "naive", no_argument, &sel[0], XCC_ALGORITHM_NAIVE },
     { "mrv", no_argument, &sel[1], XCC_ALGORITHM_MRV },
     { "x", no_argument, &sel[2], XCC_ALGORITHM_X },
@@ -45,7 +48,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "sxckhf:", long_options, &option_index);
+    c = getopt_long(argc, argv, "psxckhf:", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -53,6 +56,9 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
     switch(c) {
       case 'v':
         cfg->verbose = 1;
+        break;
+      case 'p':
+        cfg->print_options = 1;
         break;
       case 'h':
         print_help();
@@ -109,12 +115,33 @@ process_file(xcc_config* cfg) {
   } else {
     return_code = 10;
 
-    xcc_link solution[p->l];
-    xcc_extract_solution_option_indices(p, solution);
-    for(size_t i = 0; i < p->l; ++i) {
-      printf("%d ", solution[i]);
+    if(cfg->print_options) {
+      for(xcc_link o = 0; o < p->l; ++o) {
+        xcc_link o_ = p->x[o];
+
+        // Go back to beginning of option
+        while(TOP(o_ - 1) > 0)
+          --o_;
+
+        while(TOP(o_) > 0) {
+          printf("%s", NAME(TOP(o_)));
+          if(o_ < p->color_size && COLOR(o_) != 0)
+            printf(":%s", p->color_name[o_]);
+          ++o_;
+
+          if(TOP(o_) > 0)
+            printf(" ");
+        }
+        printf(";\n");
+      }
+    } else {
+      xcc_link solution[p->l];
+      xcc_extract_solution_option_indices(p, solution);
+      for(size_t i = 0; i < p->l; ++i) {
+        printf("%d ", solution[i]);
+      }
+      printf("\n");
     }
-    printf("\n");
   }
 
   xcc_problem_free(p, &a);

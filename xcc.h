@@ -40,6 +40,7 @@ typedef struct xcc_algorithm xcc_algorithm;
 
 typedef struct xcc_config {
   int verbose;
+  int print_options;
   int algorithm_select;
   const char* input_file;
 } xcc_config;
