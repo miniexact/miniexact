@@ -50,6 +50,12 @@ xcc_problem_free(xcc_problem* p, xcc_algorithm* a) {
     free(p->top);
   if(p->color)
     free(p->color);
+  if(p->color_name) {
+    for(size_t i = 0; i < p->color_name_size; ++i)
+      if(p->color_name[i])
+        free(p->color_name[i]);
+    free(p->color_name);
+  }
   if(p->name) {
     for(size_t i = 0; i < p->name_size; ++i)
       if(p->name[i])
@@ -65,6 +71,24 @@ xcc_problem_free(xcc_problem* p, xcc_algorithm* a) {
 xcc_link
 xcc_item_from_ident(xcc_problem* p, xcc_name ident) {
   return xcc_search_for_name(ident, p->name, p->name_size);
+}
+
+xcc_link
+xcc_color_from_ident(xcc_problem* p, xcc_name ident) {
+  return xcc_search_for_name(ident, p->color_name, p->color_name_size);
+}
+
+xcc_link
+xcc_color_from_ident_and_insert(xcc_problem* p, xcc_name ident) {
+  xcc_link l = xcc_color_from_ident(p, ident);
+  if(l == -1) {
+    l = p->color_name_size;
+    XCC_ARR_PLUS1(color_name)
+    p->color_name[l] = ident;
+  } else {
+    free(ident);
+  }
+  return l;
 }
 
 void

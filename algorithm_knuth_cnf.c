@@ -109,8 +109,8 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
       if(t < 0) {
         bool active = ccadical_val(k->cadical, -t) > 0;
         if(active) {
-          p->x[p->x_size] = i - 1;
           XCC_ARR_PLUS1(x)
+          p->x[p->x_size - 1] = i - 1;
         }
       }
     }

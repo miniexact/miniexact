@@ -712,7 +712,7 @@ extern int yylex \
 #undef yyTABLES_NAME
 #endif
 
-#line 48 "/home/maximaximal/sai/xcc/xcc_lexer.l"
+#line 39 "/home/maximaximal/sai/xcc/xcc_lexer.l"
 
 
 #line 718 "xcc_lexer.h"

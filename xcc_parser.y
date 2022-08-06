@@ -53,7 +53,6 @@ int yyerror();
 			    { ERR("Function " str(FUNC) " returned error!"); ERR(e); return 0;}} while(false);
 }
 
-%token <num> NUM
 %token <str> ID
 %token <item> ITEM
 
@@ -104,8 +103,8 @@ primary_items:	primary_item
 	;
 
 primary_item: 	ID { CALL(algorithm->define_primary_item, algorithm, *problem, $1); }
-        |	ID COLORSEP '[' NUM ';' NUM ']'
-        	{ CALL(algorithm->define_primary_item_with_range, algorithm, *problem, $1, $4, $6); }
+        |	ID COLORSEP '[' ID ';' ID ']'
+	{ CALL(algorithm->define_primary_item_with_range, algorithm, *problem, $1, atoi($4), atoi($6)); }
 	;
 
 secondary_items:
@@ -144,11 +143,11 @@ option_item_without_color:
 	;
 
 option_item_with_color:
-		ID COLORSEP NUM { CALL(algorithm->add_item_with_color,
+		ID COLORSEP ID { CALL(algorithm->add_item_with_color,
 				  algorithm,
 				  *problem,
 				  xcc_item_from_ident(*problem, $1),
-				  $3);
+		                  xcc_color_from_ident_and_insert(*problem, $3));
 		    free($1);
 		}
 	;

@@ -20,8 +20,7 @@
 #include <xcc.h>
 %}
 
-digit         [0-9]
-letter        [a-zA-Z]
+LETTER [^ \n\r\t\f\v\<\>\[\]\:\;]
 
 %%
 "<" { return LPRIMLIST; };
@@ -31,18 +30,10 @@ letter        [a-zA-Z]
 ":" { return COLORSEP; };
 ";" { return ENDOPTION; };
 
-{letter}({letter}|{digit})* {
+{LETTER}+ {
   yylval->str = strdup(yytext);
   return ID;
 }
 
-{digit}+ {
-  yylval->num = atoi(yytext);
-  return NUM;
-}
-
 [[:space:]]  ; /* ignore */
-
-.                    { printf("Unknown character [%c]\n",yytext[0]);
-                       return UNKNOWN;    }
 %%

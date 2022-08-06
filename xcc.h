@@ -66,6 +66,7 @@ typedef struct xcc_problem {
   };
 
   ARR(xcc_name, name)
+  ARR(xcc_name, color_name)
   ARR(xcc_color, color)
 
   // Solution
@@ -98,6 +99,12 @@ xcc_problem_free(xcc_problem* p, xcc_algorithm* a);
 
 xcc_link
 xcc_item_from_ident(xcc_problem* p, xcc_name ident);
+
+xcc_link
+xcc_color_from_ident(xcc_problem* p, xcc_name ident);
+
+xcc_link
+xcc_color_from_ident_and_insert(xcc_problem* p, xcc_name ident);
 
 void
 xcc_print_problem_matrix(xcc_problem* p);
