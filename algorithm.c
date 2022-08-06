@@ -1,7 +1,7 @@
 #include "algorithm.h"
-#include "algorithm_x.h"
 #include "algorithm_c.h"
 #include "algorithm_knuth_cnf.h"
+#include "algorithm_x.h"
 #include "ops.h"
 
 static inline const char*
@@ -99,7 +99,10 @@ prepare_options(xcc_algorithm* a, xcc_problem* p) {
 }
 
 static const char*
-add_item_with_color(xcc_algorithm* a, xcc_problem* p, xcc_link ij, xcc_color c) {
+add_item_with_color(xcc_algorithm* a,
+                    xcc_problem* p,
+                    xcc_link ij,
+                    xcc_color c) {
   if(ij < 1)
     return "Invalid ij given for add_item!";
 
@@ -194,12 +197,10 @@ xcc_choose_i_naively(xcc_algorithm* a, xcc_problem* p) {
 
 xcc_link
 xcc_choose_i_mrv(xcc_algorithm* a, xcc_problem* p) {
-  xcc_link i = xcc_choose_i_naively(a, p);
-
-  xcc_link p_ = RLINK(0);
-  xcc_link theta = XCC_LINK_MAX;
+  xcc_link i = RLINK(0);
+  xcc_link p_ = RLINK(0), theta = XCC_LINK_MAX;
   while(p_ != 0) {
-    xcc_link lambda = LEN(p->p);
+    xcc_link lambda = LEN(p_);
     if(lambda < theta) {
       theta = lambda;
       i = p_;
@@ -209,7 +210,6 @@ xcc_choose_i_mrv(xcc_algorithm* a, xcc_problem* p) {
     }
     p_ = RLINK(p_);
   }
-
   return i;
 }
 
@@ -224,24 +224,32 @@ xcc_algorithm_standard_functions(xcc_algorithm* a) {
   a->end_options = &end_options;
   a->init_problem = &xcc_default_init_problem;
 
+  // Default: Just use MRV.
+  a->choose_i = &xcc_choose_i_mrv;
+
   // Nothing to be freed by default.
   a->free_userdata = NULL;
 }
 
 bool
 xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
+  bool success = false;
   if(algorithm_select & XCC_ALGORITHM_X) {
     xcc_algoritihm_x_set(algorithm);
-    return true;
-  }
-  if(algorithm_select & XCC_ALGORITHM_C) {
+    success = true;
+  } else if(algorithm_select & XCC_ALGORITHM_C) {
     xcc_algoritihm_c_set(algorithm);
-    return true;
-  }
-  if(algorithm_select & XCC_ALGORITHM_KNUTH_CNF) {
+    success = true;
+  } else if(algorithm_select & XCC_ALGORITHM_KNUTH_CNF) {
     xcc_algoritihm_knuth_cnf_set(algorithm);
-    return true;
+    success = true;
   }
 
-  return false;
+  if(algorithm_select & XCC_ALGORITHM_NAIVE) {
+    algorithm->choose_i = &xcc_choose_i_naively;
+  } else if(algorithm_select & XCC_ALGORITHM_MRV) {
+    algorithm->choose_i = &xcc_choose_i_mrv;
+  }
+
+  return success;
 }

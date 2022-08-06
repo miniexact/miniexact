@@ -15,23 +15,29 @@ print_help() {
   printf("  -h\t\tprint help\n");
   printf("  --file/-f\tset input file (also takes first positional arg)\n");
   printf("ALGORITHM SELECTORS:\n");
+  printf("  --naive\tuse naive in-order for i selection\n");
+  printf("  --mrv\t\tuse MRV for i selection (default)\n");
   printf("  -x\t\tuse Algorithm X\n");
+  printf("  -c\t\tuse Algorithm C\n");
+  printf("  -k\t\tuse CaDiCaL to solve with SAT (Knuth's trivial encoding)\n");
 }
 
 static void
 parse_cli(xcc_config* cfg, int argc, char* argv[]) {
   int c;
 
+  int sel[5];
+  memset(sel, 0, sizeof(sel));
+
   struct option long_options[] = {
-    /* These options set a flag. */
     { "verbose", no_argument, &cfg->verbose, 1 },
-    /* These options don’t set a flag.
-       We distinguish them by their indices. */
     { "file", required_argument, 0, 'f' },
     { "help", no_argument, 0, 'h' },
-    { "x", no_argument, &cfg->algorithm_select, XCC_ALGORITHM_X },
-    { "c", no_argument, &cfg->algorithm_select, XCC_ALGORITHM_C },
-    { "k", no_argument, &cfg->algorithm_select, XCC_ALGORITHM_KNUTH_CNF },
+    { "naive", no_argument, &sel[0], XCC_ALGORITHM_NAIVE },
+    { "mrv", no_argument, &sel[1], XCC_ALGORITHM_MRV },
+    { "x", no_argument, &sel[2], XCC_ALGORITHM_X },
+    { "c", no_argument, &sel[3], XCC_ALGORITHM_C },
+    { "k", no_argument, &sel[4], XCC_ALGORITHM_KNUTH_CNF },
     { 0, 0, 0, 0 }
   };
 
@@ -49,8 +55,8 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
         cfg->verbose = 1;
         break;
       case 'h':
-	print_help();
-	exit(EXIT_SUCCESS);
+        print_help();
+        exit(EXIT_SUCCESS);
       case 'x':
         cfg->algorithm_select |= XCC_ALGORITHM_X;
         break;
@@ -72,6 +78,9 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
     if(!cfg->input_file)
       cfg->input_file = argv[optind];
   }
+
+  for(size_t i = 0; i < sizeof(sel) / sizeof(sel[0]); ++i)
+    cfg->algorithm_select |= sel[i];
 }
 
 static int
