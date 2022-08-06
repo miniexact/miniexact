@@ -1,6 +1,7 @@
 #include "algorithm.h"
 #include "algorithm_x.h"
 #include "algorithm_c.h"
+#include "algorithm_knuth_cnf.h"
 #include "ops.h"
 
 static inline const char*
@@ -155,6 +156,8 @@ xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p) {
   assert(a);
   assert(p);
 
+  p->algorithm_userdata = NULL;
+
   XCC_ARR_ALLOC(xcc_link, llink)
   XCC_ARR_ALLOC(xcc_link, rlink)
   XCC_ARR_ALLOC(xcc_name, name)
@@ -217,6 +220,9 @@ xcc_algorithm_standard_functions(xcc_algorithm* a) {
   a->define_secondary_item = &define_secondary_item;
   a->end_options = &end_options;
   a->init_problem = &xcc_default_init_problem;
+
+  // Nothing to be freed by default.
+  a->free_userdata = NULL;
 }
 
 bool
@@ -227,6 +233,10 @@ xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
   }
   if(algorithm_select & XCC_ALGORITHM_C) {
     xcc_algoritihm_c_set(algorithm);
+    return true;
+  }
+  if(algorithm_select & XCC_ALGORITHM_KNUTH_CNF) {
+    xcc_algoritihm_knuth_cnf_set(algorithm);
     return true;
   }
 

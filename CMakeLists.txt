@@ -19,6 +19,7 @@ set(SRCS
   algorithm.c
   algorithm_x.c
   algorithm_c.c
+  algorithm_knuth_cnf.c
   log.c
 )
 
@@ -46,6 +47,8 @@ add_library(xcc STATIC
   "${CMAKE_CURRENT_BINARY_DIR}/xcc_lexer.c"
   "${CMAKE_CURRENT_BINARY_DIR}/xcc_parser.c"
 )
+
+target_link_libraries(xcc libcadical)
 
 target_include_directories(xcc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

@@ -31,6 +31,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
     { "help", no_argument, 0, 'h' },
     { "x", no_argument, &cfg->algorithm_select, XCC_ALGORITHM_X },
     { "c", no_argument, &cfg->algorithm_select, XCC_ALGORITHM_C },
+    { "k", no_argument, &cfg->algorithm_select, XCC_ALGORITHM_KNUTH_CNF },
     { 0, 0, 0, 0 }
   };
 
@@ -38,7 +39,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "sxchf:", long_options, &option_index);
+    c = getopt_long(argc, argv, "sxckhf:", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -55,6 +56,9 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
         break;
       case 'c':
         cfg->algorithm_select |= XCC_ALGORITHM_C;
+        break;
+      case 'k':
+        cfg->algorithm_select |= XCC_ALGORITHM_KNUTH_CNF;
         break;
       case 'f':
         cfg->input_file = optarg;
@@ -104,7 +108,7 @@ process_file(xcc_config* cfg) {
     printf("\n");
   }
 
-  xcc_problem_free(p);
+  xcc_problem_free(p, &a);
   return return_code;
 }
 

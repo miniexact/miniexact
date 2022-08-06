@@ -16,9 +16,9 @@ extern "C" {
 
 #include "xcc.h"
 
-#include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 inline static void
 xcc_cover(xcc_problem*, xcc_link);
@@ -209,7 +209,8 @@ xcc_uncommit(xcc_problem* p, xcc_link p_, xcc_link j_) {
     UNPURIFY(p_);
 }
 
-inline static void xcc_purify(xcc_problem* p, xcc_link p_) {
+inline static void
+xcc_purify(xcc_problem* p, xcc_link p_) {
   xcc_link c = COLOR(p_), i = TOP(p_), q = DLINK(i);
   while(q != i) {
     if(COLOR(q) == c)
@@ -220,7 +221,8 @@ inline static void xcc_purify(xcc_problem* p, xcc_link p_) {
   }
 }
 
-inline static void xcc_unpurify(xcc_problem* p, xcc_link p_) {
+inline static void
+xcc_unpurify(xcc_problem* p, xcc_link p_) {
   xcc_link c = COLOR(p_), i = TOP(p_), q = ULINK(i);
   while(q != i) {
     if(COLOR(q) < 0)

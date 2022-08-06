@@ -39,6 +39,8 @@ typedef bool (*xcc_compute_next_result)(xcc_algorithm* a, xcc_problem* p);
 
 typedef xcc_link (*xcc_choose_i)(xcc_algorithm* a, xcc_problem* p);
 
+typedef void (*xcc_userdata_free)(xcc_algorithm* a, xcc_problem* p);
+
 xcc_link
 xcc_choose_i_naively(xcc_algorithm* a, xcc_problem* p);
 
@@ -60,6 +62,8 @@ typedef struct xcc_algorithm {
   xcc_compute_next_result compute_next_result;
 
   xcc_choose_i choose_i;
+
+  xcc_userdata_free free_userdata;
 } xcc_algorithm;
 
 void

@@ -51,6 +51,8 @@ TEST_CASE("parse standard XCC example") {
   REQN(6, 2, 22, 18);
   REQN(7, 3, 29, 14);
 
+  REQUIRE(p->N == 7);
+
   REQN(8, 0, 0, 10);
   REQN(9, 3, 3, 17);
   REQN(10, 5, 5, 28);

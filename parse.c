@@ -39,7 +39,7 @@ DESTROY_SCANNER:
   xcclex_destroy(scanner);
 
   if(problem)
-    xcc_problem_free(problem);
+    xcc_problem_free(problem, NULL);
   return NULL;
 }
 
@@ -73,6 +73,6 @@ DESTROY_SCANNER:
   xcclex_destroy(scanner);
 
   if(problem)
-    xcc_problem_free(problem);
+    xcc_problem_free(problem, NULL);
   return NULL;
 }

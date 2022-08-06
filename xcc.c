@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "algorithm.h"
 #include "ops.h"
 #include "xcc.h"
 
@@ -33,7 +34,10 @@ xcc_has_item(xcc_link needle, xcc_link* list, size_t len) {
 }
 
 void
-xcc_problem_free(xcc_problem* p) {
+xcc_problem_free(xcc_problem* p, xcc_algorithm* a) {
+  if(p->algorithm_userdata && a && a->free_userdata)
+    a->free_userdata(a, p);
+
   if(p->llink)
     free(p->llink);
   if(p->rlink)

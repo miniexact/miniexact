@@ -12,10 +12,7 @@ extern "C" {
 typedef int32_t xcc_link;
 typedef xcc_link xcc_color;
 typedef char* xcc_name;
-typedef struct xcc_node {
-  xcc_link ulink, dlink;
-  xcc_color color;
-} xcc_node;
+typedef struct xcc_algorithm xcc_algorithm;
 
 #define XCC_LINK_MAX INT32_MAX
 
@@ -50,7 +47,8 @@ typedef struct xcc_config {
 typedef enum xcc_algorithm_id {
   XCC_ALGORITHM_MRV = 1 << 1,
   XCC_ALGORITHM_X = 1 << 2,
-  XCC_ALGORITHM_C = 1 << 3
+  XCC_ALGORITHM_C = 1 << 3,
+  XCC_ALGORITHM_KNUTH_CNF = 1 << 4
 } xcc_algorithm_id;
 
 typedef struct xcc_problem {
@@ -78,6 +76,8 @@ typedef struct xcc_problem {
   int secondary_item_count;
   int option_count;
   int state;
+
+  void* algorithm_userdata;
 } xcc_problem;
 
 #undef ARR
@@ -94,7 +94,7 @@ xcc_problem*
 xcc_problem_allocate();
 
 void
-xcc_problem_free(xcc_problem* p);
+xcc_problem_free(xcc_problem* p, xcc_algorithm* a);
 
 xcc_link
 xcc_item_from_ident(xcc_problem* p, xcc_name ident);
