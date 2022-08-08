@@ -14,7 +14,6 @@ print_help() {
   printf("xccsolve -- solve XCC problems using different algorithms\n");
   printf("OPTIONS:\n");
   printf("  -h\t\tprint help\n");
-  printf("  --file/-f\tset input file (also takes first positional arg)\n");
   printf("  -p\t\tprint selected options\n");
   printf("  -e\t\tenumerate all solutions\n");
   printf("ALGORITHM SELECTORS:\n");
@@ -34,7 +33,6 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
   struct option long_options[] = {
     { "verbose", no_argument, &cfg->verbose, 1 },
-    { "file", required_argument, 0, 'f' },
     { "help", no_argument, 0, 'h' },
     { "print", no_argument, 0, 'p' },
     { "enumerate", no_argument, 0, 'e' },
@@ -50,7 +48,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "epsxckhf:", long_options, &option_index);
+    c = getopt_long(argc, argv, "epsxckh", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -77,17 +75,14 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
       case 'k':
         cfg->algorithm_select |= XCC_ALGORITHM_KNUTH_CNF;
         break;
-      case 'f':
-        cfg->input_file = optarg;
-        break;
       default:
         break;
     }
   }
 
   if(optind < argc) {
-    if(!cfg->input_file)
-      cfg->input_file = argv[optind];
+    cfg->input_files = &argv[optind];
+    cfg->input_files_count = argc - optind;
   }
 
   for(size_t i = 0; i < sizeof(sel) / sizeof(sel[0]); ++i)
@@ -103,7 +98,8 @@ process_file(xcc_config* cfg) {
     return EXIT_FAILURE;
   }
 
-  xcc_problem* p = xcc_parse_problem_file(&a, cfg->input_file);
+  xcc_problem* p =
+    xcc_parse_problem_file(&a, cfg->input_files[cfg->current_input_file]);
   if(!p)
     return EXIT_FAILURE;
 
@@ -171,9 +167,18 @@ main(int argc, char* argv[]) {
   memset(&cfg, 0, sizeof(cfg));
   parse_cli(&cfg, argc, argv);
 
-  if(cfg.input_file) {
-    return process_file(&cfg);
+  int status = EXIT_FAILURE;
+
+  if(cfg.input_files) {
+    for(cfg.current_input_file = 0;
+        cfg.current_input_file < cfg.input_files_count;
+        ++cfg.current_input_file) {
+      if(cfg.input_files_count > 1) {
+        printf(">>> %s <<<\n", cfg.input_files[cfg.current_input_file]);
+      }
+      status = process_file(&cfg);
+    }
   }
 
-  return EXIT_SUCCESS;
+  return status;
 }

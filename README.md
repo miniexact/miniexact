@@ -50,6 +50,9 @@ To directly print the selected options, use `-p`.
 
 To enumerate all possible solutions, use `-e`.
 
+The tool also supports solving multiple input files by adding multiple files as
+possitional options.
+
 ## Performance
 
 This is the second implementation of Knuth's algorithms I did, this one seems

@@ -43,7 +43,9 @@ typedef struct xcc_config {
   int print_options;
   int enumerate;
   int algorithm_select;
-  const char* input_file;
+  char* const* input_files;
+  size_t input_files_count;
+  size_t current_input_file;
 } xcc_config;
 
 typedef enum xcc_algorithm_id {
