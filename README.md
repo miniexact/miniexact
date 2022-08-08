@@ -40,12 +40,22 @@ PRIMARY_ITEM_2 SECONDARY_ITEM_1:OPTIONAL_COLOR SECONDARY_ITEM_2;
 To run the tool, call `xccsolve` like this:
 
 ```
-./xccsolve --solve -x ./input-file-name
+./xccsolve -x ./input-file-name
 ```
 
-The `--solve` parameter enables solving a problem and prints the indices to the
-options to standard out after finding a solution.
+The `-x` selects algorithm X for solving. Others are available too, see
+`--help`.
 
-The `-x` selects algorithm X for solving.
+To directly print the selected options, use `-p`.
 
-Other options, output formats and algorithms will be added in the future.
+To enumerate all possible solutions, use `-e`.
+
+## Performance
+
+This is the second implementation of Knuth's algorithms I did, this one seems
+to be around 30% faster than the last one. This mostly goes back to more
+inlining potential and a better parser it seems. More potential may still lie
+in-between!
+
+Use the algorithm with the littlest possible features! This way, the most
+speed-ups are possible. Pre-processing may also be happening in the future.
