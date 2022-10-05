@@ -1,6 +1,6 @@
 %define api.pure full
 %define api.prefix {xcc}
-%define parse.error detailed
+%define parse.error verbose
 %define parse.lac full
 
 %lex-param {yyscan_t scanner}
