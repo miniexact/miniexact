@@ -3,14 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "parse.h"
-#include "log.h"
+#include <xcc/parse.h>
+#include <xcc/log.h>
 
 #include <xcc_parser.h>
 
-#include <xcc_lexer.h>
+#include <xcc/xcc_lexer.h>
 
-#include <algorithm_x.h>
+#include <xcc/algorithm_x.h>
 
 extern FILE *yyin;
 

@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "log.h"
+#include <xcc/log.h>
 
 static bool debug = false;
 static bool trace = false;
@@ -14,8 +14,8 @@ xcc_check_debug() {
     return true;
   static int debug = -1;
   if(debug == -1) {
-    const char* quapi_debug = getenv("XCC_DEBUG");
-    debug = quapi_debug != NULL;
+    const char* xcc_debug = getenv("XCC_DEBUG");
+    debug = xcc_debug != NULL;
   }
   return debug;
 }
@@ -26,8 +26,8 @@ xcc_check_trace() {
     return true;
   static int trace = -1;
   if(trace == -1) {
-    const char* quapi_trace = getenv("XCC_TRACE");
-    trace = quapi_trace != NULL;
+    const char* xcc_trace = getenv("XCC_TRACE");
+    trace = xcc_trace != NULL;
   }
   return trace;
 }
@@ -35,7 +35,7 @@ xcc_check_trace() {
 void
 dbg(const char* format, ...) {
   if(xcc_check_debug()) {
-    fprintf(stderr, "[QuAPI] [DEBUG] ");
+    fprintf(stderr, "[XCC] [DEBUG] ");
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);

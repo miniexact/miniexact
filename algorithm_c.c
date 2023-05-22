@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "algorithm.h"
-#include "algorithm_c.h"
-
-#include "ops.h"
+#include <xcc/algorithm.h>
+#include <xcc/algorithm_c.h>
+#include <xcc/ops.h>
 
 typedef enum c_state { C1, C2, C3, C4, C5, C6, C7, C8 } c_state;
 

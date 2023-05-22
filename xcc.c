@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "algorithm.h"
-#include "ops.h"
-#include "xcc.h"
+#include <xcc/algorithm.h>
+#include <xcc/ops.h>
+#include <xcc/xcc.h>
 
 xcc_problem*
 xcc_problem_allocate() {

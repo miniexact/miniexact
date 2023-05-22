@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "algorithm.h"
-#include "log.h"
-#include "ops.h"
-#include "parse.h"
-#include "xcc.h"
+#include <xcc/algorithm.h>
+#include <xcc/log.h>
+#include <xcc/ops.h>
+#include <xcc/parse.h>
+#include <xcc/xcc.h>
 
 static void
 print_help() {

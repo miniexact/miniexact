@@ -1,8 +1,8 @@
-#include "algorithm.h"
-#include "algorithm_c.h"
-#include "algorithm_knuth_cnf.h"
-#include "algorithm_x.h"
-#include "ops.h"
+#include <xcc/algorithm.h>
+#include <xcc/algorithm_c.h>
+#include <xcc/algorithm_knuth_cnf.h>
+#include <xcc/algorithm_x.h>
+#include <xcc/ops.h>
 
 static inline const char*
 define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
