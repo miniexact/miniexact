@@ -9,8 +9,8 @@
 %parse-param {struct xcc_problem **problem}
 
 %code requires {
-#include <xcc.h>
-#include <algorithm.h>
+#include <xcc/xcc.h>
+#include <xcc/algorithm.h>
 #define YYSTYPE XCCSTYPE
 #ifndef YY_TYPEDEF_YY_SCANNER_T
 #define YY_TYPEDEF_YY_SCANNER_T
@@ -40,7 +40,7 @@ int yyerror();
 
 %code {
 #include <xcc_parser.h>
-#include <xcc_lexer.h>
+#include <xcc/xcc_lexer.h>
 
 #define xstr(s) str(s)
 #define str(s) #s

@@ -1,6 +1,8 @@
 set(TEST_SRCS
   test_parse.cpp
   test_solve.cpp
+  test_util.cpp
+  test_sat_solver.cpp
 )
 
 add_executable(tests ${TEST_SRCS})

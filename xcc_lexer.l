@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <xcc.h>
+#include <xcc/xcc.h>
 %}
 
 LETTER [^ \n\r\t\f\v\<\>\[\]\:\;]

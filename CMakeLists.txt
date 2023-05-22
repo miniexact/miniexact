@@ -21,6 +21,7 @@ set(SRCS
   algorithm_c.c
   algorithm_knuth_cnf.c
   log.c
+  sat_solver.c
 )
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
@@ -29,8 +30,6 @@ set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointe
 
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
-
-add_subdirectory(third_party)
 
 flex_target(xcc_lexer
   "${CMAKE_CURRENT_SOURCE_DIR}/xcc_lexer.l"
@@ -48,19 +47,20 @@ add_library(xcc STATIC
   "${CMAKE_CURRENT_BINARY_DIR}/xcc_parser.c"
 )
 
-target_link_libraries(xcc libcadical)
-
-target_include_directories(xcc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(xcc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(xccsolve main.c)
 
 target_link_libraries(xccsolve xcc)
 
-add_subdirectory(test)
-set_target_properties(tests
+find_package(Catch2)
+if(TARGET Catch2::Catch2)
+  add_subdirectory(test)
+  set_target_properties(tests
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+  )
+endif()

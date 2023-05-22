@@ -129,3 +129,4 @@ tags
 /build
 /build-*
 xcc/xcc_lexer.h
+/.cache/

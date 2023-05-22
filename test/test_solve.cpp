@@ -1,12 +1,12 @@
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <algorithm.h>
-#include <algorithm_x.h>
-#include <parse.h>
-#include <xcc.h>
+#include <xcc/algorithm.h>
+#include <xcc/algorithm_x.h>
+#include <xcc/parse.h>
+#include <xcc/xcc.h>
 
 TEST_CASE("solve standard XCC example") {
   const char* str = "<a b c d e f g> c e; a d g; b c f; a d f; b g; d e g;";
