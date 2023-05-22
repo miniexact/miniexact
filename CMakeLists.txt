@@ -13,16 +13,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-set(SRCS
-  parse.c
-  xcc.c
-  algorithm.c
-  algorithm_x.c
-  algorithm_c.c
-  algorithm_knuth_cnf.c
-  log.c
-  sat_solver.c
-)
+add_subdirectory(src)
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
@@ -50,7 +41,7 @@ add_library(xcc STATIC
 target_include_directories(xcc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(xccsolve main.c)
+add_executable(xccsolve src/main.c)
 
 target_link_libraries(xccsolve xcc)
 

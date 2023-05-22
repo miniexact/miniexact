@@ -1,4 +1,3 @@
-#include "include/xcc/sat_solver.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
