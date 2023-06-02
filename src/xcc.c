@@ -81,6 +81,12 @@ xcc_problem_free(xcc_problem* p, xcc_algorithm* a) {
   }
   if(p->x)
     free(p->x);
+  if(p->ft)
+    free(p->ft);
+  if(p->slack)
+    free(p->slack);
+  if(p->bound)
+    free(p->bound);
 
   free(p);
 }

@@ -103,7 +103,7 @@ primary_items:	primary_item
 	;
 
 primary_item: 	ID { CALL(algorithm->define_primary_item, algorithm, *problem, $1); }
-        |	ID COLORSEP '[' ID ';' ID ']'
+        |	ID COLORSEP LSECLIST ID ENDOPTION ID RSECLIST
 	{ CALL(algorithm->define_primary_item_with_range, algorithm, *problem, $1, atoi($4), atoi($6)); }
 	;
 

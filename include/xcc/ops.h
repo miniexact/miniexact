@@ -30,6 +30,9 @@ extern "C" {
 #define COLOR(n) p->color[n]
 #define LEN(n) p->len[n]
 #define TOP(n) p->top[n]
+#define FT(l) p->ft[l]
+#define SLACK(l) p->slack[l]
+#define BOUND(l) p->bound[l]
 
 #include "xcc.h"
 
@@ -67,6 +70,10 @@ inline static void
 xcc_tweak(xcc_problem* p, xcc_link x_, xcc_link p_);
 inline static void
 xcc_untweak(xcc_problem* p, xcc_link l);
+inline static void
+xcc_tweak_prime(xcc_problem* p, xcc_link x_, xcc_link p_);
+inline static void
+xcc_untweak_prime(xcc_problem* p, xcc_link l);
 
 #define COVER(I) xcc_cover(p, I)
 #define UNCOVER(I) xcc_uncover(p, I)
@@ -84,7 +91,21 @@ xcc_untweak(xcc_problem* p, xcc_link l);
 #define UNPURIFY(P) xcc_unpurify(p, P)
 
 #define TWEAK(X, P) xcc_tweak(p, X, P)
-#define UNTWEAK(L) xcc_untweak(p, l)
+#define UNTWEAK(L) xcc_untweak(p, L)
+#define TWEAK_PRIME(X, P) xcc_tweak_prime(p, X, P)
+#define UNTWEAK_PRIME(L) xcc_untweak_prime(p, L)
+
+// Taken from https://stackoverflow.com/a/3437484
+#define MAX(a, b)           \
+  ({                        \
+    __typeof__(a) _a = (a); \
+    __typeof__(b) _b = (b); \
+    _a > _b ? _a : _b;      \
+  })
+
+// Defined in Fascicle 5, page 271 (Answer to exercise 166)
+#define MONUS(X, Y) MAX(X - Y, 0)
+#define THETA(P) MONUS(LEN(P) + 1, MONUS(BOUND(P), SLACK(P)))
 
 inline static void
 xcc_cover(xcc_problem* p, xcc_link i) {
@@ -236,7 +257,11 @@ xcc_uncommit(xcc_problem* p, xcc_link p_, xcc_link j_) {
 
 inline static void
 xcc_purify(xcc_problem* p, xcc_link p_) {
-  xcc_link c = COLOR(p_), i = TOP(p_), q = DLINK(i);
+  xcc_link c = COLOR(p_);
+  xcc_link i = TOP(p_);
+  // Inserted according to err4f5 (Errata)
+  COLOR(i) = c;
+  xcc_link q = DLINK(i);
   while(q != i) {
     if(COLOR(q) == c)
       COLOR(q) = -1;
@@ -256,6 +281,65 @@ xcc_unpurify(xcc_problem* p, xcc_link p_) {
       UNHIDE_PRIME(q);
     q = ULINK(q);
   }
+}
+
+inline static void
+xcc_tweak(xcc_problem* p, xcc_link x, xcc_link p_) {
+  assert(x == DLINK(p_));
+  assert(p_ == ULINK(x));
+  HIDE_PRIME(x);
+  xcc_link d = DLINK(x);
+  DLINK(p_) = d;
+  ULINK(d) = p_;
+  LEN(p_) = LEN(p_) - 1;
+}
+
+inline static void
+xcc_untweak(xcc_problem* p, xcc_link l) {
+  xcc_link a = FT(l);
+  xcc_link p_ = (a <= p->N ? a : TOP(a));
+  xcc_link x = a, y = p_;
+  xcc_link z = DLINK(p_);
+  DLINK(p_) = x;
+  xcc_link k = 0;
+  while(x != z) {
+    ULINK(x) = y;
+    k = k + 1;
+    UNHIDE_PRIME(x);
+    y = x;
+    x = DLINK(x);
+  }
+  ULINK(z) = y;
+  LEN(p_) = LEN(p_) + k;
+}
+
+inline static void
+xcc_tweak_prime(xcc_problem* p, xcc_link x, xcc_link p_) {
+  assert(x == DLINK(p_));
+  assert(p_ == ULINK(x));
+  xcc_link d = DLINK(x);
+  DLINK(p_) = d;
+  ULINK(d) = p_;
+  LEN(p_) = LEN(p_) - 1;
+}
+
+inline static void
+xcc_untweak_prime(xcc_problem* p, xcc_link l) {
+  xcc_link a = FT(l);
+  xcc_link p_ = (a <= p->N ? a : TOP(a));
+  xcc_link x = a, y = p_;
+  xcc_link z = DLINK(p_);
+  DLINK(p_) = x;
+  xcc_link k = 0;
+  while(x != z) {
+    ULINK(x) = y;
+    k = k + 1;
+    y = x;
+    x = DLINK(x);
+  }
+  ULINK(z) = y;
+  LEN(p_) = LEN(p_) + k;
+  UNCOVER(p_);
 }
 
 #ifdef __cplusplus

@@ -68,9 +68,11 @@ typedef struct xcc_config {
 typedef enum xcc_algorithm_id {
   XCC_ALGORITHM_NAIVE = 1 << 1,
   XCC_ALGORITHM_MRV = 1 << 2,
-  XCC_ALGORITHM_X = 1 << 3,
-  XCC_ALGORITHM_C = 1 << 4,
-  XCC_ALGORITHM_KNUTH_CNF = 1 << 5
+  XCC_ALGORITHM_MRV_SLACKER = 1 << 3,
+  XCC_ALGORITHM_X = 1 << 4,
+  XCC_ALGORITHM_C = 1 << 5,
+  XCC_ALGORITHM_M = 1 << 6,
+  XCC_ALGORITHM_KNUTH_CNF = 1 << 7
 } xcc_algorithm_id;
 
 typedef struct xcc_problem {
@@ -90,6 +92,9 @@ typedef struct xcc_problem {
   ARR(xcc_name, name)
   ARR(xcc_name, color_name)
   ARR(xcc_color, color)
+  ARR(xcc_link, ft)
+  ARR(xcc_link, slack)
+  ARR(xcc_link, bound)
 
   // Solution
   ARR(xcc_link, x)

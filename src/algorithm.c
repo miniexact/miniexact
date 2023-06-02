@@ -15,9 +15,11 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "xcc/xcc.h"
 #include <xcc/algorithm.h>
 #include <xcc/algorithm_c.h>
 #include <xcc/algorithm_knuth_cnf.h>
+#include <xcc/algorithm_m.h>
 #include <xcc/algorithm_x.h>
 #include <xcc/ops.h>
 
@@ -55,6 +57,41 @@ define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
 
   ++p->primary_item_count;
 
+  // Always track them with as the base-case w.r.t. primary items.
+  XCC_ARR_PLUS1(slack)
+  XCC_ARR_PLUS1(bound)
+  SLACK(p->i) = 0;
+  BOUND(p->i) = 1;
+
+  return NULL;
+}
+
+// Adds a primary item with a range [u;v] (sets SLACK and BOUND)
+static const char*
+define_primary_item_with_range(xcc_algorithm* a,
+                               xcc_problem* p,
+                               xcc_name n,
+                               xcc_link u,
+                               xcc_link v) {
+  const char* e;
+  if((e = define_item(a, p, n)))
+    return e;
+
+  if(u > v) {
+    return "u must be smaller than v in the multiplicity range!";
+  }
+  if(v == 0) {
+    return "v must not be 0 in the multiplicity range!";
+  }
+
+  ++p->primary_item_count;
+
+  XCC_ARR_PLUS1(slack)
+  XCC_ARR_PLUS1(bound)
+
+  SLACK(p->i) = v - u;
+  BOUND(p->i) = v;
+
   return NULL;
 }
 
@@ -72,7 +109,6 @@ define_secondary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
   ++p->secondary_item_count;
 
   return NULL;
-  ;
 }
 
 static const char*
@@ -187,6 +223,8 @@ xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p) {
   XCC_ARR_ALLOC(xcc_name, dlink)
   XCC_ARR_ALLOC(xcc_name, x)
   XCC_ARR_ALLOC(xcc_color, color)
+  XCC_ARR_ALLOC(xcc_color, slack)
+  XCC_ARR_ALLOC(xcc_color, bound)
 
   LLINK(0) = 0;
   RLINK(0) = 0;
@@ -230,6 +268,22 @@ xcc_choose_i_mrv(xcc_algorithm* a, xcc_problem* p) {
   return i;
 }
 
+xcc_link
+xcc_choose_i_mrv_slacker(xcc_algorithm* a, xcc_problem* p) {
+  xcc_link theta = XCC_LINK_MAX;
+  xcc_link p_ = RLINK(0);
+  while(p_ != 0) {
+    xcc_link lambda = THETA(p_);
+    if(lambda < theta || (lambda == theta && SLACK(p_) == SLACK(p->i)) ||
+       (lambda == theta && SLACK(p_) == SLACK(p->i) && LEN(p_) > LEN(p->i))) {
+      theta = lambda;
+      p->i = p_;
+    }
+    p_ = RLINK(p_);
+  }
+  return p->i;
+}
+
 void
 xcc_algorithm_standard_functions(xcc_algorithm* a) {
   a->add_item = &add_item;
@@ -237,6 +291,7 @@ xcc_algorithm_standard_functions(xcc_algorithm* a) {
   a->prepare_options = &prepare_options;
   a->end_option = &end_option;
   a->define_primary_item = &define_primary_item;
+  a->define_primary_item_with_range = &define_primary_item_with_range;
   a->define_secondary_item = &define_secondary_item;
   a->end_options = &end_options;
   a->init_problem = &xcc_default_init_problem;
@@ -257,14 +312,24 @@ xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
   } else if(algorithm_select & XCC_ALGORITHM_C) {
     xcc_algoritihm_c_set(algorithm);
     success = true;
+  } else if(algorithm_select & XCC_ALGORITHM_M) {
+    xcc_algoritihm_m_set(algorithm);
+    // Set default for Algorithm M. May be overriden, as it is later the first
+    // to be checked.
+    algorithm_select |= XCC_ALGORITHM_MRV_SLACKER;
+    success = true;
   } else if(algorithm_select & XCC_ALGORITHM_KNUTH_CNF) {
     xcc_algoritihm_knuth_cnf_set(algorithm);
     success = true;
   }
 
+  if(algorithm_select & XCC_ALGORITHM_MRV_SLACKER) {
+    algorithm->choose_i = &xcc_choose_i_mrv_slacker;
+  }
   if(algorithm_select & XCC_ALGORITHM_NAIVE) {
     algorithm->choose_i = &xcc_choose_i_naively;
-  } else if(algorithm_select & XCC_ALGORITHM_MRV) {
+  }
+  if(algorithm_select & XCC_ALGORITHM_MRV) {
     algorithm->choose_i = &xcc_choose_i_mrv;
   }
 

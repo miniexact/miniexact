@@ -36,9 +36,13 @@ print_help() {
   printf("ALGORITHM SELECTORS:\n");
   printf("  --naive\tuse naive in-order for i selection\n");
   printf("  --mrv\t\tuse MRV for i selection (default)\n");
+  printf("  --smrv\tuse slack-aware MRV for i selection (default for M)\n    "
+         "    \t    (see answer to ex. 166, p. 271)\n");
   printf("  -x\t\tuse Algorithm X\n");
   printf("  -c\t\tuse Algorithm C\n");
-  printf("  -k\t\tuse CaDiCaL to solve with SAT (Knuth's trivial encoding)\n");
+  printf("  -m\t\tuse Algorithm M\n");
+  printf("  -k\t\tcall external binary to solve with SAT\n    \t\t    (Knuth's "
+         "trivial encoding)\n");
 }
 
 static void
@@ -55,8 +59,10 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
     { "enumerate", no_argument, 0, 'e' },
     { "naive", no_argument, &sel[0], XCC_ALGORITHM_NAIVE },
     { "mrv", no_argument, &sel[1], XCC_ALGORITHM_MRV },
+    { "smrv", no_argument, &sel[1], XCC_ALGORITHM_MRV },
     { "x", no_argument, &sel[2], XCC_ALGORITHM_X },
     { "c", no_argument, &sel[3], XCC_ALGORITHM_C },
+    { "m", no_argument, &sel[3], XCC_ALGORITHM_M },
     { "k", no_argument, &sel[4], XCC_ALGORITHM_KNUTH_CNF },
     { 0, 0, 0, 0 }
   };
@@ -65,7 +71,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "epsxckh", long_options, &option_index);
+    c = getopt_long(argc, argv, "epsxcmkh", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -88,6 +94,9 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
         break;
       case 'c':
         cfg->algorithm_select |= XCC_ALGORITHM_C;
+        break;
+      case 'm':
+        cfg->algorithm_select |= XCC_ALGORITHM_M;
         break;
       case 'k':
         cfg->algorithm_select |= XCC_ALGORITHM_KNUTH_CNF;
