@@ -1,3 +1,20 @@
+/*
+    XCCSolve - Toolset to solve exact cover problems and extensions
+    Copyright (C) 2021-2023  Maximilian Heisinger
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 #ifndef XCC_OPS_H
 #define XCC_OPS_H
 
@@ -46,6 +63,11 @@ xcc_purify(xcc_problem* p, xcc_link p_);
 inline static void
 xcc_unpurify(xcc_problem* p, xcc_link p_);
 
+inline static void
+xcc_tweak(xcc_problem* p, xcc_link x_, xcc_link p_);
+inline static void
+xcc_untweak(xcc_problem* p, xcc_link l);
+
 #define COVER(I) xcc_cover(p, I)
 #define UNCOVER(I) xcc_uncover(p, I)
 #define HIDE(P) xcc_hide(p, P)
@@ -60,6 +82,9 @@ xcc_unpurify(xcc_problem* p, xcc_link p_);
 #define UNCOMMIT(P, J) xcc_uncommit(p, P, J)
 #define PURIFY(P) xcc_purify(p, P)
 #define UNPURIFY(P) xcc_unpurify(p, P)
+
+#define TWEAK(X, P) xcc_tweak(p, X, P)
+#define UNTWEAK(L) xcc_untweak(p, l)
 
 inline static void
 xcc_cover(xcc_problem* p, xcc_link i) {

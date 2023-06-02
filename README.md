@@ -1,3 +1,5 @@
+# XCCSolve
+
 Solve exact cover problems and expand upon a flexible ground implementation!
 
 ## Compiling
