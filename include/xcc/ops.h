@@ -339,7 +339,7 @@ xcc_untweak_prime(xcc_problem* p, xcc_link l) {
   }
   ULINK(z) = y;
   LEN(p_) = LEN(p_) + k;
-  UNCOVER(p_);
+  UNCOVER_PRIME(p_);
 }
 
 #ifdef __cplusplus

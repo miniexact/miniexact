@@ -64,7 +64,11 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         break;
       case M3:
         p->i = a->choose_i(a, p);
-        p->state = M9;
+        if(THETA(p->i) == 0) {
+          p->state = M9;
+        } else {
+          p->state = M4;
+        }
         break;
       case M4:
         p->x[p->l] = DLINK(p->i);
@@ -76,7 +80,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         p->state = M5;
         break;
       case M5:
-        if(BOUND(p->i) == SLACK(p->i)) {
+        if(BOUND(p->i) == 0 && BOUND(p->i) == SLACK(p->i)) {
           if(p->x[p->l] != p->i) {
             p->state = M6;
           } else {
@@ -113,7 +117,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
           } else {
             if(j <= p->N_1) {
               BOUND(j) = BOUND(j - 1);
-              p->p = p->p - 1;
+              p->p = p->p + 1;
               if(BOUND(j) == 0) {
                 COVER_PRIME(j);
               } else {
@@ -159,23 +163,26 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         BOUND(p->i) = BOUND(p->i) + 1;
         p->state = M9;
         break;
-    case M9:
-      if(p->l == 0) {
-        return false;
-      }
-      p->l = p->l - 1;
-      if(p->x[p->l] <= p->N) {
-        p->i = p->x[p->l];
-        p->p = LLINK(p->i);
-        p->q = RLINK(p->i);
-        RLINK(p->p) = p->i;
-        LLINK(p->q) = p->i;
-        p->state = M8;
-        break;
-      } else {
-        p->state = M7;
-        break;
-      }
+      case M9:
+        if(p->l == 0) {
+          return false;
+        }
+        p->l = p->l - 1;
+        if(p->x[p->l] <= p->N) {
+          p->i = p->x[p->l];
+          p->p = LLINK(p->i);
+          p->q = RLINK(p->i);
+          // Alternative interpretation:
+          // RLINK(p->p) = LLINK(p->q);
+          RLINK(p->p) = p->i;
+          LLINK(p->q) = p->i;
+          p->state = M8;
+          break;
+        } else {
+          p->i = TOP(p->x[p->l]);
+          p->state = M7;
+          break;
+        }
     }
   }
 
