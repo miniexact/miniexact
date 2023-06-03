@@ -103,8 +103,10 @@ primary_items:	primary_item
 	;
 
 primary_item: 	ID { CALL(algorithm->define_primary_item, algorithm, *problem, $1); }
-        |	ID COLORSEP LSECLIST ID ENDOPTION ID RSECLIST
-	{ CALL(algorithm->define_primary_item_with_range, algorithm, *problem, $1, atoi($4), atoi($6)); }
+        |	ID COLORSEP ID
+	    { xcc_link m = atoi($3); CALL(algorithm->define_primary_item_with_range, algorithm, *problem, $1, m, m); }
+        |	ID COLORSEP ID COLORSEP ID
+	{ CALL(algorithm->define_primary_item_with_range, algorithm, *problem, $1, atoi($3), atoi($5)); }
 	;
 
 secondary_items:
