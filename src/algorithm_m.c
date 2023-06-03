@@ -37,6 +37,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
   assert(a->choose_i);
 
   while(true) {
+    printf("State: %d i:%d l:%d x[0]:%d\n", p->state, p->i, p->l, p->x[0]);
     switch(p->state) {
       case M1: {
         xcc_link i = 0;
@@ -51,7 +52,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         p->l = 0;
         p->state = M2;
         p->i = 0;
-        p->N = p->dlink_size;
+        printf("N: %d, N1: %d\n", p->N, p->N_1);
         break;
       }
       case M2:
@@ -64,6 +65,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         break;
       case M3:
         p->i = a->choose_i(a, p);
+        assert(p->i <= p->primary_item_count);
         if(THETA(p->i) == 0) {
           p->state = M9;
         } else {
@@ -95,13 +97,13 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
           if(p->x[p->l] != p->i) {
             if(BOUND(p->i) == 0)
               TWEAK_PRIME(p->x[p->l], p->i);
-            else {
+            else
               TWEAK(p->x[p->l], p->i);
-              p->p = LLINK(p->i);
-              p->q = RLINK(p->i);
-              RLINK(p->p) = p->q;
-              LLINK(p->q) = p->p;
-            }
+          } else if(BOUND(p->i) != 0) {
+            p->p = LLINK(p->i);
+            p->q = RLINK(p->i);
+            RLINK(p->p) = p->q;
+            LLINK(p->q) = p->p;
           }
         }
         p->state = M6;
@@ -117,16 +119,14 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
           if(j <= 0) {
             assert(p->p < p->ulink_size);
             p->p = ULINK(p->p);
-          } else {
-            if(j <= p->N_1) {
-              BOUND(j) = BOUND(j - 1);
-              if(BOUND(j) == 0) {
-                COVER_PRIME(j);
-                p->p = p->p + 1;
-              } else {
-                COMMIT(p->p, j);
-                p->p = p->p + 1;
-              }
+          } else if(j <= p->N_1) {
+            BOUND(j) = BOUND(j - 1);
+            p->p = p->p + 1;
+            if(BOUND(j) == 0) {
+              COVER_PRIME(j);
+            } else {
+              COMMIT(p->p, j);
+              p->p = p->p + 1;
             }
           }
         }
@@ -141,16 +141,14 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
           if(j <= 0) {
             assert(p->p < p->dlink_size);
             p->p = DLINK(p->p);
-          } else {
-            if(j <= p->N_1) {
-              BOUND(j) = BOUND(j) + 1;
-              if(BOUND(j) == 1) {
-                UNCOVER_PRIME(j);
-                p->p = p->p - 1;
-              } else {
-                UNCOMMIT(p->p, j);
-                p->p = p->p - 1;
-              }
+          } else if(j <= p->N_1) {
+            BOUND(j) = BOUND(j) + 1;
+            p->p = p->p - 1;
+            if(BOUND(j) == 1) {
+              UNCOVER_PRIME(j);
+            } else {
+              UNCOMMIT(p->p, j);
+              p->p = p->p - 1;
             }
           }
         }
@@ -177,8 +175,6 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
           p->i = p->x[p->l];
           p->p = LLINK(p->i);
           p->q = RLINK(p->i);
-          // Alternative interpretation:
-          // RLINK(p->p) = LLINK(p->q);
           RLINK(p->p) = p->i;
           LLINK(p->q) = p->i;
           p->state = M8;

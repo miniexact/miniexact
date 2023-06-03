@@ -51,7 +51,6 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         p->l = 0;
         p->state = X2;
         p->i = 0;
-        p->N = p->dlink_size;
         break;
       }
       case X2:
