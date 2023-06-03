@@ -87,22 +87,21 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
             p->state = M8;
           }
           break;
-        } else {
-          if(LEN(p->i) <= BOUND(p->i) - SLACK(p->i)) {
-            p->state = M8;// List i is too short
-            break;
-          }
-          if(p->x[p->l] != p->i) {
-            if(BOUND(p->i) == 0)
-              TWEAK_PRIME(p->x[p->l], p->i);
-            else
-              TWEAK(p->x[p->l], p->i);
-          } else if(BOUND(p->i) != 0) {
-            p->p = LLINK(p->i);
-            p->q = RLINK(p->i);
-            RLINK(p->p) = p->q;
-            LLINK(p->q) = p->p;
-          }
+        }
+        if(LEN(p->i) <= BOUND(p->i) - SLACK(p->i)) {
+          p->state = M8;// List i is too short
+          break;
+        }
+        if(p->x[p->l] != p->i) {
+          if(BOUND(p->i) == 0)
+            TWEAK_PRIME(p->x[p->l], p->i);
+          else
+            TWEAK(p->x[p->l], p->i);
+        } else if(BOUND(p->i) != 0) {
+          p->p = LLINK(p->i);
+          p->q = RLINK(p->i);
+          RLINK(p->p) = p->q;
+          LLINK(p->q) = p->p;
         }
         p->state = M6;
         break;
