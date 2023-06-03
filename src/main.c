@@ -71,7 +71,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "epsxcmkh", long_options, &option_index);
+    c = getopt_long(argc, argv, "epsxcmkhv", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -128,6 +128,9 @@ process_file(xcc_config* cfg) {
     xcc_parse_problem_file(&a, cfg->input_files[cfg->current_input_file]);
   if(!p)
     return EXIT_FAILURE;
+
+  if(cfg->verbose)
+    xcc_print_problem_matrix(p);
 
   int return_code = EXIT_SUCCESS;
 

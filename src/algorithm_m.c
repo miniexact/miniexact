@@ -109,17 +109,20 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
       case M6:
         if(p->x[p->l] != p->i) {
           p->p = p->x[p->l] + 1;
+          assert(p->p < p->top_size);
         }
         while(p->x[p->l] != p->p) {
+          assert(p->p < p->top_size);
           xcc_link j = TOP(p->p);
           if(j <= 0) {
+            assert(p->p < p->ulink_size);
             p->p = ULINK(p->p);
           } else {
             if(j <= p->N_1) {
               BOUND(j) = BOUND(j - 1);
-              p->p = p->p + 1;
               if(BOUND(j) == 0) {
                 COVER_PRIME(j);
+                p->p = p->p + 1;
               } else {
                 COMMIT(p->p, j);
                 p->p = p->p + 1;
@@ -133,15 +136,17 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
       case M7:
         p->p = p->x[p->l] - 1;
         while(p->p != p->x[p->l]) {
+          assert(p->p < p->top_size);
           xcc_link j = TOP(p->p);
           if(j <= 0) {
+            assert(p->p < p->dlink_size);
             p->p = DLINK(p->p);
           } else {
             if(j <= p->N_1) {
               BOUND(j) = BOUND(j) + 1;
-              p->p = p->p - 1;
               if(BOUND(j) == 1) {
                 UNCOVER_PRIME(j);
+                p->p = p->p - 1;
               } else {
                 UNCOMMIT(p->p, j);
                 p->p = p->p - 1;

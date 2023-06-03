@@ -223,8 +223,9 @@ xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p) {
   XCC_ARR_ALLOC(xcc_name, dlink)
   XCC_ARR_ALLOC(xcc_name, x)
   XCC_ARR_ALLOC(xcc_color, color)
-  XCC_ARR_ALLOC(xcc_color, slack)
-  XCC_ARR_ALLOC(xcc_color, bound)
+  XCC_ARR_ALLOC(xcc_link, ft)
+  XCC_ARR_ALLOC(xcc_link, slack)
+  XCC_ARR_ALLOC(xcc_link, bound)
 
   LLINK(0) = 0;
   RLINK(0) = 0;

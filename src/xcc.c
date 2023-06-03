@@ -118,11 +118,21 @@ void
 xcc_print_problem_matrix(xcc_problem* p) {
   // Print Header first
   for(size_t i = 0; i < p->name_size; ++i) {
-    printf("i:%zu\tNAME:%s\tLLINK:%d\tRLINK:%d\n",
-           i,
-           p->name[i],
-           p->llink[i],
-           p->rlink[i]);
+    if(i > 0 && i <= p->primary_item_count) {
+      printf("i:%zu\tNAME:%s\tLLINK:%d\tRLINK:%d\tSLACK:%d\tBOUND:%d\n",
+             i,
+             p->name[i],
+             p->llink[i],
+             p->rlink[i],
+             p->slack[i],
+             p->bound[i]);
+    } else {
+      printf("i:%zu\tNAME:%s\tLLINK:%d\tRLINK:%d\n",
+             i,
+             p->name[i],
+             p->llink[i],
+             p->rlink[i]);
+    }
   }
   printf("\n");
   for(size_t x = 0; x < p->ulink_size; ++x) {
