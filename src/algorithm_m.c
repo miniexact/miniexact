@@ -75,7 +75,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         BOUND(p->i) = BOUND(p->i) - 1;
         if(BOUND(p->i) == 0)
           COVER_PRIME(p->i);
-        else if(BOUND(p->i) != 0 || SLACK(p->i) != 0)
+        if(BOUND(p->i) != 0 || SLACK(p->i) != 0)
           FT(p->l) = p->x[p->l];
         p->state = M5;
         break;
@@ -153,9 +153,9 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         if(BOUND(p->i) == 0 && BOUND(p->i) == SLACK(p->i)) {
           UNCOVER_PRIME(p->i);
         } else if(BOUND(p->i) == 0) {
-          UNTWEAK_PRIME(p->i);
+          UNTWEAK_PRIME(p->l);
         } else {
-          UNTWEAK(p->i);
+          UNTWEAK(p->l);
         }
         BOUND(p->i) = BOUND(p->i) + 1;
         p->state = M9;
