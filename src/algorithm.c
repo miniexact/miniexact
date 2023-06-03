@@ -276,7 +276,6 @@ xcc_choose_i_mrv_slacker(xcc_algorithm* a, xcc_problem* p) {
   xcc_link p_ = RLINK(0);
   while(p_ != 0) {
     xcc_link lambda = THETA(p_);
-    printf("Choosing i. Current p: %d\n", p_);
     if(lambda < theta || (lambda == theta && SLACK(p_) == SLACK(i)) ||
        (lambda == theta && SLACK(p_) == SLACK(i) && LEN(p_) > LEN(i))) {
       theta = lambda;
@@ -284,7 +283,6 @@ xcc_choose_i_mrv_slacker(xcc_algorithm* a, xcc_problem* p) {
     }
     p_ = RLINK(p_);
   }
-  printf("I: %d\n", i);
   return i;
 }
 

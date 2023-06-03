@@ -37,7 +37,6 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
   assert(a->choose_i);
 
   while(true) {
-    printf("State: %d i:%d l:%d x[0]:%d\n", p->state, p->i, p->l, p->x[0]);
     switch(p->state) {
       case M1: {
         xcc_link i = 0;
@@ -52,7 +51,6 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         p->l = 0;
         p->state = M2;
         p->i = 0;
-        printf("N: %d, N1: %d\n", p->N, p->N_1);
         break;
       }
       case M2:
@@ -77,7 +75,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         BOUND(p->i) = BOUND(p->i) - 1;
         if(BOUND(p->i) == 0)
           COVER_PRIME(p->i);
-        if(BOUND(p->i) != 0 || SLACK(p->i) != 0)
+        else if(BOUND(p->i) != 0 || SLACK(p->i) != 0)
           FT(p->l) = p->x[p->l];
         p->state = M5;
         break;
@@ -114,20 +112,18 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
           assert(p->p < p->top_size);
         }
         while(p->x[p->l] != p->p) {
-          assert(p->p < p->top_size);
           xcc_link j = TOP(p->p);
           if(j <= 0) {
-            assert(p->p < p->ulink_size);
             p->p = ULINK(p->p);
           } else if(j <= p->N_1) {
-            BOUND(j) = BOUND(j - 1);
+            BOUND(j) = BOUND(j) - 1;
             p->p = p->p + 1;
             if(BOUND(j) == 0) {
               COVER_PRIME(j);
-            } else {
-              COMMIT(p->p, j);
-              p->p = p->p + 1;
             }
+          } else {
+            COMMIT(p->p, j);
+            p->p = p->p + 1;
           }
         }
         p->l = p->l + 1;
@@ -135,21 +131,19 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         break;
       case M7:
         p->p = p->x[p->l] - 1;
-        while(p->p != p->x[p->l]) {
-          assert(p->p < p->top_size);
+        while(p->x[p->l] != p->p) {
           xcc_link j = TOP(p->p);
           if(j <= 0) {
-            assert(p->p < p->dlink_size);
             p->p = DLINK(p->p);
           } else if(j <= p->N_1) {
             BOUND(j) = BOUND(j) + 1;
             p->p = p->p - 1;
             if(BOUND(j) == 1) {
               UNCOVER_PRIME(j);
-            } else {
-              UNCOMMIT(p->p, j);
-              p->p = p->p - 1;
             }
+          } else {
+            UNCOMMIT(p->p, j);
+            p->p = p->p - 1;
           }
         }
         p->x[p->l] = DLINK(p->x[p->l]);
