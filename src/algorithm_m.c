@@ -109,20 +109,20 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         if(p->x[p->l] != p->i) {
           p->p = p->x[p->l] + 1;
           assert(p->p < p->top_size);
-        }
-        while(p->x[p->l] != p->p) {
-          xcc_link j = TOP(p->p);
-          if(j <= 0) {
-            p->p = ULINK(p->p);
-          } else if(j <= p->N_1) {
-            BOUND(j) = BOUND(j) - 1;
-            p->p = p->p + 1;
-            if(BOUND(j) == 0) {
-              COVER_PRIME(j);
+          while(p->x[p->l] != p->p) {
+            xcc_link j = TOP(p->p);
+            if(j <= 0) {
+              p->p = ULINK(p->p);
+            } else if(j <= p->N_1) {
+              BOUND(j) = BOUND(j) - 1;
+              p->p = p->p + 1;
+              if(BOUND(j) == 0) {
+                COVER_PRIME(j);
+              }
+            } else {
+              COMMIT(p->p, j);
+              p->p = p->p + 1;
             }
-          } else {
-            COMMIT(p->p, j);
-            p->p = p->p + 1;
           }
         }
         p->l = p->l + 1;

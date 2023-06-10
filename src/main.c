@@ -180,6 +180,11 @@ process_file(xcc_config* cfg) {
     }
     if(cfg->enumerate)
       printf("\n");
+
+    if(cfg->verbose){
+      xcc_print_problem_matrix(p);
+      printf("\n");
+    }
   } while(cfg->enumerate);
 
   if(cfg->enumerate) {
