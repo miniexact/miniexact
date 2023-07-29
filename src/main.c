@@ -129,6 +129,8 @@ process_file(xcc_config* cfg) {
   if(!p)
     return EXIT_FAILURE;
 
+  p->cfg = cfg;
+
   if(cfg->verbose)
     xcc_print_problem_matrix(p);
 
@@ -188,7 +190,7 @@ process_file(xcc_config* cfg) {
   } while(cfg->enumerate);
 
   if(cfg->enumerate) {
-    printf("Found %d solutions!", solution);
+    printf("Found %d solutions!\n", solution);
   }
 
   xcc_problem_free(p, &a);

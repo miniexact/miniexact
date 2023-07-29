@@ -37,7 +37,8 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
   assert(a->choose_i);
 
   while(true) {
-    printf("State: %d i:%d l:%d x[0]:%d\n", p->state, p->i, p->l, p->x[0]);
+    // State print:
+    // printf("State: %d i:%d l:%d x[0]:%d\n", p->state, p->i, p->l, p->x[0]);
     switch(p->state) {
       case C1: {
         xcc_link i = 0;

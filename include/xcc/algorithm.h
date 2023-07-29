@@ -28,16 +28,16 @@ typedef struct xcc_algorithm xcc_algorithm;
 
 typedef const char* (*xcc_define_primary_item)(xcc_algorithm* a,
                                                xcc_problem* p,
-                                               xcc_name n);
+                                               xcc_link n);
 typedef const char* (*xcc_define_primary_item_with_range)(xcc_algorithm* a,
                                                           xcc_problem* p,
-                                                          xcc_name n,
+                                                          xcc_link n,
                                                           xcc_link slack,
                                                           xcc_link bound);
 
 typedef const char* (*xcc_define_secondary_item)(xcc_algorithm* a,
                                                  xcc_problem* p,
-                                                 xcc_name n);
+                                                 xcc_link n);
 
 typedef const char* (*xcc_add_item)(xcc_algorithm* a,
                                     xcc_problem* p,
@@ -89,7 +89,7 @@ typedef struct xcc_algorithm {
 void
 xcc_algorithm_standard_functions(xcc_algorithm* algorithm);
 
-static const char*
+const char*
 xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p);
 
 bool

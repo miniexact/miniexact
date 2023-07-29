@@ -106,6 +106,7 @@ typedef struct xcc_problem {
   int state;
 
   void* algorithm_userdata;
+  xcc_config* cfg;
 } xcc_problem;
 
 #undef ARR
@@ -128,10 +129,13 @@ xcc_link
 xcc_item_from_ident(xcc_problem* p, xcc_name ident);
 
 xcc_link
+xcc_insert_ident_as_name(xcc_problem* p, xcc_name ident);
+
+xcc_link
 xcc_color_from_ident(xcc_problem* p, xcc_name ident);
 
 xcc_link
-xcc_color_from_ident_and_insert(xcc_problem* p, xcc_name ident);
+xcc_color_from_ident_or_insert(xcc_problem* p, xcc_name ident);
 
 void
 xcc_print_problem_matrix(xcc_problem* p);

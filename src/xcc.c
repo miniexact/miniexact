@@ -97,19 +97,25 @@ xcc_item_from_ident(xcc_problem* p, xcc_name ident) {
 }
 
 xcc_link
+xcc_insert_ident_as_name(xcc_problem* p, xcc_name ident) {
+  xcc_link l = p->name_size;
+  XCC_ARR_PLUS1(name)
+  p->name[l] = strdup(ident);
+  return l;
+}
+
+xcc_link
 xcc_color_from_ident(xcc_problem* p, xcc_name ident) {
   return xcc_search_for_name(ident, p->color_name, p->color_name_size);
 }
 
 xcc_link
-xcc_color_from_ident_and_insert(xcc_problem* p, xcc_name ident) {
+xcc_color_from_ident_or_insert(xcc_problem* p, xcc_name ident) {
   xcc_link l = xcc_color_from_ident(p, ident);
   if(l == -1) {
     l = p->color_name_size;
     XCC_ARR_PLUS1(color_name)
-    p->color_name[l] = ident;
-  } else {
-    free(ident);
+    p->color_name[l] = strdup(ident);
   }
   return l;
 }

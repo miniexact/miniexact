@@ -24,25 +24,17 @@
 #include <xcc/ops.h>
 
 static inline const char*
-define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
+define_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
   assert(a);
   assert(p);
-  assert(n);
-  assert(p->name);
+  assert(l);
   assert(p->llink);
   assert(p->rlink);
 
-  int found = 0;
-  if((found = xcc_search_for_name(n, p->name, p->name_size - 1) >= 0)) {
-    return "Name already defined as item!";
-  }
-
-  XCC_ARR_PLUS1(name)
   XCC_ARR_PLUS1(llink)
   XCC_ARR_PLUS1(rlink)
 
   p->i = p->i + 1;
-  NAME(p->i) = n;
   LLINK(p->i) = p->i - 1;
   RLINK(p->i - 1) = p->i;
 
@@ -50,9 +42,9 @@ define_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
 }
 
 static const char*
-define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
+define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
   const char* e;
-  if((e = define_item(a, p, n)))
+  if((e = define_item(a, p, l)))
     return e;
 
   ++p->primary_item_count;
@@ -70,11 +62,11 @@ define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
 static const char*
 define_primary_item_with_range(xcc_algorithm* a,
                                xcc_problem* p,
-                               xcc_name n,
+                               xcc_link l,
                                xcc_link u,
                                xcc_link v) {
   const char* e;
-  if((e = define_item(a, p, n)))
+  if((e = define_item(a, p, l)))
     return e;
 
   if(u > v) {
@@ -96,10 +88,10 @@ define_primary_item_with_range(xcc_algorithm* a,
 }
 
 static const char*
-define_secondary_item(xcc_algorithm* a, xcc_problem* p, xcc_name n) {
+define_secondary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
   const char* e;
 
-  if((e = define_item(a, p, n)))
+  if((e = define_item(a, p, l)))
     return e;
 
   if(p->secondary_item_count == 0) {
