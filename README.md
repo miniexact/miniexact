@@ -64,3 +64,14 @@ in-between!
 
 Use the algorithm with the littlest possible features! This way, the most
 speed-ups are possible. Pre-processing may also be happening in the future.
+
+## Web Compilation
+
+A web-version is currently in the works. Compile the WASM using the following
+docker invocations:
+
+    docker run -v $(pwd):/src -w /src ghcr.io/webassembly/wasi-sdk cmake -S . -B build-wasi
+    docker run -v $(pwd):/src -w /src ghcr.io/webassembly/wasi-sdk make -C build-wasi
+
+This web port will mainly rely on the [WASI
+SDK](https://github.com/WebAssembly/wasi-sdk) to be as lightweight as possible.

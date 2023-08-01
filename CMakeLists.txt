@@ -19,14 +19,33 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsaniti
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "WASI")
+  message(STATUS "Compiling on ${CMAKE_SYSTEM_NAME}, so no SAT solver available.")
+  set(SRCS_SAT)
+  set(SRCS_MAIN
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main_web.c
+  )
+else()
+  set(SRCS_SAT
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sat_solver.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/algorithm_knuth_cnf.c
+  )
+  set(SRCS_MAIN
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+  )
+
+  add_compile_definitions(XCC_SAT_SOLVER_AVAILABLE)
+endif()
+
 add_library(xcc STATIC
   ${SRCS}
+  ${SRCS_SAT}
 )
 
 target_include_directories(xcc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(xccsolve src/main.c)
+add_executable(xccsolve ${SRCS_MAIN})
 
 target_link_libraries(xccsolve xcc)
 

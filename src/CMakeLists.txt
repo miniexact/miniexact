@@ -5,8 +5,6 @@ set(SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/algorithm_x.c
   ${CMAKE_CURRENT_SOURCE_DIR}/algorithm_c.c
   ${CMAKE_CURRENT_SOURCE_DIR}/algorithm_m.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/algorithm_knuth_cnf.c
   ${CMAKE_CURRENT_SOURCE_DIR}/log.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/sat_solver.c
   PARENT_SCOPE
 )

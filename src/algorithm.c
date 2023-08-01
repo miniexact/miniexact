@@ -312,9 +312,11 @@ xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
     // to be checked.
     algorithm_select |= XCC_ALGORITHM_MRV_SLACKER;
     success = true;
+#ifdef XCC_SAT_SOLVER_AVAILABLE
   } else if(algorithm_select & XCC_ALGORITHM_KNUTH_CNF) {
     xcc_algoritihm_knuth_cnf_set(algorithm);
     success = true;
+#endif
   }
 
   if(algorithm_select & XCC_ALGORITHM_MRV_SLACKER) {

@@ -75,12 +75,16 @@ trc(const char* format, ...) {
 
 void
 err(const char* format, ...) {
+#if _POSIX_C_SOURCE >= 199309L
   flockfile(stderr);
+#endif
   fprintf(stderr, "[XCC] [ERROR] ");
   va_list args;
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
   fputc('\n', stderr);
+#if _POSIX_C_SOURCE >= 199309L
   funlockfile(stderr);
+#endif
 }
