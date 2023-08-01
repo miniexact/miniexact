@@ -1,4 +1,9 @@
-WebAssembly.instantiateStreaming(fetch("xccsolve.wasm"), importObject).then(
+const memory = new WebAssembly.Memory({
+  initial: 50,
+  maximum: 2000,
+});
+
+WebAssembly.instantiateStreaming(fetch("../build-wasi/xccsolve.wasm"), memory).then(
   (obj) => {
     // Call an exported function:
     obj.instance.exports.exported_func();

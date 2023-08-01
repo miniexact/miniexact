@@ -49,6 +49,10 @@ add_executable(xccsolve ${SRCS_MAIN})
 
 target_link_libraries(xccsolve xcc)
 
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "WASI")
+  set_target_properties(xccsolve PROPERTIES OUTPUT_NAME xccsolve.wasm)
+endif()
+
 find_package(Catch2)
 if(TARGET Catch2::Catch2)
   add_subdirectory(test)
