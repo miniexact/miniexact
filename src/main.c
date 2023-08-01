@@ -33,6 +33,7 @@ print_help() {
   printf("  -h\t\tprint help\n");
   printf("  -p\t\tprint selected options\n");
   printf("  -e\t\tenumerate all solutions\n");
+  printf("  -E\t\tprint the problem matrix in libExact format (only -x)\n");
   printf("ALGORITHM SELECTORS:\n");
   printf("  --naive\tuse naive in-order for i selection\n");
   printf("  --mrv\t\tuse MRV for i selection (default)\n");
@@ -71,7 +72,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "epsxcmkhv", long_options, &option_index);
+    c = getopt_long(argc, argv, "eEpsxcmkhv", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -85,6 +86,9 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
         break;
       case 'e':
         cfg->enumerate = 1;
+        break;
+      case 'E':
+        cfg->transform_to_libexact = 1;
         break;
       case 'h':
         print_help();
@@ -133,6 +137,15 @@ process_file(xcc_config* cfg) {
 
   if(cfg->verbose)
     xcc_print_problem_matrix(p);
+
+  if(cfg->transform_to_libexact) {
+    const char* error = xcc_print_problem_matrix_in_libexact_format(p);
+    if(error) {
+      err("Transform error: %s", error);
+      return EXIT_FAILURE;
+    } else
+      return EXIT_SUCCESS;
+  }
 
   int return_code = EXIT_SUCCESS;
 
@@ -183,7 +196,7 @@ process_file(xcc_config* cfg) {
     if(cfg->enumerate)
       printf("\n");
 
-    if(cfg->verbose){
+    if(cfg->verbose) {
       xcc_print_problem_matrix(p);
       printf("\n");
     }

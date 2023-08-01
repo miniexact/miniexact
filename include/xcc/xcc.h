@@ -59,6 +59,7 @@ typedef struct xcc_config {
   int verbose;
   int print_options;
   int enumerate;
+  int transform_to_libexact;
   int algorithm_select;
   char* const* input_files;
   size_t input_files_count;
@@ -139,6 +140,9 @@ xcc_color_from_ident_or_insert(xcc_problem* p, xcc_name ident);
 
 void
 xcc_print_problem_matrix(xcc_problem* p);
+
+const char*
+xcc_print_problem_matrix_in_libexact_format(xcc_problem* p);
 
 void
 xcc_print_problem_solution(xcc_problem* p);

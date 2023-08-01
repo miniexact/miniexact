@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include <xcc/algorithm.h>
+#include <xcc/log.h>
 #include <xcc/ops.h>
 #include <xcc/xcc.h>
 
@@ -148,6 +149,37 @@ xcc_print_problem_matrix(xcc_problem* p) {
            p->ulink[x],
            p->dlink[x]);
   }
+}
+
+const char*
+xcc_print_problem_matrix_in_libexact_format(xcc_problem* p) {
+  if(p->color_size)
+    return "Colors not supported in libexact format!";
+  if(p->secondary_item_count)
+    return "Secondary items not supported in libexact format!";
+
+  for(xcc_link i = 1; i <= p->primary_item_count; ++i) {
+    printf("# %s %d\n", NAME(i), i);
+  }
+
+  for(size_t i = 1; i <= p->primary_item_count; ++i) {
+    printf("r %zu\n", i);
+  }
+  for(size_t i = 1; i <= p->option_count; ++i) {
+    printf("c %zu\n", i);
+  }
+
+  for(xcc_link i = p->N_1 + 1, option = 0;
+      option < p->option_count && i < p->ulink_size;
+      ++i) {
+    if(TOP(i) <= 0)
+      ++option;
+    else {
+      printf("e %d %d\n", TOP(i), option);
+    }
+  }
+
+  return NULL;
 }
 
 void
