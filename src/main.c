@@ -223,6 +223,8 @@ main(int argc, char* argv[]) {
         cfg.current_input_file < cfg.input_files_count;
         ++cfg.current_input_file) {
       if(cfg.input_files_count > 1) {
+        if(cfg.current_input_file > 0)
+          printf("\n");
         printf(">>> %s <<<\n", cfg.input_files[cfg.current_input_file]);
       }
       status = process_file(&cfg);
