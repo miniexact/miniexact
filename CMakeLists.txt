@@ -19,11 +19,11 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsaniti
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "WASI")
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   message(STATUS "Compiling on ${CMAKE_SYSTEM_NAME}, so no SAT solver available.")
   set(SRCS_SAT)
   set(SRCS_MAIN
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/main_web.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main_web.cpp
   )
 else()
   set(SRCS_SAT
@@ -49,8 +49,11 @@ add_executable(xccsolve ${SRCS_MAIN})
 
 target_link_libraries(xccsolve xcc)
 
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "WASI")
-  set_target_properties(xccsolve PROPERTIES OUTPUT_NAME xccsolve.wasm)
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    target_link_options(xccsolve PRIVATE "-s INITIAL_MEMORY=200MB")
+    target_link_options(xccsolve PRIVATE "--use-preload-cache")
+    target_link_options(xccsolve PRIVATE "--bind")
+    target_link_options(xccsolve PRIVATE "-sALLOW_MEMORY_GROWTH")
 endif()
 
 find_package(Catch2)

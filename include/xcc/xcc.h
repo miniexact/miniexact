@@ -168,7 +168,7 @@ xcc_extract_selected_options(xcc_problem* p,
                              xcc_link_visitor visitor);
 
 #ifdef __cplusplus
-}
+  }
 
 #include "xcc.hpp"
 #endif

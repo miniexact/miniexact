@@ -47,7 +47,6 @@
               <div class="form-check">
                 <input class="form-check-input"
                        type="radio"
-                       value=""
                        id="algorithm-x"
                        name="algorithm"
                        value="x">
@@ -58,10 +57,10 @@
               <div class="form-check">
                 <input class="form-check-input"
                        type="radio"
-                       value=""
                        id="algorithm-c"
                        name="algorithm"
-                       value="c">
+                       value="c"
+                       checked>
                 <label class="form-check-label" for="algorithm-c" style="width: 100%;">
                   Algorithm C (Exact Cover with Colors)
                 </label>
@@ -69,11 +68,9 @@
               <div class="form-check">
                 <input class="form-check-input"
                        type="radio"
-                       value=""
                        id="algorithm-m"
                        name="algorithm"
-                       value="m"
-                       checked>
+                       value="m">
                 <label class="form-check-label" for="algorithm-m" style="width: 100%;">
                   Algorithm M (Exact Cover with Colors and Multiplicty)
                 </label>
@@ -89,6 +86,14 @@
               <div class="form-check form-check-inline">
                 <input class="form-check-input"
                        type="checkbox"
+                       id="option-print"
+                       value="option-print"
+                       checked>
+                <label class="form-check-label" for="option-verbose">Print Options</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input"
+                       type="checkbox"
                        id="option-verbose"
                        value="option-verbose">
                 <label class="form-check-label" for="option-verbose">Verbose</label>
@@ -98,7 +103,7 @@
               <div class="progress" id="loading-indicator" style="height: 3em;">
                 <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Loading and Processing WebAssembly of xccsolve...</div>
               </div>
-              <button tabindex="0" type="button" class="btn btn-primary btn-block invisible" onclick="run_();" id="run-btn">Run (or Shift+Enter in input area)</button>
+              <button tabindex="0" type="button" style="display: none; width: 100%;" class="btn btn-primary btn-block" onclick="run_();" id="run-btn">Run (or Shift+Enter in input area)</button>
             </div>
           </div>
         </form>
@@ -136,6 +141,7 @@
     </main>
 
     <script src="main.js"></script>
+    <script src="../build-emscripten/xccsolve.js"></script>
 
     <script>
       document.getElementById("input").focus();

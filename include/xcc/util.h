@@ -18,6 +18,10 @@
 #ifndef XCC_UTIL_H
 #define XCC_UTIL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -30,5 +34,20 @@ xcc_sign(int32_t value) {
   bool sign = !temp;
   return sign;
 }
+
+struct xcc_algorithm;
+struct xcc_problem;
+struct xcc_config;
+
+// Utility function to solve the given problem and print solutions. Both used in
+// the web version and the CLI version of xccsolve.
+int
+xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
+                                      struct xcc_problem* p,
+                                      struct xcc_config* cfg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
