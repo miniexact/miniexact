@@ -17,7 +17,7 @@ jobs:
       - name: Create Build Folder
         run: mkdir build-emscripten
       - name: Configure with CMake
-        run: emcmake cmake -b build-emscripten -DCMAKE_BUILD_TYPE=Release
+        run: emcmake cmake -Bbuild-emscripten -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: make -C build-emscripten
       - name: Copy built files to web folder
