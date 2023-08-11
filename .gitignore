@@ -130,3 +130,6 @@ tags
 /build-*
 xcc/xcc_lexer.h
 /.cache/
+
+web/xccsolve.js
+web/xccsolve.wasm

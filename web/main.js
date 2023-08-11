@@ -14,13 +14,14 @@ function ready() {
     loader.style.display = "none";
     run_element.style.display = "block";
     isReady = true;
-
-    console.log(stdout.parentNode.dataset.replicatedValue)
 }
 
 function run_() {
     if(!isReady)
         return;
+
+    isReady = false;
+    run_element.disabled = true;
 
     stdout.value = "";
     stderr.value = "";
@@ -30,6 +31,9 @@ function run_() {
     let verbose = document.getElementById("option-verbose").checked ? 'v' : ' ';
     let print_options = document.getElementById("option-print").checked ? 'p' : ' ';
     Module.solve(input.value, algorithm, enumerate, verbose, print_options);
+
+    isReady = true;
+    run_element.disabled = false;
 }
 
 var Module = {
