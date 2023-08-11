@@ -10,7 +10,10 @@ jobs:
     container: emscripten/emsdk:3.1.44
     steps:
       - name: Checkout
-        uses: actions/checkout@3
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.inputs.checkoutRef }}
       - name: Create Build Folder
         run: mkdir build-emscripten
       - name: Configure with CMake
