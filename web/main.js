@@ -14,6 +14,10 @@ function ready() {
     loader.style.display = "none";
     run_element.style.display = "block";
     isReady = true;
+
+    if(input.innerText.length > 0) {
+        run_()
+    }
 }
 
 function run_() {
@@ -31,6 +35,7 @@ function run_() {
     let verbose = document.getElementById("option-verbose").checked ? 'v' : ' ';
     let print_options = document.getElementById("option-print").checked ? 'p' : ' ';
     Module.solve(input.innerText, algorithm, enumerate, verbose, print_options);
+    localStorage.setItem('input', input.innerText);
 
     isReady = true;
     run_element.disabled = false;
@@ -39,6 +44,13 @@ function run_() {
 function matchError(e) {
     let matcher = /^\[XCC\] \[ERROR\] Parse error at (\d+):(\d+)/g;
     let arr = matcher.exec(e);
+}
+
+window.onload = function() {
+    let i = window.localStorage.getItem('input');
+    if(i != null && i.length > 0) {
+        input.innerText = i;
+    }
 }
 
 var Module = {
