@@ -1,5 +1,5 @@
 name: XCCSolve Page
-on: 
+on:
   push:
     branches:
       - main
@@ -25,4 +25,4 @@ jobs:
       - name: Deploy Page
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: build
+          folder: web
