@@ -33,7 +33,6 @@ print_help() {
   printf("OPTIONS:\n");
   printf("  -h\t\tprint help\n");
   printf("  -p\t\tprint selected options\n");
-  printf("  -P\t\tprint the solution array directly\n");
   printf("  -e\t\tenumerate all solutions\n");
   printf("  -E\t\tprint the problem matrix in libExact format (only -x)\n");
   printf("ALGORITHM SELECTORS:\n");
@@ -59,7 +58,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
     { "verbose", no_argument, &cfg->verbose, 1 },
     { "help", no_argument, 0, 'h' },
     { "print", no_argument, 0, 'p' },
-    { "print-x", no_argument, 0, 'P' },
+    { "print-x", no_argument, 0, XCC_OPTION_PRINT_X },
     { "enumerate", no_argument, 0, 'e' },
     { "naive", no_argument, &sel[0], XCC_ALGORITHM_NAIVE },
     { "mrv", no_argument, &sel[1], XCC_ALGORITHM_MRV },
@@ -75,7 +74,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "eEpPsxcmkhv", long_options, &option_index);
+    c = getopt_long(argc, argv, "eEpsxcmkhv", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -87,7 +86,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
       case 'p':
         cfg->print_options = 1;
         break;
-      case 'P':
+      case XCC_OPTION_PRINT_X:
         cfg->print_x = 1;
         break;
       case 'e':

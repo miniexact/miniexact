@@ -77,6 +77,9 @@ typedef enum xcc_algorithm_id {
   XCC_ALGORITHM_KNUTH_CNF = 1 << 7
 } xcc_algorithm_id;
 
+#define XCC_LONG_OPTIONS (1 << 20)
+#define XCC_OPTION_PRINT_X (XCC_LONG_OPTIONS + 1)
+
 typedef struct xcc_problem {
   ARR(xcc_link, llink)
   ARR(xcc_link, rlink)
