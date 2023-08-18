@@ -188,5 +188,6 @@ xcc_algoritihm_m_set(xcc_algorithm* a) {
   xcc_algorithm_standard_functions(a);
 
   a->compute_next_result = &compute_next_result;
+  // Override the default MRV heuristic with the slacker MRV heuristic.
   a->choose_i = &xcc_choose_i_mrv_slacker;
 }

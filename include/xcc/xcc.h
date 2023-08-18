@@ -58,6 +58,7 @@ typedef struct xcc_algorithm xcc_algorithm;
 typedef struct xcc_config {
   int verbose;
   int print_options;
+  int print_x;
   int enumerate;
   int transform_to_libexact;
   int algorithm_select;
@@ -150,11 +151,12 @@ xcc_print_problem_solution(xcc_problem* p);
 /** @brief Extract a valid solution, consisting of the option indices
  *
  * Requires p to be in a valid solved state and solution to be a pointer to an
- * array with at least p->l elements.
+ * array with at least p->l elements. The real number of solutions is returned
+ * by this function.
  *
- * This is basically exercise 13.
+ * This is basically exercise 13 combined with exercise 12.
  */
-void
+xcc_link
 xcc_extract_solution_option_indices(xcc_problem* p, xcc_link* solution);
 
 typedef void (*xcc_link_visitor)(xcc_problem* p,

@@ -34,21 +34,32 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
           while(TOP(o_ - 1) > 0)
             --o_;
 
-          while(TOP(o_) > 0) {
-            printf("%s", NAME(TOP(o_)));
-            if(o_ < p->color_size && COLOR(o_) != 0)
-              printf(":%s", p->color_name[o_]);
-            ++o_;
+          // This makes printing prettier. With algorithm M, options may be
+          // empty, as branches are taken to resolve multiplicities. These are
+          // expressed in the solution array, but don't directly correspond to
+          // selected options.
+          if(o_ > p->N && o_ <= p->Z) {
+            while(TOP(o_) > 0) {
+              printf("%s", NAME(TOP(o_)));
+              if(o_ < p->color_size && COLOR(o_) != 0)
+                printf(":%s", p->color_name[o_]);
+              ++o_;
 
-            if(TOP(o_) > 0)
-              printf(" ");
+              if(TOP(o_) > 0)
+                printf(" ");
+            }
+            printf(";\n");
           }
-          printf(";\n");
         }
+      } else if(cfg->print_x) {
+        for(size_t i = 0; i < p->l; ++i) {
+          printf("%d ", p->x[i]);
+        }
+        printf("\n");
       } else {
         xcc_link solution[p->l];
-        xcc_extract_solution_option_indices(p, solution);
-        for(size_t i = 0; i < p->l; ++i) {
+        xcc_link l = xcc_extract_solution_option_indices(p, solution);
+        for(size_t i = 0; i < l; ++i) {
           printf("%d ", solution[i]);
         }
         printf("\n");

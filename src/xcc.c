@@ -191,15 +191,23 @@ xcc_print_problem_solution(xcc_problem* p) {
   printf("\n");
 }
 
-void
+xcc_link
 xcc_extract_solution_option_indices(xcc_problem* p, xcc_link* solution) {
   assert(p);
   assert(solution);
 
+  xcc_link size = 0;
+
   for(xcc_link j = 0; j < p->l; ++j) {
     xcc_link r = p->x[j];
+
+    if(r <= p->N || r > p->Z)
+      continue;// Out of range (e.g. MCC)
+
     while(TOP(r) >= 0)
       ++r;
-    solution[j] = -TOP(r);
+    solution[size++] = -TOP(r);
   }
+
+  return size;
 }
