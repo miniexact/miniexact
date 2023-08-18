@@ -37,10 +37,15 @@ else()
   add_compile_definitions(XCC_SAT_SOLVER_AVAILABLE)
 endif()
 
+include(CheckGit.cmake)
+CheckGitSetup()
+
 add_library(xcc STATIC
   ${SRCS}
   ${SRCS_SAT}
 )
+
+target_link_libraries(xcc PUBLIC git_version)
 
 target_include_directories(xcc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(xcc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

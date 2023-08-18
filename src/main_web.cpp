@@ -3,10 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <string>
+
 #include <emscripten.h>
 #include <emscripten/bind.h>
 
 #include <xcc/algorithm.h>
+#include <xcc/git.h>
 #include <xcc/log.h>
 #include <xcc/parse.h>
 #include <xcc/util.h>
@@ -55,8 +58,20 @@ solve(std::string problem,
   return status;
 }
 
+std::string
+commit() {
+  return xcc_git_commit_hash;
+}
+
+std::string
+tag() {
+  return xcc_git_tag;
+}
+
 EMSCRIPTEN_BINDINGS(Module) {
   emscripten::function("solve", &solve);
+  emscripten::function("commit", &commit);
+  emscripten::function("tag", &tag);
 }
 
 int

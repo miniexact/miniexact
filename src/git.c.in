@@ -1,0 +1,4 @@
+#include <xcc/git.h>
+
+const char* xcc_git_commit_hash = "@GIT_HASH@";
+const char* xcc_git_tag = "@GIT_TAG@";

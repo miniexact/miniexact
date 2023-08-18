@@ -6,6 +6,9 @@ let stderr = document.getElementById("stderr");
 let run_element = document.getElementById("run-btn");
 let loader = document.getElementById("loading-indicator");
 
+let xccsolve_tag = document.getElementById("xccsolve-tag");
+let xccsolve_commit = document.getElementById("xccsolve-commit");
+
 input.parentNode.dataset.replicatedValue = input.value;
 stdout.parentNode.dataset.replicatedValue = stdout.value;
 stderr.parentNode.dataset.replicatedValue = stderr.value;
@@ -18,6 +21,15 @@ function ready() {
     if(input.innerText.length > 0) {
         run_()
     }
+
+    let tag = Module.tag();
+    if(tag == "") {
+        tag = "<untagged commit>"
+    }
+    xccsolve_tag.innerText = tag;
+
+    let commit = Module.commit();
+    xccsolve_commit.innerHTML = "<a href=\"https://github.com/maximaximal/xccsolve/commit/" + commit + "\">" + commit + "</a>";
 }
 
 function run_() {

@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include <xcc/algorithm.h>
+#include <xcc/git.h>
 #include <xcc/log.h>
 #include <xcc/ops.h>
 #include <xcc/parse.h>
@@ -45,6 +46,23 @@ print_help() {
   printf("  -m\t\tuse Algorithm M\n");
   printf("  -k\t\tcall external binary to solve with SAT\n    \t\t    (Knuth's "
          "trivial encoding)\n");
+  printf("VERSION:\n");
+  if(strlen(xcc_git_tag) > 0)
+    printf("  Tag: %s\n", xcc_git_tag);
+  printf("  Commit: %s\n", xcc_git_commit_hash);
+  printf("  GitHub URL: https://github.com/maximaximal/xccsolve/commit/%s\n",
+         xcc_git_commit_hash);
+  printf("  Private GitLab URL: "
+         "https://gitlab.sai.jku.at/maximaximal/xcc/commit/%s\n",
+         xcc_git_commit_hash);
+}
+
+static void
+print_version() {
+  if(strlen(xcc_git_tag) > 0)
+    printf("%s\n", xcc_git_tag);
+  else
+    printf("%s\n", xcc_git_commit_hash);
 }
 
 static void
@@ -57,6 +75,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
   struct option long_options[] = {
     { "verbose", no_argument, &cfg->verbose, 1 },
     { "help", no_argument, 0, 'h' },
+    { "version", no_argument, 0, 'v' },
     { "print", no_argument, 0, 'p' },
     { "print-x", no_argument, 0, XCC_OPTION_PRINT_X },
     { "enumerate", no_argument, 0, 'e' },
@@ -74,15 +93,18 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "eEpsxcmkhv", long_options, &option_index);
+    c = getopt_long(argc, argv, "eEpsxcmkhVv", long_options, &option_index);
 
     if(c == -1)
       break;
 
     switch(c) {
-      case 'v':
+      case 'V':
         cfg->verbose = 1;
         break;
+      case 'v':
+        print_version();
+        exit(EXIT_SUCCESS);
       case 'p':
         cfg->print_options = 1;
         break;

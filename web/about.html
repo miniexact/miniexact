@@ -21,7 +21,33 @@
         <h1>Exact Cover: Mobile Edition: About</h1>
 
         <p>Collection of Exact Cover Solvers, modelled after Donald Knuth's
-        Dancing Links algorithms.</p>
+          Dancing Links algorithms.</p>
+
+        <h2>Input Syntax</h2>
+        <p>A problem starts by defining <i>items</i>, either primary or
+          secondary ones. First, define all primary items using
+          <i>&lt; item1 item2 ... &gt;</i>, and afterwards, define secondary
+          items using
+          <i>[ sec1 sec2 ... ]</i>. Then, define all options by listing their
+          involved items, each ending with a semicolon, like this: <i>item1
+            sec1;</i>.
+        </p>
+
+        <p>
+          You find the full syntax description below. Idents can be any string
+          including multi-byte unicode characters, excluding other special
+          symbols ;, [, ], &lt;, &gt;, and :. Colors are like idents, but
+          occuppy a second name-space relevant to algorithms handling them.
+        </p>
+
+        <pre>
+problem ::= primary_items [ secondary_items ] { option }
+primary_items ::= '&lt;' { primary_item } '&gt;'
+primary_item ::= ident [ ':' u [ ';' v ] ]
+secondary_items ::= '[' { secondary_item } ']'
+secondary_item ::= ident
+option ::= { ident [ ':' color ] } ';'
+        </pre>
       </main>
 
       <footer class="py-3 my-4">
