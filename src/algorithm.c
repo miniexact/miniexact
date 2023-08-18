@@ -272,9 +272,11 @@ xcc_choose_i_mrv_slacker(xcc_algorithm* a, xcc_problem* p) {
        (lambda == theta && SLACK(p_) == SLACK(i) && LEN(p_) > LEN(i))) {
       theta = lambda;
       i = p_;
+      assert(i <= p->primary_item_count);
     }
     p_ = RLINK(p_);
   }
+  assert(i <= p->primary_item_count);
   return i;
 }
 
