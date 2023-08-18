@@ -162,6 +162,7 @@ static const char*
 parse(xcc_parser* p) {
   // Read problem header (primary items, secondary items), then read all
   // options.
+  const char* e = NULL;
 
   xcc_token t;
   t = next(p);
@@ -177,35 +178,39 @@ parse(xcc_parser* p) {
       item = xcc_insert_ident_as_name(p->p, p->ident);
 
       t = next(p);
-      xcc_link slack = 0;
-      xcc_link bound = 0;
       if(t == COLON) {
         // Triggers define_primary_item_with_range
         t = next(p);
 
-        xcc_link slack = 0;
-        xcc_link bound = 1;
-
-        t = next(p);
+        xcc_link u = 1;
+        xcc_link v = 1;
 
         if(t != IDENT && isonlydigits(p))
           return "token after colon in range specifier must be a number";
 
-        slack = atoi(p->ident);
+        u = atoi(p->ident);
 
         t = next(p);
 
         if(t == SEMICOLON) {
           t = next(p);
-          if(t != IDENT && isonlydigits(p))
+          if(t != IDENT || !isonlydigits(p))
             return "token after first number and semicolon in range specifier "
                    "must also be a "
                    "number";
-          bound = atoi(p->ident);
+          v = atoi(p->ident);
+          t = next(p);
+        } else if(t == COLON) {
+          return "separate range specifiers with a semicolon";
+        } else {
+          // The range will be the first number specified by default.
+          v = u;
         }
-        p->a->define_primary_item_with_range(p->a, p->p, item, slack, bound);
+        if((e = p->a->define_primary_item_with_range(p->a, p->p, item, u, v)))
+          return e;
       } else {
-        p->a->define_primary_item(p->a, p->p, item);
+        if((e = p->a->define_primary_item(p->a, p->p, item)))
+          return e;
       }
     }
     if(t != GREATER_THAN) {
@@ -224,7 +229,8 @@ parse(xcc_parser* p) {
       }
       item = xcc_insert_ident_as_name(p->p, p->ident);
 
-      p->a->define_secondary_item(p->a, p->p, item);
+      if((e = p->a->define_secondary_item(p->a, p->p, item)))
+        return e;
 
       t = next(p);
     }
@@ -234,7 +240,8 @@ parse(xcc_parser* p) {
     t = next(p);
   }
 
-  p->a->prepare_options(p->a, p->p);
+  if((e = p->a->prepare_options(p->a, p->p)))
+    return e;
 
   while(t != END) {
     if(t != IDENT) {
@@ -259,13 +266,16 @@ parse(xcc_parser* p) {
         xcc_link color = xcc_color_from_ident_or_insert(p->p, p->ident);
         t = next(p);
 
-        p->a->add_item_with_color(p->a, p->p, item, color);
+        if((e = p->a->add_item_with_color(p->a, p->p, item, color)))
+          return e;
       } else {
-        p->a->add_item(p->a, p->p, item);
+        if((e = p->a->add_item(p->a, p->p, item)))
+          return e;
       }
 
       if(t == SEMICOLON) {
-        p->a->end_option(p->a, p->p);
+        if((e = p->a->end_option(p->a, p->p)))
+          return e;
         ++p->p->option_count;
         t = next(p);
       }
