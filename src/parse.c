@@ -273,7 +273,7 @@ parse(xcc_parser* p) {
           return e;
       }
 
-      if(t == SEMICOLON) {
+      if(t == SEMICOLON || t == END) {
         if((e = p->a->end_option(p->a, p->p)))
           return e;
         ++p->p->option_count;
