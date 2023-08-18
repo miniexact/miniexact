@@ -52,7 +52,7 @@ define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
   // Always track them with as the base-case w.r.t. primary items.
   XCC_ARR_PLUS1(slack)
   XCC_ARR_PLUS1(bound)
-  SLACK(p->i) = 0;
+  SLACK(p->i) = 1;
   BOUND(p->i) = 1;
 
   return NULL;
