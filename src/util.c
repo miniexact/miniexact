@@ -16,6 +16,7 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
   }
 
   int solution = 0;
+  int nr_of_solutions = 0;
 
   do {
     bool has_solution = a->compute_next_result(a, p);
@@ -49,9 +50,11 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
                 printf(" ");
             }
             printf(";\n");
+            ++nr_of_solutions;
           }
         }
       } else if(cfg->print_x) {
+        ++nr_of_solutions;
         for(size_t i = 0; i < p->l; ++i) {
           printf("%d ", p->x[i]);
         }
@@ -59,10 +62,13 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
       } else {
         xcc_link solution[p->l];
         xcc_link l = xcc_extract_solution_option_indices(p, solution);
-        for(size_t i = 0; i < l; ++i) {
-          printf("%d ", solution[i]);
+        if(l > 0) {
+          for(size_t i = 0; i < l; ++i) {
+            printf("%d ", solution[i]);
+          }
+          printf("\n");
+          ++nr_of_solutions;
         }
-        printf("\n");
       }
     }
     if(cfg->enumerate)
@@ -75,7 +81,7 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
   } while(cfg->enumerate);
 
   if(cfg->enumerate) {
-    printf("Found %d solutions!\n", solution);
+    printf("Found %d solutions!\n", nr_of_solutions);
   }
 
   return return_code;
