@@ -53,7 +53,7 @@ define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
   XCC_ARR_PLUS1(slack)
   XCC_ARR_PLUS1(bound)
   SLACK(p->i) = 1;
-  BOUND(p->i) = 1;
+  BOUND(p->i) = 0;
 
   return NULL;
 }
