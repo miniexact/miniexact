@@ -42,8 +42,10 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
           if(o_ > p->N && o_ <= p->Z) {
             while(TOP(o_) > 0) {
               printf("%s", NAME(TOP(o_)));
-              if(o_ < p->color_size && COLOR(o_) != 0)
-                printf(":%s", p->color_name[o_]);
+              if(o_ < p->color_size && COLOR(o_) != 0) {
+                assert(COLOR(o_) != -1);
+                printf(":%s", p->color_name[COLOR(o_)]);
+	      }
               ++o_;
 
               if(TOP(o_) > 0)

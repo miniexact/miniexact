@@ -154,6 +154,7 @@ add_item_with_color(xcc_algorithm* a,
   XCC_ARR_PLUS1(len)
   XCC_ARR_PLUS1(dlink)
   XCC_ARR_PLUS1(ulink)
+  XCC_ARR_PLUS1(color)
 
   ++p->j;
 
