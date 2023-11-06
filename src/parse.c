@@ -250,7 +250,7 @@ parse(xcc_parser* p) {
     while(t == IDENT) {
       xcc_link item = xcc_item_from_ident(p->p, p->ident);
       if(item == -1) {
-        return "encountered undefined item";
+        return p->ident;
       }
       t = next(p);
       if(t == COLON) {
