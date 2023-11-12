@@ -28,6 +28,7 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
       return_code = 10;
 
       if(cfg->print_options) {
+        ++nr_of_solutions;
         for(xcc_link o = 0; o < p->l; ++o) {
           xcc_link o_ = p->x[o];
 
@@ -51,7 +52,6 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
                 printf(" ");
             }
             printf(";\n");
-            ++nr_of_solutions;
           }
         }
       } else if(cfg->print_x) {
