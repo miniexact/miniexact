@@ -109,6 +109,7 @@ typedef struct xcc_problem {
   int secondary_item_count;
   int option_count;
   int state;
+  int longest_option;
 
   void* algorithm_userdata;
   xcc_config* cfg;
@@ -117,7 +118,7 @@ typedef struct xcc_problem {
 #undef ARR
 
 int
-xcc_search_for_name(const xcc_name needle,
+xcc_search_for_name(const char* needle,
                     const xcc_name* names,
                     size_t names_size);
 
@@ -128,19 +129,22 @@ xcc_problem*
 xcc_problem_allocate();
 
 void
+xcc_problem_free_inner(xcc_problem* p, xcc_algorithm* a);
+
+void
 xcc_problem_free(xcc_problem* p, xcc_algorithm* a);
 
 xcc_link
-xcc_item_from_ident(xcc_problem* p, xcc_name ident);
+xcc_item_from_ident(xcc_problem* p, const char* ident);
 
 xcc_link
-xcc_insert_ident_as_name(xcc_problem* p, xcc_name ident);
+xcc_insert_ident_as_name(xcc_problem* p, const char* ident);
 
 xcc_link
-xcc_color_from_ident(xcc_problem* p, xcc_name ident);
+xcc_color_from_ident(xcc_problem* p, const char* ident);
 
 xcc_link
-xcc_color_from_ident_or_insert(xcc_problem* p, xcc_name ident);
+xcc_color_from_ident_or_insert(xcc_problem* p, const char* ident);
 
 void
 xcc_print_problem_matrix(xcc_problem* p);
@@ -173,7 +177,7 @@ xcc_extract_selected_options(xcc_problem* p,
                              xcc_link_visitor visitor);
 
 #ifdef __cplusplus
-  }
+}
 
 #include "xcc.hpp"
 #endif

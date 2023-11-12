@@ -95,6 +95,11 @@ xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p);
 bool
 xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm);
 
+xcc_algorithm* xcc_algorithm_allocate();
+xcc_algorithm* xcc_algorithm_x_allocate();
+xcc_algorithm* xcc_algorithm_c_allocate();
+xcc_algorithm* xcc_algorithm_m_allocate();
+
 #ifdef __cplusplus
 }
 #endif

@@ -31,7 +31,7 @@ xcc_problem_allocate() {
 }
 
 int
-xcc_search_for_name(const xcc_name needle,
+xcc_search_for_name(const char* needle,
                     const xcc_name* names,
                     size_t names_size) {
   for(int i = 0; i < names_size; ++i) {
@@ -52,7 +52,7 @@ xcc_has_item(xcc_link needle, xcc_link* list, size_t len) {
 }
 
 void
-xcc_problem_free(xcc_problem* p, xcc_algorithm* a) {
+xcc_problem_free_inner(xcc_problem* p, xcc_algorithm* a) {
   if(p->algorithm_userdata && a && a->free_userdata)
     a->free_userdata(a, p);
 
@@ -89,16 +89,22 @@ xcc_problem_free(xcc_problem* p, xcc_algorithm* a) {
   if(p->bound)
     free(p->bound);
 
+  memset(p, 0, sizeof(xcc_problem));
+}
+
+void
+xcc_problem_free(xcc_problem* p, xcc_algorithm* a) {
+  xcc_problem_free_inner(p, a);
   free(p);
 }
 
 xcc_link
-xcc_item_from_ident(xcc_problem* p, xcc_name ident) {
+xcc_item_from_ident(xcc_problem* p, const char* ident) {
   return xcc_search_for_name(ident, p->name, p->name_size);
 }
 
 xcc_link
-xcc_insert_ident_as_name(xcc_problem* p, xcc_name ident) {
+xcc_insert_ident_as_name(xcc_problem* p, const char* ident) {
   xcc_link l = p->name_size;
   XCC_ARR_PLUS1(name)
   p->name[l] = strdup(ident);
@@ -106,12 +112,12 @@ xcc_insert_ident_as_name(xcc_problem* p, xcc_name ident) {
 }
 
 xcc_link
-xcc_color_from_ident(xcc_problem* p, xcc_name ident) {
+xcc_color_from_ident(xcc_problem* p, const char* ident) {
   return xcc_search_for_name(ident, p->color_name, p->color_name_size);
 }
 
 xcc_link
-xcc_color_from_ident_or_insert(xcc_problem* p, xcc_name ident) {
+xcc_color_from_ident_or_insert(xcc_problem* p, const char* ident) {
   xcc_link l = xcc_color_from_ident(p, ident);
   if(l == -1) {
     l = p->color_name_size;

@@ -123,7 +123,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
 }
 
 void
-xcc_algoritihm_c_set(xcc_algorithm* a) {
+xcc_algorithm_c_set(xcc_algorithm* a) {
   xcc_algorithm_standard_functions(a);
 
   a->compute_next_result = &compute_next_result;

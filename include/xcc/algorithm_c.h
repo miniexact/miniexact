@@ -25,7 +25,7 @@ extern "C" {
 typedef struct xcc_algorithm xcc_algorithm;
 
 void
-xcc_algoritihm_c_set(xcc_algorithm* a);
+xcc_algorithm_c_set(xcc_algorithm* a);
 
 #ifdef __cplusplus
 }

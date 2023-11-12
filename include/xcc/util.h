@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 // Small utility function to extract the sign out of an integer. Positive is
@@ -45,6 +46,23 @@ int
 xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
                                       struct xcc_problem* p,
                                       struct xcc_config* cfg);
+
+// Utility function to solve a given problem and return if there are solutions.
+int
+xcc_solve_problem(struct xcc_algorithm* a, struct xcc_problem* p);
+
+typedef void (*xcc_option_str_iterator)(struct xcc_problem*,
+                                        const char** names,
+                                        const char** colors,
+                                        size_t items_count,
+                                        void* userdata);
+
+// Utility function to iterate over the options that solve a problem. Represents
+// items and colors as strings.
+void
+xcc_iterate_solution_options_str(struct xcc_problem* p,
+                                 xcc_option_str_iterator it,
+                                 void* userdata);
 
 #ifdef __cplusplus
 }

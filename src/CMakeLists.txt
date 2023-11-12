@@ -1,6 +1,7 @@
 set(SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/parse.c
   ${CMAKE_CURRENT_SOURCE_DIR}/xcc.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/simple.c
   ${CMAKE_CURRENT_SOURCE_DIR}/algorithm.c
   ${CMAKE_CURRENT_SOURCE_DIR}/algorithm_x.c
   ${CMAKE_CURRENT_SOURCE_DIR}/algorithm_c.c

@@ -13,7 +13,7 @@ TEST_CASE("solve standard XCC example") {
   const char* str = "<a b c d e f g> c e; a d g; b c f; a d f; b g; d e g;";
 
   xcc_algorithm algorithm;
-  xcc_algoritihm_x_set(&algorithm);
+  xcc_algorithm_x_set(&algorithm);
 
   xcc_problem_ptr p(xcc_parse_problem(&algorithm, str));
   REQUIRE(p);
@@ -34,7 +34,7 @@ TEST_CASE("solve standard XCC example") {
 TEST_CASE("solve small MCC example") {
   const char* str = "<a : 2 b : 1;2> a; a b; b;";
   xcc_algorithm algorithm;
-  xcc_algoritihm_m_set(&algorithm);
+  xcc_algorithm_m_set(&algorithm);
 
   xcc_problem_ptr p(xcc_parse_problem(&algorithm, str));
   REQUIRE(p);

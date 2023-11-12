@@ -188,6 +188,8 @@ end_option(xcc_algorithm* a, xcc_problem* p) {
   ULINK(p->p) = p->p - p->j;
   COLOR(p->p) = 0;
 
+  p->longest_option = MAX(p->longest_option, p->j);
+
   p->j = 0;
   p->Z = p->p;
 
@@ -235,6 +237,8 @@ xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p) {
   p->N_1 = -1;
 
   p->state = 0;
+
+  p->longest_option = 0;
 
   return NULL;
 }
@@ -304,13 +308,13 @@ bool
 xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
   bool success = false;
   if(algorithm_select & XCC_ALGORITHM_X) {
-    xcc_algoritihm_x_set(algorithm);
+    xcc_algorithm_x_set(algorithm);
     success = true;
   } else if(algorithm_select & XCC_ALGORITHM_C) {
-    xcc_algoritihm_c_set(algorithm);
+    xcc_algorithm_c_set(algorithm);
     success = true;
   } else if(algorithm_select & XCC_ALGORITHM_M) {
-    xcc_algoritihm_m_set(algorithm);
+    xcc_algorithm_m_set(algorithm);
     // Set default for Algorithm M. May be overriden, as it is later the first
     // to be checked.
     algorithm_select |= XCC_ALGORITHM_MRV_SLACKER;
@@ -333,4 +337,30 @@ xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
   }
 
   return success;
+}
+
+struct xcc_algorithm*
+xcc_algorithm_allocate() {
+  return calloc(1, sizeof(xcc_algorithm));
+}
+
+xcc_algorithm*
+xcc_algorithm_x_allocate() {
+  xcc_algorithm* a = xcc_algorithm_allocate();
+  xcc_algorithm_x_set(a);
+  return a;
+}
+
+xcc_algorithm*
+xcc_algorithm_c_allocate() {
+  xcc_algorithm* a = xcc_algorithm_allocate();
+  xcc_algorithm_c_set(a);
+  return a;
+}
+
+xcc_algorithm*
+xcc_algorithm_m_allocate() {
+  xcc_algorithm* a = xcc_algorithm_allocate();
+  xcc_algorithm_m_set(a);
+  return a;
 }
