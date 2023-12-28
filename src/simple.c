@@ -65,6 +65,7 @@ xccs_init_m() {
 
 #define DIE(MESSAGE)                \
   fprintf(stderr, "%s\n", MESSAGE); \
+  assert(false);                    \
   exit(1);
 
 #define TRY(STMT)                                                        \
@@ -79,18 +80,18 @@ xccs_init_m() {
 static const char*
 require_state(struct xccs* h, int s) {
   assert(h);
-  return NULL;
-  return h->s == s || h->s & s ? NULL
-                               : "xccs state does not match desired state!";
+  char* error =
+    (h->s == s || h->s & s) ? NULL : "xccs state does not match desired state!";
+  return error;
 }
 
 // Define a new primary item. U and V give the slack. By default, these can both
 // be 1.
-void
-xccs_define_primary_item(struct xccs* h,
-                         const char* name,
-                         unsigned int u,
-                         unsigned int v) {
+int32_t
+xccs_define_primary_item_with_slack(struct xccs* h,
+                                    const char* name,
+                                    unsigned int u,
+                                    unsigned int v) {
   assert(h);
   assert(name);
   TRY(require_state(h, S_ADD_PRIMARY_ITEMS));
@@ -100,9 +101,15 @@ xccs_define_primary_item(struct xccs* h,
   }
   item = xcc_insert_ident_as_name(&h->p, name);
   TRY(h->a.define_primary_item_with_range(&h->a, &h->p, item, u, v));
+  return h->p.i;
 }
 
-void
+int32_t
+xccs_define_primary_item(struct xccs* h, const char* name) {
+  return xccs_define_primary_item_with_slack(h, name, 1, 1);
+}
+
+int32_t
 xccs_define_secondary_item(struct xccs* h, const char* name) {
   assert(h);
   assert(name);
@@ -117,10 +124,18 @@ xccs_define_secondary_item(struct xccs* h, const char* name) {
   }
   item = xcc_insert_ident_as_name(&h->p, name);
   TRY(h->a.define_secondary_item(&h->a, &h->p, item));
+  return h->p.i;
 }
 
-void
-xccs_add(struct xccs* h, const char* name, const char* color_str) {
+int32_t
+xccs_define_color(struct xccs* h, const char* name) {
+  assert(h);
+  assert(name);
+  return xcc_color_from_ident_or_insert(&h->p, name);
+}
+
+int32_t
+xccs_add_named(struct xccs* h, const char* name, const char* color_str) {
   assert(h);
 
   if(name)
@@ -141,11 +156,12 @@ xccs_add(struct xccs* h, const char* name, const char* color_str) {
 
     xcc_link item = xcc_item_from_ident(&h->p, name);
     if(color_str) {
-      xcc_link color = xcc_color_from_ident_or_insert(&h->p, color_str);
+      xcc_link color = xccs_define_color(h, color_str);
       TRY(h->a.add_item_with_color(&h->a, &h->p, item, color));
     } else {
       TRY(h->a.add_item(&h->a, &h->p, item));
     }
+    return 0;
   } else {
     TRY(require_state(h, S_ADDING_OPTION));
 
@@ -153,12 +169,43 @@ xccs_add(struct xccs* h, const char* name, const char* color_str) {
     ++h->p.option_count;
 
     h->s = S_READY;
+    return h->p.option_count - 1;
+  }
+}
+
+int32_t
+xccs_add(struct xccs* h, int32_t item, int32_t color) {
+  assert(h);
+
+  if(h->s == S_ADD_PRIMARY_ITEMS || h->s == S_ADD_SECONDARY_ITEMS) {
+    TRY(h->a.prepare_options(&h->a, &h->p));
+    h->s = S_READY;
+  }
+
+  if(item) {
+    TRY(require_state(h, S_READY | S_ADDING_OPTION));
+    h->s = S_ADDING_OPTION;
+
+    if(color) {
+      TRY(h->a.add_item_with_color(&h->a, &h->p, item, color));
+    } else {
+      TRY(h->a.add_item(&h->a, &h->p, item));
+    }
+    return 0;
+  } else {
+    TRY(require_state(h, S_ADDING_OPTION));
+
+    TRY(h->a.end_option(&h->a, &h->p));
+    ++h->p.option_count;
+
+    h->s = S_READY;
+    return h->p.option_count - 1;
   }
 }
 
 int
 xccs_solve(struct xccs* h) {
-  TRY(require_state(h, S_READY));
+  TRY(require_state(h, S_READY | S_SOLUTIONS_AVAILABLE));
 
   int r = xcc_solve_problem(&h->a, &h->p);
   if(r == 10) {
@@ -192,6 +239,19 @@ xccs_solution(struct xccs* h, xccs_solution_iterator it, void* userdata) {
 
   struct userdata_bag b = { .h = h, .it = it, .userdata = userdata };
   xcc_iterate_solution_options_str(&h->p, &it_converter, &b);
+}
+
+unsigned int
+xccs_solution_length(struct xccs* h) {
+  assert(h);
+  return h->p.l;
+}
+
+int32_t
+xccs_extract_solution(struct xccs* h, int32_t* arr) {
+  assert(h);
+  assert(arr);
+  return xcc_extract_solution_option_indices(&h->p, arr);
 }
 
 void

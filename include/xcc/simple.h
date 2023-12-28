@@ -30,6 +30,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 struct xccs;
 
 typedef void (*xccs_solution_iterator)(struct xccs*,
@@ -49,22 +51,45 @@ xccs_init_m();
 
 // Define a new primary item. U and V give the slack. By default, these can both
 // be 1.
-void
-xccs_define_primary_item(struct xccs* h, const char* name, unsigned int u, unsigned int v);
+int32_t
+xccs_define_primary_item_with_slack(struct xccs* h,
+                                    const char* name,
+                                    unsigned int u,
+                                    unsigned int v);
 
-void
+int32_t
+xccs_define_primary_item(struct xccs* h, const char* name);
+
+// Define a secondary item. It also may be colored later.
+int32_t
 xccs_define_secondary_item(struct xccs* h, const char* name);
+
+// Define a new color or retrieve the ID of an existing color. Useful to avoid
+// string lookups.
+int32_t
+xccs_define_color(struct xccs* h, const char* name);
 
 // Add an item to the current option. If the name is NULL, the option is ended.
 // The color is only valid if the item is a secondary item.
-void
-xccs_add(struct xccs* h, const char* name, const char* color);
+int32_t
+xccs_add_named(struct xccs* h, const char* name, const char* color);
+
+// Add an item to the current option. If the name is 0, the option is ended.
+// The color is only valid if the item is a secondary item.
+int32_t
+xccs_add(struct xccs* h, int32_t item, int32_t color);
 
 int
 xccs_solve(struct xccs* h);
 
 void
-xccs_iterate_solution(struct xccs* h, xccs_solution_iterator it, void* userdata);
+xccs_solution(struct xccs* h, xccs_solution_iterator it, void* userdata);
+
+unsigned int
+xccs_solution_length(struct xccs* h);
+
+int32_t
+xccs_extract_solution(struct xccs* h, int32_t* arr);
 
 void
 xccs_free(struct xccs* h);

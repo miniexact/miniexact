@@ -104,7 +104,7 @@ xcc_solve_problem(struct xcc_algorithm* a, struct xcc_problem* p) {
 void
 xcc_iterate_solution_options_str(struct xcc_problem* p,
                                  xcc_option_str_iterator it,
-                                 void* userdata) {
+                                void* userdata) {
   assert(p);
   assert(it);
   const char* names[p->longest_option];
@@ -130,6 +130,8 @@ xcc_iterate_solution_options_str(struct xcc_problem* p,
         names[i] = NAME(TOP(o_));
         if(TOP(o_) < p->color_size && COLOR(TOP(o_)) > 0) {
           colors[i] = p->color_name[COLOR(TOP(o_))];
+        } else {
+          colors[i] = NULL;
         }
         ++o_;
         ++i;
