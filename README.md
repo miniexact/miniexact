@@ -17,28 +17,20 @@ Features:
   - No dependencies
   - SWIG Bindings support (if available on the system), see the Python example.
 
-## Compiling
+## Usage
 
-Reqirements:
+Either use the web-version in your browser, the latest universal APE release, or
+compile yourself. The command line tools expect the algorithm to use (`-x`,
+`-c`, or `-m`) and the input file(s). If multiple files are given (e.g. using
+your shell's wildcard), each file is solved separately.
 
-  - C Compiler (e.g. GCC or Clang)
-  - make
-  - cmake
-  - Optional: SWIG and Python 2/3
+A solution is the list of selected options. You can also print the options as
+they were listed in the input file with the `-p` (print) switch.
 
-Create a sub-directory, generate a build script and compile the tool. Use
-something like this:
+In order to enumerate all possible solutions, use the `-e` (enumerate) switch.
 
-```bash
-mkdir build
-cd build
-cmake ..
-make
-```
-
-By default, a `Release` build is created. To develop the project, using the
-`Debug` build is recommended. For this, run cmake using `cmake ..
--DCMAKE_BUILD_TYPE=Debug`.
+You can change the heuristic used internally to a naive one, but the MRV
+heuristic (the default) is a good choice usually.
 
 ## Knuth Exact Cover Format
 
@@ -95,3 +87,26 @@ option ::= { primary | secondary }
 primary ::= <int>
 secondary ::= <int> [ '-'<int> ]
 ```
+
+## Compiling
+
+Reqirements:
+
+  - C Compiler (e.g. GCC or Clang)
+  - make
+  - cmake
+  - Optional: SWIG and Python 2/3
+
+Create a sub-directory, generate a build script and compile the tool. Use
+something like this:
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
+By default, a `Release` build is created. To develop the project, using the
+`Debug` build is recommended. For this, run cmake using `cmake ..
+-DCMAKE_BUILD_TYPE=Debug`.
