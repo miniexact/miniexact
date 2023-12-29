@@ -1,4 +1,4 @@
-name: XCCSolve Page
+name: Miniexact Page
 on:
   push:
     branches:
@@ -14,8 +14,6 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.inputs.checkoutRef }}
-      - name: Fix git permissions for GitHub action
-        run: git config --system --add safe.directory /__w/xccsolve/xccsolve
       - name: Create Build Folder
         run: mkdir build-emscripten
       - name: Configure with CMake
