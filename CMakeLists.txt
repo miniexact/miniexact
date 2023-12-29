@@ -53,7 +53,7 @@ add_library(miniexact-static STATIC $<TARGET_OBJECTS:miniexact-obj>)
 
 message(STATUS ${CMAKE_C_COMPILER})
 
-if(NOT CMAKE_C_COMPILER MATCHES "cosmo")
+if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   add_library(miniexact SHARED $<TARGET_OBJECTS:miniexact-obj>)
   target_include_directories(miniexact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_link_libraries(miniexact PUBLIC git_version)
