@@ -112,15 +112,15 @@ elseif(NOT CMAKE_C_COMPILER MATCHES "cosmo")
   endif()
 endif()
 
-if(NOT CMAKE_C_COMPILER MATCHES "cosmo")
-find_package(Catch2)
-if(TARGET Catch2::Catch2)
-  add_subdirectory(test)
-  set_target_properties(tests
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  )
-endif()
+if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+  find_package(Catch2)
+  if(TARGET Catch2::Catch2)
+    add_subdirectory(test)
+    set_target_properties(tests
+      PROPERTIES
+      ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+  endif()
 endif()
