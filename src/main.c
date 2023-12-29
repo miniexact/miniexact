@@ -24,13 +24,13 @@
 #include <miniexact/algorithm.h>
 #include <miniexact/git.h>
 #include <miniexact/log.h>
+#include <miniexact/miniexact.h>
 #include <miniexact/ops.h>
 #include <miniexact/parse.h>
-#include <miniexact/miniexact.h>
 
 static void
 print_help() {
-  printf("miniexact -- solve XCC problems using different algorithms\n");
+  printf("miniexact -- solve XCC problems using different algorithms, version " MINIEXACT_VERSION "\n");
   printf("OPTIONS:\n");
   printf("  -h\t\tprint help\n");
   printf("  -p\t\tprint selected options\n");
@@ -46,23 +46,11 @@ print_help() {
   printf("  -m\t\tuse Algorithm M\n");
   printf("  -k\t\tcall external binary to solve with SAT\n    \t\t    (Knuth's "
          "trivial encoding)\n");
-  printf("VERSION:\n");
-  if(strlen(miniexact_git_tag) > 0)
-    printf("  Tag: %s\n", miniexact_git_tag);
-  printf("  Commit: %s\n", miniexact_git_commit_hash);
-  printf("  GitHub URL: https://github.com/miniexact/miniexact/commit/%s\n",
-         miniexact_git_commit_hash);
-  printf("  Private GitLab URL: "
-         "https://gitlab.sai.jku.at/miniexact/miniexact/commit/%s\n",
-         miniexact_git_commit_hash);
 }
 
 static void
 print_version() {
-  if(strlen(miniexact_git_tag) > 0)
-    printf("%s\n", miniexact_git_tag);
-  else
-    printf("%s\n", miniexact_git_commit_hash);
+  printf("%s\n", MINIEXACT_VERSION);
 }
 
 static void
@@ -150,8 +138,9 @@ static int
 process_file(miniexact_config* cfg) {
   miniexact_algorithm a;
   if(!miniexact_algorithm_from_select(cfg->algorithm_select, &a)) {
-    miniexact_err("Could not extract algorithm from algorithm select! Try different "
-        "algorithm selection.");
+    miniexact_err(
+      "Could not extract algorithm from algorithm select! Try different "
+      "algorithm selection.");
     return EXIT_FAILURE;
   }
 

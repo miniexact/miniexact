@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(miniexact)
+project(miniexact VERSION 1.0)
 
 # Set a default build type if none was specified
 set(default_build_type "Release")
@@ -37,15 +37,11 @@ else()
   add_compile_definitions(MINIEXACT_SAT_SOLVER_AVAILABLE)
 endif()
 
-include(CheckGit.cmake)
-CheckGitSetup()
-
 add_library(miniexact-obj OBJECT
   ${SRCS}
   ${SRCS_SAT}
 )
 set_property(TARGET miniexact-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
-target_link_libraries(miniexact-obj PUBLIC git_version)
 target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -56,16 +52,16 @@ message(STATUS ${CMAKE_C_COMPILER})
 if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   add_library(miniexact SHARED $<TARGET_OBJECTS:miniexact-obj>)
   target_include_directories(miniexact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  target_link_libraries(miniexact PUBLIC git_version)
 endif()
 
 target_include_directories(miniexact-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(miniexact-static PUBLIC git_version)
 
 add_executable(miniexactsolve ${SRCS_MAIN})
 set_target_properties(miniexactsolve PROPERTIES OUTPUT_NAME "miniexact")
 
 target_link_libraries(miniexactsolve miniexact-static)
+
+add_compile_definitions(miniexactsolve PRIVATE MINIEXACT_VERSION="${CMAKE_PROJECT_VERSION}")
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   target_link_options(miniexactsolve PRIVATE "-s INITIAL_MEMORY=200MB")

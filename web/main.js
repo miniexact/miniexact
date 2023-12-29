@@ -21,15 +21,6 @@ function ready() {
     if(input.innerText.length > 0) {
         run_()
     }
-
-    let tag = Module.tag();
-    if(tag == "") {
-        tag = "<untagged commit>"
-    }
-    xccsolve_tag.innerText = tag;
-
-    let commit = Module.commit();
-    xccsolve_commit.innerHTML = "<a href=\"https://github.com/maximaximal/xccsolve/commit/" + commit + "\">" + commit + "</a>";
 }
 
 function run_() {

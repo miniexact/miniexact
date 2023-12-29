@@ -9,7 +9,6 @@
 #include <emscripten/bind.h>
 
 #include <miniexact/algorithm.h>
-#include <miniexact/git.h>
 #include <miniexact/log.h>
 #include <miniexact/parse.h>
 #include <miniexact/util.h>
@@ -58,20 +57,13 @@ solve(std::string problem,
   return status;
 }
 
-std::string
-commit() {
-  return miniexact_git_commit_hash;
-}
-
-std::string
-tag() {
-  return miniexact_git_tag;
+std::string version() {
+  return MINIEXACT_VERSION;
 }
 
 EMSCRIPTEN_BINDINGS(Module) {
   emscripten::function("solve", &solve);
-  emscripten::function("commit", &commit);
-  emscripten::function("tag", &tag);
+  emscripten::function("version", &version);
 }
 
 int
