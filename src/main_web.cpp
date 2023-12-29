@@ -30,7 +30,7 @@ solve(std::string problem,
   } else if(algorithm == "m") {
     algorithm_select |= MINIEXACT_ALGORITHM_M;
   } else {
-    err("Unknown algorithm: %s", algorithm.c_str());
+    miniexact_err("Unknown algorithm: %s", algorithm.c_str());
     return false;
   }
   miniexact_config cfg;
