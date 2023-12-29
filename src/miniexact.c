@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -20,19 +20,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <xcc/algorithm.h>
-#include <xcc/log.h>
-#include <xcc/ops.h>
-#include <xcc/xcc.h>
+#include <miniexact/algorithm.h>
+#include <miniexact/log.h>
+#include <miniexact/ops.h>
+#include <miniexact/miniexact.h>
 
-xcc_problem*
-xcc_problem_allocate() {
-  return calloc(1, sizeof(xcc_problem));
+miniexact_problem*
+miniexact_problem_allocate() {
+  return calloc(1, sizeof(miniexact_problem));
 }
 
 int
-xcc_search_for_name(const char* needle,
-                    const xcc_name* names,
+miniexact_search_for_name(const char* needle,
+                    const miniexact_name* names,
                     size_t names_size) {
   for(int i = 0; i < names_size; ++i) {
     if(names[i] && strcmp(names[i], needle) == 0) {
@@ -43,7 +43,7 @@ xcc_search_for_name(const char* needle,
 }
 
 bool
-xcc_has_item(xcc_link needle, xcc_link* list, size_t len) {
+miniexact_has_item(miniexact_link needle, miniexact_link* list, size_t len) {
   for(size_t i = 0; i < len; ++i) {
     if(list[i] == needle)
       return true;
@@ -52,7 +52,7 @@ xcc_has_item(xcc_link needle, xcc_link* list, size_t len) {
 }
 
 void
-xcc_problem_free_inner(xcc_problem* p, xcc_algorithm* a) {
+miniexact_problem_free_inner(miniexact_problem* p, miniexact_algorithm* a) {
   if(p->algorithm_userdata && a && a->free_userdata)
     a->free_userdata(a, p);
 
@@ -89,53 +89,53 @@ xcc_problem_free_inner(xcc_problem* p, xcc_algorithm* a) {
   if(p->bound)
     free(p->bound);
 
-  memset(p, 0, sizeof(xcc_problem));
+  memset(p, 0, sizeof(miniexact_problem));
 }
 
 void
-xcc_problem_free(xcc_problem* p, xcc_algorithm* a) {
-  xcc_problem_free_inner(p, a);
+miniexact_problem_free(miniexact_problem* p, miniexact_algorithm* a) {
+  miniexact_problem_free_inner(p, a);
   free(p);
 }
 
-xcc_link
-xcc_item_from_ident(xcc_problem* p, const char* ident) {
-  return xcc_search_for_name(ident, p->name, p->name_size);
+miniexact_link
+miniexact_item_from_ident(miniexact_problem* p, const char* ident) {
+  return miniexact_search_for_name(ident, p->name, p->name_size);
 }
 
-xcc_link
-xcc_insert_ident_as_name(xcc_problem* p, const char* ident) {
-  xcc_link l = p->name_size;
-  XCC_ARR_PLUS1(name)
+miniexact_link
+miniexact_insert_ident_as_name(miniexact_problem* p, const char* ident) {
+  miniexact_link l = p->name_size;
+  MINIEXACT_ARR_PLUS1(name)
   p->name[l] = strdup(ident);
   return l;
 }
 
 void
-xcc_append_NULL_to_name(xcc_problem* p) {
-  xcc_link l = p->name_size;
-  XCC_ARR_PLUS1(name)
+miniexact_append_NULL_to_name(miniexact_problem* p) {
+  miniexact_link l = p->name_size;
+  MINIEXACT_ARR_PLUS1(name)
   p->name[l] = NULL;
 }
 
-xcc_link
-xcc_color_from_ident(xcc_problem* p, const char* ident) {
-  return xcc_search_for_name(ident, p->color_name, p->color_name_size);
+miniexact_link
+miniexact_color_from_ident(miniexact_problem* p, const char* ident) {
+  return miniexact_search_for_name(ident, p->color_name, p->color_name_size);
 }
 
-xcc_link
-xcc_color_from_ident_or_insert(xcc_problem* p, const char* ident) {
-  xcc_link l = xcc_color_from_ident(p, ident);
+miniexact_link
+miniexact_color_from_ident_or_insert(miniexact_problem* p, const char* ident) {
+  miniexact_link l = miniexact_color_from_ident(p, ident);
   if(l == -1) {
     l = p->color_name_size;
-    XCC_ARR_PLUS1(color_name)
+    MINIEXACT_ARR_PLUS1(color_name)
     p->color_name[l] = strdup(ident);
   }
   return l;
 }
 
 void
-xcc_print_problem_matrix(xcc_problem* p) {
+miniexact_print_problem_matrix(miniexact_problem* p) {
   // Print Header first
   for(size_t i = 0; i < p->name_size; ++i) {
     if(i > 0 && i <= p->primary_item_count) {
@@ -165,13 +165,13 @@ xcc_print_problem_matrix(xcc_problem* p) {
 }
 
 const char*
-xcc_print_problem_matrix_in_libexact_format(xcc_problem* p) {
+miniexact_print_problem_matrix_in_libexact_format(miniexact_problem* p) {
   if(p->color_size)
     return "Colors not supported in libexact format!";
   if(p->secondary_item_count)
     return "Secondary items not supported in libexact format!";
 
-  for(xcc_link i = 1; i <= p->primary_item_count; ++i) {
+  for(miniexact_link i = 1; i <= p->primary_item_count; ++i) {
     printf("# %s %d\n", NAME(i), i);
   }
 
@@ -182,7 +182,7 @@ xcc_print_problem_matrix_in_libexact_format(xcc_problem* p) {
     printf("c %zu\n", i);
   }
 
-  for(xcc_link i = p->N_1 + 1, option = 0;
+  for(miniexact_link i = p->N_1 + 1, option = 0;
       option < p->option_count && i < p->ulink_size;
       ++i) {
     if(TOP(i) <= 0)
@@ -196,7 +196,7 @@ xcc_print_problem_matrix_in_libexact_format(xcc_problem* p) {
 }
 
 void
-xcc_print_problem_solution(xcc_problem* p) {
+miniexact_print_problem_solution(miniexact_problem* p) {
   printf("Solution:\n");
   for(size_t i = 0; i < p->x_size; ++i) {
     printf("%d ", p->x[i]);
@@ -204,15 +204,15 @@ xcc_print_problem_solution(xcc_problem* p) {
   printf("\n");
 }
 
-xcc_link
-xcc_extract_solution_option_indices(xcc_problem* p, xcc_link* solution) {
+miniexact_link
+miniexact_extract_solution_option_indices(miniexact_problem* p, miniexact_link* solution) {
   assert(p);
   assert(solution);
 
-  xcc_link size = 0;
+  miniexact_link size = 0;
 
-  for(xcc_link j = 0; j < p->l; ++j) {
-    xcc_link r = p->x[j];
+  for(miniexact_link j = 0; j < p->l; ++j) {
+    miniexact_link r = p->x[j];
 
     if(r <= p->N || r > p->Z)
       continue;// Out of range (e.g. MCC)

@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -24,34 +24,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <xcc/algorithm.h>
-#include <xcc/log.h>
-#include <xcc/parse.h>
-#include <xcc/xcc.h>
+#include <miniexact/algorithm.h>
+#include <miniexact/log.h>
+#include <miniexact/parse.h>
+#include <miniexact/miniexact.h>
 
 extern FILE* yyin;
 
-struct xcc_parser;
+struct miniexact_parser;
 
-typedef int (*xcc_getc)(struct xcc_parser* p);
-typedef int (*xcc_peekc)(struct xcc_parser* p);
+typedef int (*miniexact_getc)(struct miniexact_parser* p);
+typedef int (*miniexact_peekc)(struct miniexact_parser* p);
 
-typedef const char* (*xcc_add)(struct xcc_parser* p, int lit);
+typedef const char* (*miniexact_add)(struct miniexact_parser* p, int lit);
 
-typedef const char* (*xcc_init_xc)(struct xcc_parser* p,
+typedef const char* (*miniexact_init_xc)(struct miniexact_parser* p,
                                    int primaries,
                                    int secondaries);
-typedef const char* (*xcc_init_xcc)(struct xcc_parser* p,
+typedef const char* (*miniexact_init_miniexact)(struct miniexact_parser* p,
                                     int primaries,
                                     int secondaries);
 
-typedef enum xcc_dimacs_problem { DIMACS_XC, DIMACS_XCC } xcc_dimacs_problem;
+typedef enum miniexact_dimacs_problem { DIMACS_XC, DIMACS_XCC } miniexact_dimacs_problem;
 
-typedef struct xcc_parser {
-  xcc_problem* p;
-  xcc_algorithm* a;
-  xcc_getc getc;
-  xcc_peekc peekc;
+typedef struct miniexact_parser {
+  miniexact_problem* p;
+  miniexact_algorithm* a;
+  miniexact_getc getc;
+  miniexact_peekc peekc;
 
   // Source for characters.
   FILE* file;
@@ -66,11 +66,11 @@ typedef struct xcc_parser {
   size_t col;
 
   int dimacs_primaries, dimacs_secondaries;
-  xcc_dimacs_problem dimacs_problem;
+  miniexact_dimacs_problem dimacs_problem;
   int dimacs_last_lit;
-} xcc_parser;
+} miniexact_parser;
 
-typedef enum xcc_token {
+typedef enum miniexact_token {
   END,
   IDENT,
   LBRACK,
@@ -79,7 +79,7 @@ typedef enum xcc_token {
   GREATER_THAN,
   COLON,
   SEMICOLON,
-} xcc_token;
+} miniexact_token;
 
 #define GETC(P) P->getc(P)
 #define PEEKC(P) P->peekc(P)
@@ -95,15 +95,15 @@ isidentchar(char c) {
 }
 
 inline static bool
-isonlydigits(xcc_parser* p) {
+isonlydigits(miniexact_parser* p) {
   for(size_t i = 0; i < p->ident_len; ++i)
     if(p->ident[i] > '9' || p->ident[i] < '0')
       return false;
   return true;
 }
 
-static xcc_token
-next(xcc_parser* p) {
+static miniexact_token
+next(miniexact_parser* p) {
   int c = 0;
   while(true) {
     c = GETC(p);
@@ -153,22 +153,22 @@ next(xcc_parser* p) {
 }
 
 static inline int
-xcc_getc_str(xcc_parser* p) {
+miniexact_getc_str(miniexact_parser* p) {
   if(p->str[p->str_pos] == '\0')
     return EOF;
   return p->str[p->str_pos++];
 }
 static inline int
-xcc_peekc_str(xcc_parser* p) {
+miniexact_peekc_str(miniexact_parser* p) {
   return p->str[p->str_pos];
 }
 
 static inline int
-xcc_getc_file(xcc_parser* p) {
+miniexact_getc_file(miniexact_parser* p) {
   return getc(p->file);
 }
 static inline int
-xcc_peekc_file(xcc_parser* p) {
+miniexact_peekc_file(miniexact_parser* p) {
   // Thanks to https://stackoverflow.com/a/7623338
   const int c = getc(p->file);
   return c == EOF ? EOF : ungetc(c, p->file);
@@ -184,16 +184,16 @@ faster_is_digit(int ch) {
 // The dimacs parser is taken from Kissat, by Armin Biere (MIT Licensed) and
 // modified to parse exact cover header and options.
 static const char*
-parse_dimacs_kissat(xcc_parser* p,
-                    xcc_init_xc xc,
-                    xcc_init_xcc xcc,
-                    xcc_add add) {
+parse_dimacs_kissat(miniexact_parser* p,
+                    miniexact_init_xc xc,
+                    miniexact_init_miniexact miniexact,
+                    miniexact_add add) {
   int ch;
   uint64_t parsed = 0;
   int lit = 0;
   ch = GETC(p);
 
-  xcc_init_xc init = NULL;
+  miniexact_init_xc init = NULL;
 
   if(ch != ' ')
     return "expected space after 'p'";
@@ -208,7 +208,7 @@ parse_dimacs_kissat(xcc_parser* p,
   ch = GETC(p);
   ++p->col;
   if(ch == 'c') {
-    init = xcc;
+    init = miniexact;
     ch = GETC(p);
     ++p->col;
   } else
@@ -352,7 +352,7 @@ parse_dimacs_kissat(xcc_parser* p,
 }
 
 static const char*
-parse_dimacs_init_xc(xcc_parser* p, int primaries, int secondaries) {
+parse_dimacs_init_xc(miniexact_parser* p, int primaries, int secondaries) {
   p->dimacs_problem = DIMACS_XC;
   p->dimacs_primaries = primaries;
   p->dimacs_secondaries = secondaries;
@@ -364,12 +364,12 @@ parse_dimacs_init_xc(xcc_parser* p, int primaries, int secondaries) {
   for(int item = 1; item <= primaries; ++item) {
     if((e = p->a->define_primary_item(p->a, p->p, item)))
       return e;
-    xcc_append_NULL_to_name(p->p);
+    miniexact_append_NULL_to_name(p->p);
   }
   for(int item = 1; item <= secondaries; ++item) {
     if((e = p->a->define_secondary_item(p->a, p->p, item + primaries)))
       return e;
-    xcc_append_NULL_to_name(p->p);
+    miniexact_append_NULL_to_name(p->p);
   }
 
   if((e = p->a->prepare_options(p->a, p->p)))
@@ -379,7 +379,7 @@ parse_dimacs_init_xc(xcc_parser* p, int primaries, int secondaries) {
 }
 
 static const char*
-parse_dimacs_init_xcc(xcc_parser* p, int primaries, int secondaries) {
+parse_dimacs_init_miniexact(miniexact_parser* p, int primaries, int secondaries) {
   const char* e = parse_dimacs_init_xc(p, primaries, secondaries);
   if(e)
     return e;
@@ -394,7 +394,7 @@ parse_dimacs_init_xcc(xcc_parser* p, int primaries, int secondaries) {
    L <= pp->dimacs_primaries + pp->dimacs_secondaries)
 
 static const char*
-parse_dimacs_add(xcc_parser* pp, int lit) {
+parse_dimacs_add(miniexact_parser* pp, int lit) {
   const char* e = NULL;
 
   if(IS_PRIMARY(lit)) {
@@ -413,9 +413,9 @@ parse_dimacs_add(xcc_parser* pp, int lit) {
     if((e =
           pp->a->add_item_with_color(pp->a, pp->p, pp->dimacs_last_lit, -lit)))
       return e;
-    xcc_problem* p = pp->p;
-    xcc_link color = -lit;
-    XCC_ARR_HASN(color_name, color);
+    miniexact_problem* p = pp->p;
+    miniexact_link color = -lit;
+    MINIEXACT_ARR_HASN(color_name, color);
     p->color_name[color] = NULL;
   } else if(lit < 0 && IS_PRIMARY(pp->dimacs_last_lit)) {
     return "primary items cannot be colored";
@@ -439,7 +439,7 @@ parse_dimacs_add(xcc_parser* pp, int lit) {
 #undef IS_SECONDARY
 
 static const char*
-parse_dimacs(xcc_parser* p) {
+parse_dimacs(miniexact_parser* p) {
   // Multiple variants of Dimacs exist in the context of exact cover:
   // XC: Exact cover with Algorithm X.
   // XCC: Exact cover with colors
@@ -447,35 +447,35 @@ parse_dimacs(xcc_parser* p) {
   p->dimacs_last_lit = 0;
 
   return parse_dimacs_kissat(
-    p, &parse_dimacs_init_xc, &parse_dimacs_init_xcc, &parse_dimacs_add);
+    p, &parse_dimacs_init_xc, &parse_dimacs_init_miniexact, &parse_dimacs_add);
 }
 
 static const char*
-parse(xcc_parser* p) {
+parse(miniexact_parser* p) {
   // Read problem header (primary items, secondary items), then read all
   // options.
   const char* e = NULL;
 
-  xcc_token t;
+  miniexact_token t;
   t = next(p);
 
   if(t == LESS_THAN) {
     // Primary items
     t = next(p);
     while(t == IDENT) {
-      xcc_link item = xcc_item_from_ident(p->p, p->ident);
+      miniexact_link item = miniexact_item_from_ident(p->p, p->ident);
       if(item != -1) {
         return "duplicate name for new primary item";
       }
-      item = xcc_insert_ident_as_name(p->p, p->ident);
+      item = miniexact_insert_ident_as_name(p->p, p->ident);
 
       t = next(p);
       if(t == COLON) {
         // Triggers define_primary_item_with_range
         t = next(p);
 
-        xcc_link u = 1;
-        xcc_link v = 1;
+        miniexact_link u = 1;
+        miniexact_link v = 1;
 
         if(t != IDENT && isonlydigits(p))
           return "token after colon in range specifier must be a number";
@@ -519,11 +519,11 @@ parse(xcc_parser* p) {
   if(t == LBRACK) {
     t = next(p);
     while(t == IDENT) {
-      xcc_link item = xcc_item_from_ident(p->p, p->ident);
+      miniexact_link item = miniexact_item_from_ident(p->p, p->ident);
       if(item != -1) {
         return "duplicate name for new secondary item";
       }
-      item = xcc_insert_ident_as_name(p->p, p->ident);
+      item = miniexact_insert_ident_as_name(p->p, p->ident);
 
       if((e = p->a->define_secondary_item(p->a, p->p, item)))
         return e;
@@ -544,7 +544,7 @@ parse(xcc_parser* p) {
       return "expected ident as option start";
     }
     while(t == IDENT) {
-      xcc_link item = xcc_item_from_ident(p->p, p->ident);
+      miniexact_link item = miniexact_item_from_ident(p->p, p->ident);
       if(item == -1) {
         return p->ident;
       }
@@ -559,7 +559,7 @@ parse(xcc_parser* p) {
           return "cannot specify a color for a primary item";
         }
 
-        xcc_link color = xcc_color_from_ident_or_insert(p->p, p->ident);
+        miniexact_link color = miniexact_color_from_ident_or_insert(p->p, p->ident);
         t = next(p);
 
         if((e = p->a->add_item_with_color(p->a, p->p, item, color)))
@@ -581,16 +581,16 @@ parse(xcc_parser* p) {
   return p->a->end_options(p->a, p->p);
 }
 
-xcc_problem*
-xcc_parse_problem(xcc_algorithm* a, const char* str) {
+miniexact_problem*
+miniexact_parse_problem(miniexact_algorithm* a, const char* str) {
   int i;
 
-  xcc_parser p;
+  miniexact_parser p;
   memset(&p, 0, sizeof(p));
   const char* error = NULL;
 
-  xcc_problem* problem = xcc_problem_allocate();
-  if((error = xcc_default_init_problem(a, problem)))
+  miniexact_problem* problem = miniexact_problem_allocate();
+  if((error = miniexact_default_init_problem(a, problem)))
     goto ERROR;
 
   p.a = a;
@@ -600,21 +600,21 @@ xcc_parse_problem(xcc_algorithm* a, const char* str) {
   p.file = NULL;
   p.ident_len = 0;
 
-  p.getc = &xcc_getc_str;
-  p.peekc = &xcc_peekc_str;
+  p.getc = &miniexact_getc_str;
+  p.peekc = &miniexact_peekc_str;
 
   if((error = parse(&p)))
     goto ERROR;
 
   return p.p;
 ERROR:
-  xcc_problem_free(p.p, a);
+  miniexact_problem_free(p.p, a);
   err("Parse error at %u:%u %s", p.line, p.col, error);
   return NULL;
 }
 
-xcc_problem*
-xcc_parse_problem_file(xcc_algorithm* a, const char* file_path) {
+miniexact_problem*
+miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
 
   FILE* f = fopen(file_path, "r");
   if(!f) {
@@ -624,11 +624,11 @@ xcc_parse_problem_file(xcc_algorithm* a, const char* file_path) {
 
   const char* error = NULL;
 
-  xcc_problem* problem = xcc_problem_allocate();
-  if((error = xcc_default_init_problem(a, problem)))
+  miniexact_problem* problem = miniexact_problem_allocate();
+  if((error = miniexact_default_init_problem(a, problem)))
     goto ERROR;
 
-  xcc_parser p;
+  miniexact_parser p;
   memset(&p, 0, sizeof(p));
   p.a = a;
   p.file = f;
@@ -637,8 +637,8 @@ xcc_parse_problem_file(xcc_algorithm* a, const char* file_path) {
   p.str_pos = 0;
   p.ident_len = 0;
 
-  p.getc = &xcc_getc_file;
-  p.peekc = &xcc_peekc_file;
+  p.getc = &miniexact_getc_file;
+  p.peekc = &miniexact_peekc_file;
 
   if((error = parse(&p)))
     goto ERROR;
@@ -651,7 +651,7 @@ xcc_parse_problem_file(xcc_algorithm* a, const char* file_path) {
   return problem;
 ERROR:
   assert(problem);
-  xcc_problem_free(problem, a);
+  miniexact_problem_free(problem, a);
   err("Parse error at %u:%u %s", p.line, p.col, error);
   return NULL;
 }

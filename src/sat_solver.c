@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -25,9 +25,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <xcc/log.h>
-#include <xcc/sat_solver.h>
-#include <xcc/util.h>
+#include <miniexact/log.h>
+#include <miniexact/sat_solver.h>
+#include <miniexact/util.h>
 
 #ifdef WIN32
 #include <io.h>
@@ -128,13 +128,13 @@ find_solver_id() {
 }
 
 void
-xcc_sat_solver_find_and_init(xcc_sat_solver* solver,
+miniexact_sat_solver_find_and_init(miniexact_sat_solver* solver,
                              unsigned int variables,
                              unsigned int clauses) {
   assert(solver);
 
   size_t solver_id = find_solver_id();
-  xcc_sat_solver_init(solver,
+  miniexact_sat_solver_init(solver,
                       variables,
                       clauses,
                       known_sat_solvers[solver_id],
@@ -143,7 +143,7 @@ xcc_sat_solver_find_and_init(xcc_sat_solver* solver,
 }
 
 void
-xcc_sat_solver_init(xcc_sat_solver* solver,
+miniexact_sat_solver_init(miniexact_sat_solver* solver,
                     unsigned int variables,
                     unsigned int clauses,
                     char* binary,
@@ -209,7 +209,7 @@ xcc_sat_solver_init(xcc_sat_solver* solver,
 }
 
 void
-xcc_sat_solver_destroy(xcc_sat_solver* solver) {
+miniexact_sat_solver_destroy(miniexact_sat_solver* solver) {
   assert(solver);
   if(solver->assignments) {
     free(solver->assignments);
@@ -218,7 +218,7 @@ xcc_sat_solver_destroy(xcc_sat_solver* solver) {
 }
 
 void
-xcc_sat_solver_add(xcc_sat_solver* solver, int l) {
+miniexact_sat_solver_add(miniexact_sat_solver* solver, int l) {
   assert(solver);
   assert(solver->infd_handle);
   trc("[SAT] Lit: %d", l);
@@ -230,21 +230,21 @@ xcc_sat_solver_add(xcc_sat_solver* solver, int l) {
 }
 
 void
-xcc_sat_solver_unit(xcc_sat_solver* solver, int l) {
+miniexact_sat_solver_unit(miniexact_sat_solver* solver, int l) {
   assert(solver);
   assert(solver->infd_handle);
   trc("[SAT] %d 0", l);
   fprintf(solver->infd_handle, "%d 0\n", l);
 }
 void
-xcc_sat_solver_binary(xcc_sat_solver* solver, int a, int b) {
+miniexact_sat_solver_binary(miniexact_sat_solver* solver, int a, int b) {
   assert(solver);
   assert(solver->infd_handle);
   trc("[SAT] %d %d 0", a, b);
   fprintf(solver->infd_handle, "%d %d 0\n", a, b);
 }
 void
-xcc_sat_solver_ternary(xcc_sat_solver* solver, int a, int b, int c) {
+miniexact_sat_solver_ternary(miniexact_sat_solver* solver, int a, int b, int c) {
   assert(solver);
   assert(solver->infd_handle);
   trc("[SAT] %d %d %d 0", a, b, c);
@@ -252,7 +252,7 @@ xcc_sat_solver_ternary(xcc_sat_solver* solver, int a, int b, int c) {
 }
 
 static void
-parse_solver_output(xcc_sat_solver* solver) {
+parse_solver_output(miniexact_sat_solver* solver) {
   assert(solver);
   assert(solver->assignments);
   char stack_buf[BUF_SIZE];
@@ -277,7 +277,7 @@ parse_solver_output(xcc_sat_solver* solver) {
         uint32_t v_ = abs(v);
 
         assert(v_ < solver->variables + 1);
-        solver->assignments[v_] = xcc_sign(v);
+        solver->assignments[v_] = miniexact_sign(v);
 
         if(v_ == solver->variables)
           return;
@@ -287,7 +287,7 @@ parse_solver_output(xcc_sat_solver* solver) {
 }
 
 int
-xcc_sat_solver_solve(xcc_sat_solver* solver) {
+miniexact_sat_solver_solve(miniexact_sat_solver* solver) {
   fclose(solver->infd_handle);
   solver->infd_handle = NULL;
   close(solver->infd[1]);

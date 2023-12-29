@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef XCC_OPS_H
-#define XCC_OPS_H
+#ifndef MINIEXACT_OPS_H
+#define MINIEXACT_OPS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,66 +34,66 @@ extern "C" {
 #define SLACK(l) p->slack[l]
 #define BOUND(l) p->bound[l]
 
-#include "xcc.h"
+#include "miniexact.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 inline static void
-xcc_cover(xcc_problem*, xcc_link);
+miniexact_cover(miniexact_problem*, miniexact_link);
 inline static void
-xcc_uncover(xcc_problem*, xcc_link);
+miniexact_uncover(miniexact_problem*, miniexact_link);
 inline static void
-xcc_hide(xcc_problem*, xcc_link);
+miniexact_hide(miniexact_problem*, miniexact_link);
 inline static void
-xcc_unhide(xcc_problem*, xcc_link);
+miniexact_unhide(miniexact_problem*, miniexact_link);
 
 inline static void
-xcc_cover_prime(xcc_problem*, xcc_link);
+miniexact_cover_prime(miniexact_problem*, miniexact_link);
 inline static void
-xcc_uncover_prime(xcc_problem*, xcc_link);
+miniexact_uncover_prime(miniexact_problem*, miniexact_link);
 inline static void
-xcc_hide_prime(xcc_problem*, xcc_link);
+miniexact_hide_prime(miniexact_problem*, miniexact_link);
 inline static void
-xcc_unhide_prime(xcc_problem*, xcc_link);
+miniexact_unhide_prime(miniexact_problem*, miniexact_link);
 inline static void
-xcc_commit(xcc_problem* p, xcc_link p_, xcc_link j_);
+miniexact_commit(miniexact_problem* p, miniexact_link p_, miniexact_link j_);
 inline static void
-xcc_uncommit(xcc_problem* p, xcc_link p_, xcc_link j_);
+miniexact_uncommit(miniexact_problem* p, miniexact_link p_, miniexact_link j_);
 inline static void
-xcc_purify(xcc_problem* p, xcc_link p_);
+miniexact_purify(miniexact_problem* p, miniexact_link p_);
 inline static void
-xcc_unpurify(xcc_problem* p, xcc_link p_);
+miniexact_unpurify(miniexact_problem* p, miniexact_link p_);
 
 inline static void
-xcc_tweak(xcc_problem* p, xcc_link x_, xcc_link p_);
+miniexact_tweak(miniexact_problem* p, miniexact_link x_, miniexact_link p_);
 inline static void
-xcc_untweak(xcc_problem* p, xcc_link l);
+miniexact_untweak(miniexact_problem* p, miniexact_link l);
 inline static void
-xcc_tweak_prime(xcc_problem* p, xcc_link x_, xcc_link p_);
+miniexact_tweak_prime(miniexact_problem* p, miniexact_link x_, miniexact_link p_);
 inline static void
-xcc_untweak_prime(xcc_problem* p, xcc_link l);
+miniexact_untweak_prime(miniexact_problem* p, miniexact_link l);
 
-#define COVER(I) xcc_cover(p, I)
-#define UNCOVER(I) xcc_uncover(p, I)
-#define HIDE(P) xcc_hide(p, P)
-#define UNHIDE(P) xcc_unhide(p, P)
+#define COVER(I) miniexact_cover(p, I)
+#define UNCOVER(I) miniexact_uncover(p, I)
+#define HIDE(P) miniexact_hide(p, P)
+#define UNHIDE(P) miniexact_unhide(p, P)
 
-#define COVER_PRIME(I) xcc_cover_prime(p, I)
-#define UNCOVER_PRIME(I) xcc_uncover_prime(p, I)
-#define HIDE_PRIME(P) xcc_hide_prime(p, P)
-#define UNHIDE_PRIME(P) xcc_unhide_prime(p, P)
+#define COVER_PRIME(I) miniexact_cover_prime(p, I)
+#define UNCOVER_PRIME(I) miniexact_uncover_prime(p, I)
+#define HIDE_PRIME(P) miniexact_hide_prime(p, P)
+#define UNHIDE_PRIME(P) miniexact_unhide_prime(p, P)
 
-#define COMMIT(P, J) xcc_commit(p, P, J)
-#define UNCOMMIT(P, J) xcc_uncommit(p, P, J)
-#define PURIFY(P) xcc_purify(p, P)
-#define UNPURIFY(P) xcc_unpurify(p, P)
+#define COMMIT(P, J) miniexact_commit(p, P, J)
+#define UNCOMMIT(P, J) miniexact_uncommit(p, P, J)
+#define PURIFY(P) miniexact_purify(p, P)
+#define UNPURIFY(P) miniexact_unpurify(p, P)
 
-#define TWEAK(X, P) xcc_tweak(p, X, P)
-#define UNTWEAK(L) xcc_untweak(p, L)
-#define TWEAK_PRIME(X, P) xcc_tweak_prime(p, X, P)
-#define UNTWEAK_PRIME(L) xcc_untweak_prime(p, L)
+#define TWEAK(X, P) miniexact_tweak(p, X, P)
+#define UNTWEAK(L) miniexact_untweak(p, L)
+#define TWEAK_PRIME(X, P) miniexact_tweak_prime(p, X, P)
+#define UNTWEAK_PRIME(L) miniexact_untweak_prime(p, L)
 
 // Taken from https://stackoverflow.com/a/3437484
 #define MAX(a, b)           \
@@ -108,36 +108,36 @@ xcc_untweak_prime(xcc_problem* p, xcc_link l);
 #define THETA(P) MONUS(LEN(P) + 1, MONUS(BOUND(P), SLACK(P)))
 
 inline static void
-xcc_cover(xcc_problem* p, xcc_link i) {
-  xcc_link p_ = DLINK(i);
+miniexact_cover(miniexact_problem* p, miniexact_link i) {
+  miniexact_link p_ = DLINK(i);
   while(p_ != i) {
     HIDE(p_);
     p_ = DLINK(p_);
   }
-  xcc_link l = LLINK(i), r = RLINK(i);
+  miniexact_link l = LLINK(i), r = RLINK(i);
   RLINK(l) = r;
   LLINK(r) = l;
 }
 
 inline static void
-xcc_cover_prime(xcc_problem* p, xcc_link i) {
-  xcc_link p_ = DLINK(i);
+miniexact_cover_prime(miniexact_problem* p, miniexact_link i) {
+  miniexact_link p_ = DLINK(i);
   while(p_ != i) {
     HIDE_PRIME(p_);
     p_ = DLINK(p_);
   }
-  xcc_link l = LLINK(i), r = RLINK(i);
+  miniexact_link l = LLINK(i), r = RLINK(i);
   RLINK(l) = r;
   LLINK(r) = l;
 }
 
 inline static void
-xcc_uncover(xcc_problem* p, xcc_link i) {
-  xcc_link l = LLINK(i);
-  xcc_link r = RLINK(i);
+miniexact_uncover(miniexact_problem* p, miniexact_link i) {
+  miniexact_link l = LLINK(i);
+  miniexact_link r = RLINK(i);
   RLINK(l) = i;
   LLINK(r) = i;
-  xcc_link p_ = ULINK(i);
+  miniexact_link p_ = ULINK(i);
   while(p_ != i) {
     UNHIDE(p_);
     p_ = ULINK(p_);
@@ -145,12 +145,12 @@ xcc_uncover(xcc_problem* p, xcc_link i) {
 }
 
 inline static void
-xcc_uncover_prime(xcc_problem* p, xcc_link i) {
-  xcc_link l = LLINK(i);
-  xcc_link r = RLINK(i);
+miniexact_uncover_prime(miniexact_problem* p, miniexact_link i) {
+  miniexact_link l = LLINK(i);
+  miniexact_link r = RLINK(i);
   RLINK(l) = i;
   LLINK(r) = i;
-  xcc_link p_ = ULINK(i);
+  miniexact_link p_ = ULINK(i);
   while(p_ != i) {
     UNHIDE_PRIME(p_);
     p_ = ULINK(p_);
@@ -158,14 +158,14 @@ xcc_uncover_prime(xcc_problem* p, xcc_link i) {
 }
 
 inline static void
-xcc_hide(xcc_problem* p, xcc_link p_) {
-  xcc_link q = p_ + 1;
+miniexact_hide(miniexact_problem* p, miniexact_link p_) {
+  miniexact_link q = p_ + 1;
   while(q != p_) {
     assert(q >= 0);
     assert(q < p->top_size);
-    xcc_link x = TOP(q);
-    xcc_link u = ULINK(q);
-    xcc_link d = DLINK(q);
+    miniexact_link x = TOP(q);
+    miniexact_link u = ULINK(q);
+    miniexact_link d = DLINK(q);
 
     assert(x != 0);
 
@@ -181,12 +181,12 @@ xcc_hide(xcc_problem* p, xcc_link p_) {
 }
 
 inline static void
-xcc_unhide(xcc_problem* p, xcc_link p_) {
-  xcc_link q = p_ - 1;
+miniexact_unhide(miniexact_problem* p, miniexact_link p_) {
+  miniexact_link q = p_ - 1;
   while(q != p_) {
-    xcc_link x = TOP(q);
-    xcc_link u = ULINK(q);
-    xcc_link d = DLINK(q);
+    miniexact_link x = TOP(q);
+    miniexact_link u = ULINK(q);
+    miniexact_link d = DLINK(q);
     if(x <= 0) {
       q = d; /* q was a spacer */
     } else {
@@ -199,12 +199,12 @@ xcc_unhide(xcc_problem* p, xcc_link p_) {
 }
 
 inline static void
-xcc_hide_prime(xcc_problem* p, xcc_link p_) {
-  xcc_link q = p_ + 1;
+miniexact_hide_prime(miniexact_problem* p, miniexact_link p_) {
+  miniexact_link q = p_ + 1;
   while(q != p_) {
-    xcc_link x = TOP(q);
-    xcc_link u = ULINK(q);
-    xcc_link d = DLINK(q);
+    miniexact_link x = TOP(q);
+    miniexact_link u = ULINK(q);
+    miniexact_link d = DLINK(q);
 
     if(x <= 0) {
       q = u; /* q was a spacer */
@@ -220,12 +220,12 @@ xcc_hide_prime(xcc_problem* p, xcc_link p_) {
 }
 
 inline static void
-xcc_unhide_prime(xcc_problem* p, xcc_link p_) {
-  xcc_link q = p_ - 1;
+miniexact_unhide_prime(miniexact_problem* p, miniexact_link p_) {
+  miniexact_link q = p_ - 1;
   while(q != p_) {
-    xcc_link x = TOP(q);
-    xcc_link u = ULINK(q);
-    xcc_link d = DLINK(q);
+    miniexact_link x = TOP(q);
+    miniexact_link u = ULINK(q);
+    miniexact_link d = DLINK(q);
     if(x <= 0) {
       q = d; /* q was a spacer */
     } else if(COLOR(q) < 0) {
@@ -240,7 +240,7 @@ xcc_unhide_prime(xcc_problem* p, xcc_link p_) {
 }
 
 inline static void
-xcc_commit(xcc_problem* p, xcc_link p_, xcc_link j_) {
+miniexact_commit(miniexact_problem* p, miniexact_link p_, miniexact_link j_) {
   if(COLOR(p_) == 0)
     COVER_PRIME(j_);
   else if(COLOR(p_) > 0)
@@ -248,7 +248,7 @@ xcc_commit(xcc_problem* p, xcc_link p_, xcc_link j_) {
 }
 
 inline static void
-xcc_uncommit(xcc_problem* p, xcc_link p_, xcc_link j_) {
+miniexact_uncommit(miniexact_problem* p, miniexact_link p_, miniexact_link j_) {
   if(COLOR(p_) == 0)
     UNCOVER_PRIME(j_);
   else if(COLOR(p_) > 0)
@@ -256,12 +256,12 @@ xcc_uncommit(xcc_problem* p, xcc_link p_, xcc_link j_) {
 }
 
 inline static void
-xcc_purify(xcc_problem* p, xcc_link p_) {
-  xcc_link c = COLOR(p_);
-  xcc_link i = TOP(p_);
+miniexact_purify(miniexact_problem* p, miniexact_link p_) {
+  miniexact_link c = COLOR(p_);
+  miniexact_link i = TOP(p_);
   // Inserted according to err4f5 (Errata)
   COLOR(i) = c;
-  xcc_link q = DLINK(i);
+  miniexact_link q = DLINK(i);
   while(q != i) {
     if(COLOR(q) == c)
       COLOR(q) = -1;
@@ -272,8 +272,8 @@ xcc_purify(xcc_problem* p, xcc_link p_) {
 }
 
 inline static void
-xcc_unpurify(xcc_problem* p, xcc_link p_) {
-  xcc_link c = COLOR(p_), i = TOP(p_), q = ULINK(i);
+miniexact_unpurify(miniexact_problem* p, miniexact_link p_) {
+  miniexact_link c = COLOR(p_), i = TOP(p_), q = ULINK(i);
   while(q != i) {
     if(COLOR(q) < 0)
       COLOR(q) = c;
@@ -284,24 +284,24 @@ xcc_unpurify(xcc_problem* p, xcc_link p_) {
 }
 
 inline static void
-xcc_tweak(xcc_problem* p, xcc_link x, xcc_link p_) {
+miniexact_tweak(miniexact_problem* p, miniexact_link x, miniexact_link p_) {
   assert(x == DLINK(p_));
   assert(p_ == ULINK(x));
   HIDE_PRIME(x);
-  xcc_link d = DLINK(x);
+  miniexact_link d = DLINK(x);
   DLINK(p_) = d;
   ULINK(d) = p_;
   LEN(p_) = LEN(p_) - 1;
 }
 
 inline static void
-xcc_untweak(xcc_problem* p, xcc_link l) {
-  xcc_link a = FT(l);
-  xcc_link p_ = (a <= p->N ? a : TOP(a));
-  xcc_link x = a, y = p_;
-  xcc_link z = DLINK(p_);
+miniexact_untweak(miniexact_problem* p, miniexact_link l) {
+  miniexact_link a = FT(l);
+  miniexact_link p_ = (a <= p->N ? a : TOP(a));
+  miniexact_link x = a, y = p_;
+  miniexact_link z = DLINK(p_);
   DLINK(p_) = x;
-  xcc_link k = 0;
+  miniexact_link k = 0;
   while(x != z) {
     ULINK(x) = y;
     k = k + 1;
@@ -314,23 +314,23 @@ xcc_untweak(xcc_problem* p, xcc_link l) {
 }
 
 inline static void
-xcc_tweak_prime(xcc_problem* p, xcc_link x, xcc_link p_) {
+miniexact_tweak_prime(miniexact_problem* p, miniexact_link x, miniexact_link p_) {
   assert(x == DLINK(p_));
   assert(p_ == ULINK(x));
-  xcc_link d = DLINK(x);
+  miniexact_link d = DLINK(x);
   DLINK(p_) = d;
   ULINK(d) = p_;
   LEN(p_) = LEN(p_) - 1;
 }
 
 inline static void
-xcc_untweak_prime(xcc_problem* p, xcc_link l) {
-  xcc_link a = FT(l);
-  xcc_link p_ = (a <= p->N ? a : TOP(a));
-  xcc_link x = a, y = p_;
-  xcc_link z = DLINK(p_);
+miniexact_untweak_prime(miniexact_problem* p, miniexact_link l) {
+  miniexact_link a = FT(l);
+  miniexact_link p_ = (a <= p->N ? a : TOP(a));
+  miniexact_link x = a, y = p_;
+  miniexact_link z = DLINK(p_);
   DLINK(p_) = x;
-  xcc_link k = 0;
+  miniexact_link k = 0;
   while(x != z) {
     ULINK(x) = y;
     k = k + 1;

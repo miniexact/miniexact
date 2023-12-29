@@ -1,16 +1,16 @@
 #include <string.h>
 
-#include <xcc/algorithm.h>
-#include <xcc/log.h>
-#include <xcc/ops.h>
-#include <xcc/parse.h>
-#include <xcc/util.h>
-#include <xcc/xcc.h>
+#include <miniexact/algorithm.h>
+#include <miniexact/log.h>
+#include <miniexact/ops.h>
+#include <miniexact/parse.h>
+#include <miniexact/util.h>
+#include <miniexact/miniexact.h>
 
 int
-xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
-                                      struct xcc_problem* p,
-                                      struct xcc_config* cfg) {
+miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
+                                      struct miniexact_problem* p,
+                                      struct miniexact_config* cfg) {
   int return_code = EXIT_SUCCESS;
   if(!a->compute_next_result) {
     err("Algorithm does not support solving!");
@@ -31,8 +31,8 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
 
       if(cfg->print_options) {
         ++nr_of_solutions;
-        for(xcc_link o = 0; o < p->l; ++o) {
-          xcc_link o_ = p->x[o];
+        for(miniexact_link o = 0; o < p->l; ++o) {
+          miniexact_link o_ = p->x[o];
 
           // Go back to beginning of option
           while(TOP(o_ - 1) > 0)
@@ -69,8 +69,8 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
         }
         printf("\n");
       } else {
-        xcc_link solution[p->l];
-        xcc_link l = xcc_extract_solution_option_indices(p, solution);
+        miniexact_link solution[p->l];
+        miniexact_link l = miniexact_extract_solution_option_indices(p, solution);
         if(l > 0) {
           for(size_t i = 0; i < l; ++i) {
             printf("%d ", solution[i]);
@@ -84,7 +84,7 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
       printf("\n");
 
     if(cfg->verbose) {
-      xcc_print_problem_matrix(p);
+      miniexact_print_problem_matrix(p);
       printf("\n");
     }
   } while(cfg->enumerate);
@@ -97,7 +97,7 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
 }
 
 int
-xcc_solve_problem(struct xcc_algorithm* a, struct xcc_problem* p) {
+miniexact_solve_problem(struct miniexact_algorithm* a, struct miniexact_problem* p) {
   assert(a);
   assert(p);
   bool has_result = a->compute_next_result(a, p);
@@ -108,20 +108,20 @@ xcc_solve_problem(struct xcc_algorithm* a, struct xcc_problem* p) {
 }
 
 void
-xcc_iterate_solution_options_str(struct xcc_problem* p,
-                                 xcc_option_str_iterator it,
+miniexact_iterate_solution_options_str(struct miniexact_problem* p,
+                                 miniexact_option_str_iterator it,
                                  void* userdata) {
   assert(p);
   assert(it);
   const char* names[p->longest_option];
   const char* colors[p->longest_option];
 
-  for(xcc_link o = 0; o < p->l; ++o) {
+  for(miniexact_link o = 0; o < p->l; ++o) {
     memset(names, 0, p->longest_option);
     memset(colors, 0, p->longest_option);
     size_t i = 0;
 
-    xcc_link o_ = p->x[o];
+    miniexact_link o_ = p->x[o];
 
     // Go back to beginning of option
     while(TOP(o_ - 1) > 0)

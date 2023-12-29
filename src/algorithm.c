@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -15,24 +15,24 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "xcc/xcc.h"
-#include <xcc/algorithm.h>
-#include <xcc/algorithm_c.h>
-#include <xcc/algorithm_knuth_cnf.h>
-#include <xcc/algorithm_m.h>
-#include <xcc/algorithm_x.h>
-#include <xcc/ops.h>
+#include "miniexact/miniexact.h"
+#include <miniexact/algorithm.h>
+#include <miniexact/algorithm_c.h>
+#include <miniexact/algorithm_knuth_cnf.h>
+#include <miniexact/algorithm_m.h>
+#include <miniexact/algorithm_x.h>
+#include <miniexact/ops.h>
 
 static inline const char*
-define_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
+define_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link l) {
   assert(a);
   assert(p);
   assert(l);
   assert(p->llink);
   assert(p->rlink);
 
-  XCC_ARR_PLUS1(llink)
-  XCC_ARR_PLUS1(rlink)
+  MINIEXACT_ARR_PLUS1(llink)
+  MINIEXACT_ARR_PLUS1(rlink)
 
   p->i = p->i + 1;
   LLINK(p->i) = p->i - 1;
@@ -42,7 +42,7 @@ define_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
 }
 
 static const char*
-define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
+define_primary_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link l) {
   const char* e;
   if((e = define_item(a, p, l)))
     return e;
@@ -50,8 +50,8 @@ define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
   ++p->primary_item_count;
 
   // Always track them with as the base-case w.r.t. primary items.
-  XCC_ARR_PLUS1(slack)
-  XCC_ARR_PLUS1(bound)
+  MINIEXACT_ARR_PLUS1(slack)
+  MINIEXACT_ARR_PLUS1(bound)
   SLACK(p->i) = 1;
   BOUND(p->i) = 0;
 
@@ -60,11 +60,11 @@ define_primary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
 
 // Adds a primary item with a range [u;v] (sets SLACK and BOUND)
 static const char*
-define_primary_item_with_range(xcc_algorithm* a,
-                               xcc_problem* p,
-                               xcc_link l,
-                               xcc_link u,
-                               xcc_link v) {
+define_primary_item_with_range(miniexact_algorithm* a,
+                               miniexact_problem* p,
+                               miniexact_link l,
+                               miniexact_link u,
+                               miniexact_link v) {
   const char* e;
   if((e = define_item(a, p, l)))
     return e;
@@ -78,8 +78,8 @@ define_primary_item_with_range(xcc_algorithm* a,
 
   ++p->primary_item_count;
 
-  XCC_ARR_PLUS1(slack)
-  XCC_ARR_PLUS1(bound)
+  MINIEXACT_ARR_PLUS1(slack)
+  MINIEXACT_ARR_PLUS1(bound)
 
   SLACK(p->i) = v - u;
   BOUND(p->i) = v;
@@ -88,7 +88,7 @@ define_primary_item_with_range(xcc_algorithm* a,
 }
 
 static const char*
-define_secondary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
+define_secondary_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link l) {
   const char* e;
 
   if((e = define_item(a, p, l)))
@@ -104,7 +104,7 @@ define_secondary_item(xcc_algorithm* a, xcc_problem* p, xcc_link l) {
 }
 
 static const char*
-prepare_options(xcc_algorithm* a, xcc_problem* p) {
+prepare_options(miniexact_algorithm* a, miniexact_problem* p) {
   // Step I2
   p->N = p->i;
   if(p->N_1 < 0)
@@ -117,9 +117,9 @@ prepare_options(xcc_algorithm* a, xcc_problem* p) {
   RLINK(p->N_1) = 0;
 
   // Step N3
-  XCC_ARR_PLUSN(len, p->N + 2);
-  XCC_ARR_PLUSN(ulink, p->N + 2);
-  XCC_ARR_PLUSN(dlink, p->N + 2);
+  MINIEXACT_ARR_PLUSN(len, p->N + 2);
+  MINIEXACT_ARR_PLUSN(ulink, p->N + 2);
+  MINIEXACT_ARR_PLUSN(dlink, p->N + 2);
 
   // Normalize the don't cares
   ULINK(p->N + 1) = 0;
@@ -144,17 +144,17 @@ prepare_options(xcc_algorithm* a, xcc_problem* p) {
 }
 
 static const char*
-add_item_with_color(xcc_algorithm* a,
-                    xcc_problem* p,
-                    xcc_link ij,
-                    xcc_color c) {
+add_item_with_color(miniexact_algorithm* a,
+                    miniexact_problem* p,
+                    miniexact_link ij,
+                    miniexact_color c) {
   if(ij < 1)
     return "Invalid ij given for add_item!";
 
-  XCC_ARR_PLUS1(len)
-  XCC_ARR_PLUS1(dlink)
-  XCC_ARR_PLUS1(ulink)
-  XCC_ARR_PLUS1(color)
+  MINIEXACT_ARR_PLUS1(len)
+  MINIEXACT_ARR_PLUS1(dlink)
+  MINIEXACT_ARR_PLUS1(ulink)
+  MINIEXACT_ARR_PLUS1(color)
 
   ++p->j;
 
@@ -171,15 +171,15 @@ add_item_with_color(xcc_algorithm* a,
 }
 
 static const char*
-add_item(xcc_algorithm* a, xcc_problem* p, xcc_link ij) {
+add_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link ij) {
   return add_item_with_color(a, p, ij, 0);
 }
 
 static const char*
-end_option(xcc_algorithm* a, xcc_problem* p) {
-  XCC_ARR_PLUS1(len)
-  XCC_ARR_PLUS1(dlink)
-  XCC_ARR_PLUS1(ulink)
+end_option(miniexact_algorithm* a, miniexact_problem* p) {
+  MINIEXACT_ARR_PLUS1(len)
+  MINIEXACT_ARR_PLUS1(dlink)
+  MINIEXACT_ARR_PLUS1(ulink)
 
   p->M = p->M + 1;
   DLINK(p->p) = p->p + p->j;
@@ -197,36 +197,36 @@ end_option(xcc_algorithm* a, xcc_problem* p) {
 }
 
 static const char*
-end_options(xcc_algorithm* a, xcc_problem* p) {
+end_options(miniexact_algorithm* a, miniexact_problem* p) {
   DLINK(p->dlink_size - 1) = 0;
   return NULL;
 }
 
 const char*
-xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p) {
+miniexact_default_init_problem(miniexact_algorithm* a, miniexact_problem* p) {
   assert(a);
   assert(p);
 
   p->algorithm_userdata = NULL;
 
-  XCC_ARR_ALLOC(xcc_link, llink)
-  XCC_ARR_ALLOC(xcc_link, rlink)
-  XCC_ARR_ALLOC(xcc_name, name)
-  XCC_ARR_ALLOC(xcc_name, color_name)
-  XCC_ARR_ALLOC(xcc_name, len)
-  XCC_ARR_ALLOC(xcc_name, ulink)
-  XCC_ARR_ALLOC(xcc_name, dlink)
-  XCC_ARR_ALLOC(xcc_name, x)
-  XCC_ARR_ALLOC(xcc_color, color)
-  XCC_ARR_ALLOC(xcc_link, ft)
-  XCC_ARR_ALLOC(xcc_link, slack)
-  XCC_ARR_ALLOC(xcc_link, bound)
+  MINIEXACT_ARR_ALLOC(miniexact_link, llink)
+  MINIEXACT_ARR_ALLOC(miniexact_link, rlink)
+  MINIEXACT_ARR_ALLOC(miniexact_name, name)
+  MINIEXACT_ARR_ALLOC(miniexact_name, color_name)
+  MINIEXACT_ARR_ALLOC(miniexact_name, len)
+  MINIEXACT_ARR_ALLOC(miniexact_name, ulink)
+  MINIEXACT_ARR_ALLOC(miniexact_name, dlink)
+  MINIEXACT_ARR_ALLOC(miniexact_name, x)
+  MINIEXACT_ARR_ALLOC(miniexact_color, color)
+  MINIEXACT_ARR_ALLOC(miniexact_link, ft)
+  MINIEXACT_ARR_ALLOC(miniexact_link, slack)
+  MINIEXACT_ARR_ALLOC(miniexact_link, bound)
 
   LLINK(0) = 0;
   RLINK(0) = 0;
   NAME(0) = NULL;
   p->color_name[0] = NULL;
-  XCC_ARR_PLUS1(color_name)
+  MINIEXACT_ARR_PLUS1(color_name)
 
   p->name_size = 1;
   p->llink_size = 1;
@@ -243,17 +243,17 @@ xcc_default_init_problem(xcc_algorithm* a, xcc_problem* p) {
   return NULL;
 }
 
-xcc_link
-xcc_choose_i_naively(xcc_algorithm* a, xcc_problem* p) {
+miniexact_link
+miniexact_choose_i_naively(miniexact_algorithm* a, miniexact_problem* p) {
   return RLINK(0);
 }
 
-xcc_link
-xcc_choose_i_mrv(xcc_algorithm* a, xcc_problem* p) {
-  xcc_link i = RLINK(0);
-  xcc_link p_ = RLINK(0), theta = XCC_LINK_MAX;
+miniexact_link
+miniexact_choose_i_mrv(miniexact_algorithm* a, miniexact_problem* p) {
+  miniexact_link i = RLINK(0);
+  miniexact_link p_ = RLINK(0), theta = MINIEXACT_LINK_MAX;
   while(p_ != 0) {
-    xcc_link lambda = LEN(p_);
+    miniexact_link lambda = LEN(p_);
     if(lambda < theta) {
       theta = lambda;
       i = p_;
@@ -266,13 +266,13 @@ xcc_choose_i_mrv(xcc_algorithm* a, xcc_problem* p) {
   return i;
 }
 
-xcc_link
-xcc_choose_i_mrv_slacker(xcc_algorithm* a, xcc_problem* p) {
-  xcc_link theta = XCC_LINK_MAX;
-  xcc_link i = RLINK(0);
-  xcc_link p_ = RLINK(0);
+miniexact_link
+miniexact_choose_i_mrv_slacker(miniexact_algorithm* a, miniexact_problem* p) {
+  miniexact_link theta = MINIEXACT_LINK_MAX;
+  miniexact_link i = RLINK(0);
+  miniexact_link p_ = RLINK(0);
   while(p_ != 0) {
-    xcc_link lambda = THETA(p_);
+    miniexact_link lambda = THETA(p_);
     if(lambda < theta || (lambda == theta && SLACK(p_) == SLACK(i)) ||
        (lambda == theta && SLACK(p_) == SLACK(i) && LEN(p_) > LEN(i))) {
       theta = lambda;
@@ -286,7 +286,7 @@ xcc_choose_i_mrv_slacker(xcc_algorithm* a, xcc_problem* p) {
 }
 
 void
-xcc_algorithm_standard_functions(xcc_algorithm* a) {
+miniexact_algorithm_standard_functions(miniexact_algorithm* a) {
   a->add_item = &add_item;
   a->add_item_with_color = &add_item_with_color;
   a->prepare_options = &prepare_options;
@@ -295,72 +295,72 @@ xcc_algorithm_standard_functions(xcc_algorithm* a) {
   a->define_primary_item_with_range = &define_primary_item_with_range;
   a->define_secondary_item = &define_secondary_item;
   a->end_options = &end_options;
-  a->init_problem = &xcc_default_init_problem;
+  a->init_problem = &miniexact_default_init_problem;
 
   // Default: Just use MRV.
-  a->choose_i = &xcc_choose_i_mrv;
+  a->choose_i = &miniexact_choose_i_mrv;
 
   // Nothing to be freed by default.
   a->free_userdata = NULL;
 }
 
 bool
-xcc_algorithm_from_select(int algorithm_select, xcc_algorithm* algorithm) {
+miniexact_algorithm_from_select(int algorithm_select, miniexact_algorithm* algorithm) {
   bool success = false;
-  if(algorithm_select & XCC_ALGORITHM_X) {
-    xcc_algorithm_x_set(algorithm);
+  if(algorithm_select & MINIEXACT_ALGORITHM_X) {
+    miniexact_algorithm_x_set(algorithm);
     success = true;
-  } else if(algorithm_select & XCC_ALGORITHM_C) {
-    xcc_algorithm_c_set(algorithm);
+  } else if(algorithm_select & MINIEXACT_ALGORITHM_C) {
+    miniexact_algorithm_c_set(algorithm);
     success = true;
-  } else if(algorithm_select & XCC_ALGORITHM_M) {
-    xcc_algorithm_m_set(algorithm);
+  } else if(algorithm_select & MINIEXACT_ALGORITHM_M) {
+    miniexact_algorithm_m_set(algorithm);
     // Set default for Algorithm M. May be overriden, as it is later the first
     // to be checked.
-    algorithm_select |= XCC_ALGORITHM_MRV_SLACKER;
+    algorithm_select |= MINIEXACT_ALGORITHM_MRV_SLACKER;
     success = true;
-#ifdef XCC_SAT_SOLVER_AVAILABLE
-  } else if(algorithm_select & XCC_ALGORITHM_KNUTH_CNF) {
-    xcc_algoritihm_knuth_cnf_set(algorithm);
+#ifdef MINIEXACT_SAT_SOLVER_AVAILABLE
+  } else if(algorithm_select & MINIEXACT_ALGORITHM_KNUTH_CNF) {
+    miniexact_algoritihm_knuth_cnf_set(algorithm);
     success = true;
 #endif
   }
 
-  if(algorithm_select & XCC_ALGORITHM_MRV_SLACKER) {
-    algorithm->choose_i = &xcc_choose_i_mrv_slacker;
+  if(algorithm_select & MINIEXACT_ALGORITHM_MRV_SLACKER) {
+    algorithm->choose_i = &miniexact_choose_i_mrv_slacker;
   }
-  if(algorithm_select & XCC_ALGORITHM_NAIVE) {
-    algorithm->choose_i = &xcc_choose_i_naively;
+  if(algorithm_select & MINIEXACT_ALGORITHM_NAIVE) {
+    algorithm->choose_i = &miniexact_choose_i_naively;
   }
-  if(algorithm_select & XCC_ALGORITHM_MRV) {
-    algorithm->choose_i = &xcc_choose_i_mrv;
+  if(algorithm_select & MINIEXACT_ALGORITHM_MRV) {
+    algorithm->choose_i = &miniexact_choose_i_mrv;
   }
 
   return success;
 }
 
-struct xcc_algorithm*
-xcc_algorithm_allocate() {
-  return calloc(1, sizeof(xcc_algorithm));
+struct miniexact_algorithm*
+miniexact_algorithm_allocate() {
+  return calloc(1, sizeof(miniexact_algorithm));
 }
 
-xcc_algorithm*
-xcc_algorithm_x_allocate() {
-  xcc_algorithm* a = xcc_algorithm_allocate();
-  xcc_algorithm_x_set(a);
+miniexact_algorithm*
+miniexact_algorithm_x_allocate() {
+  miniexact_algorithm* a = miniexact_algorithm_allocate();
+  miniexact_algorithm_x_set(a);
   return a;
 }
 
-xcc_algorithm*
-xcc_algorithm_c_allocate() {
-  xcc_algorithm* a = xcc_algorithm_allocate();
-  xcc_algorithm_c_set(a);
+miniexact_algorithm*
+miniexact_algorithm_c_allocate() {
+  miniexact_algorithm* a = miniexact_algorithm_allocate();
+  miniexact_algorithm_c_set(a);
   return a;
 }
 
-xcc_algorithm*
-xcc_algorithm_m_allocate() {
-  xcc_algorithm* a = xcc_algorithm_allocate();
-  xcc_algorithm_m_set(a);
+miniexact_algorithm*
+miniexact_algorithm_m_allocate() {
+  miniexact_algorithm* a = miniexact_algorithm_allocate();
+  miniexact_algorithm_m_set(a);
   return a;
 }

@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -20,38 +20,38 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include <xcc/log.h>
+#include <miniexact/log.h>
 
 static bool debug = false;
 static bool trace = false;
 
 bool
-xcc_check_debug() {
+miniexact_check_debug() {
   if(debug)
     return true;
   static int debug = -1;
   if(debug == -1) {
-    const char* xcc_debug = getenv("XCC_DEBUG");
-    debug = xcc_debug != NULL;
+    const char* miniexact_debug = getenv("MINIEXACT_DEBUG");
+    debug = miniexact_debug != NULL;
   }
   return debug;
 }
 
 bool
-xcc_check_trace() {
+miniexact_check_trace() {
   if(trace)
     return true;
   static int trace = -1;
   if(trace == -1) {
-    const char* xcc_trace = getenv("XCC_TRACE");
-    trace = xcc_trace != NULL;
+    const char* miniexact_trace = getenv("MINIEXACT_TRACE");
+    trace = miniexact_trace != NULL;
   }
   return trace;
 }
 
 void
 dbg(const char* format, ...) {
-  if(xcc_check_debug()) {
+  if(miniexact_check_debug()) {
     fprintf(stderr, "[XCC] [DEBUG] ");
     va_list args;
     va_start(args, format);
@@ -63,7 +63,7 @@ dbg(const char* format, ...) {
 
 void
 trc(const char* format, ...) {
-  if(xcc_check_trace()) {
+  if(miniexact_check_trace()) {
     fprintf(stderr, "[XCC] [TRACE] ");
     va_list args;
     va_start(args, format);

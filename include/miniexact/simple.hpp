@@ -5,12 +5,12 @@
 
 #include "simple.h"
 
-typedef xccs* (*xccs_init)();
+typedef miniexacts* (*miniexacts_init)();
 
-template<xccs_init init>
-class xccs_wrapper {
+template<miniexacts_init init>
+class miniexacts_wrapper {
   private:
-  std::unique_ptr<xccs, void (*)(xccs*)> h_;
+  std::unique_ptr<miniexacts, void (*)(miniexacts*)> h_;
   std::vector<int32_t> selected_options_;
   bool solution_valid_ = false;
   int last_res_ = 0;
@@ -22,31 +22,31 @@ class xccs_wrapper {
       fprintf(stderr, "%s\n", "not in state with last result 10");
       exit(1);
     }
-    selected_options_.resize(xccs_solution_length(h_.get()));
-    int32_t len = xccs_extract_solution(h_.get(), selected_options_.data());
+    selected_options_.resize(miniexacts_solution_length(h_.get()));
+    int32_t len = miniexacts_extract_solution(h_.get(), selected_options_.data());
     selected_options_.resize(len);
     solution_valid_ = true;
   }
 
   public:
-  xccs_wrapper()
-    : h_(init(), &xccs_free) {}
+  miniexacts_wrapper()
+    : h_(init(), &miniexacts_free) {}
 
-  ~xccs_wrapper() {}
+  ~miniexacts_wrapper() {}
 
   int32_t primary(const char* name, unsigned int u = 1, unsigned int v = 1) {
-    return xccs_define_primary_item_with_slack(h_.get(), name, u, v);
+    return miniexacts_define_primary_item_with_slack(h_.get(), name, u, v);
   }
   int32_t secondary(const char* name) {
-    return xccs_define_secondary_item(h_.get(), name);
+    return miniexacts_define_secondary_item(h_.get(), name);
   }
-  int32_t color(const char* name) { return xccs_define_color(h_.get(), name); }
+  int32_t color(const char* name) { return miniexacts_define_color(h_.get(), name); }
 
   int32_t add(const char* name, const char* color = NULL) {
-    return xccs_add_named(h_.get(), name, color);
+    return miniexacts_add_named(h_.get(), name, color);
   }
   int32_t add(int32_t item, int32_t color = 0) {
-    return xccs_add(h_.get(), item, color);
+    return miniexacts_add(h_.get(), item, color);
   }
 
   int32_t add(std::vector<const char*> items) {
@@ -64,13 +64,13 @@ class xccs_wrapper {
 
   int solve() {
     solution_valid_ = false;
-    int res = xccs_solve(h_.get());
+    int res = miniexacts_solve(h_.get());
     last_res_ = res;
     return res;
   }
-  void solution(xccs_solution_iterator it, void* userdata) {
+  void solution(miniexacts_solution_iterator it, void* userdata) {
     extract_solution();
-    return xccs_solution(h_.get(), it, userdata);
+    return miniexacts_solution(h_.get(), it, userdata);
   }
 
   using solution_cb_func =
@@ -78,9 +78,9 @@ class xccs_wrapper {
 
   void solution(solution_cb_func cb) {
     extract_solution();
-    xccs_solution(
+    miniexacts_solution(
       h_.get(),
-      [](xccs* h,
+      [](miniexacts* h,
          const char** names,
          const char** colors,
          unsigned int items_count,
@@ -124,6 +124,6 @@ class xccs_wrapper {
   }
 };
 
-using xccs_x = xccs_wrapper<&xccs_init_x>;
-using xccs_c = xccs_wrapper<&xccs_init_c>;
-using xccs_m = xccs_wrapper<&xccs_init_m>;
+using miniexacts_x = miniexacts_wrapper<&miniexacts_init_x>;
+using miniexacts_c = miniexacts_wrapper<&miniexacts_init_c>;
+using miniexacts_m = miniexacts_wrapper<&miniexacts_init_m>;

@@ -1,20 +1,20 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <xcc/algorithm.h>
-#include <xcc/algorithm_c.h>
-#include <xcc/algorithm_x.h>
-#include <xcc/parse.h>
-#include <xcc/xcc.h>
+#include <miniexact/algorithm.h>
+#include <miniexact/algorithm_c.h>
+#include <miniexact/algorithm_x.h>
+#include <miniexact/parse.h>
+#include <miniexact/miniexact.h>
 
-#include <xcc/ops.h>
+#include <miniexact/ops.h>
 
 TEST_CASE("parse standard XCC example") {
   const char* str = "<a b c d e f g> c e; a d g; b c f; a d f; b g; d e g;";
 
-  xcc_algorithm algorithm;
-  xcc_algorithm_x_set(&algorithm);
+  miniexact_algorithm algorithm;
+  miniexact_algorithm_x_set(&algorithm);
 
-  xcc_problem_ptr p(xcc_parse_problem(&algorithm, str));
+  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str));
   REQUIRE(p);
 
   // Reference solution from page 66 of Dancing Links (Table 1)
@@ -86,10 +86,10 @@ TEST_CASE("parse standard XCC example") {
   // if(p) {
   //   bool has_solution = algorithm.compute_next_result(&algorithm, p);
   //   if(has_solution)
-  //     xcc_print_problem_solution(p);
+  //     miniexact_print_problem_solution(p);
   //   else
   //     printf("No solution found!\n");
-  //   xcc_problem_free(p);
+  //   miniexact_problem_free(p);
   // }
 }
 
@@ -97,10 +97,10 @@ TEST_CASE("parse standard colored XCC example") {
   const char* str =
     "< p q r > [ x y ] p q x y:1; p r x:1 y; p x:2; q x:1; r y:2;";
 
-  xcc_algorithm algorithm;
-  xcc_algorithm_c_set(&algorithm);
+  miniexact_algorithm algorithm;
+  miniexact_algorithm_c_set(&algorithm);
 
-  xcc_problem_ptr p(xcc_parse_problem(&algorithm, str));
+  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str));
   REQUIRE(p);
 
   // Reference solution from page 87 of Dancing Links (Table 2)
@@ -169,9 +169,9 @@ TEST_CASE("parse standard colored XCC example") {
   // if(p) {
   //   bool has_solution = algorithm.compute_next_result(&algorithm, p);
   //   if(has_solution)
-  //     xcc_print_problem_solution(p);
+  //     miniexact_print_problem_solution(p);
   //   else
   //     printf("No solution found!\n");
-  //   xcc_problem_free(p);
+  //   miniexact_problem_free(p);
   // }
 }

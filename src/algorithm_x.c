@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -20,16 +20,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <xcc/algorithm.h>
-#include <xcc/algorithm_x.h>
-#include <xcc/ops.h>
+#include <miniexact/algorithm.h>
+#include <miniexact/algorithm_x.h>
+#include <miniexact/ops.h>
 
 typedef enum x_state { X1, X2, X3, X4, X5, X6, X7, X8 } x_state;
 
 static bool
-compute_next_result(xcc_algorithm* a, xcc_problem* p) {
+compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
   if(p->x_capacity < p->option_count) {
-    p->x = realloc(p->x, sizeof(xcc_link) * p->option_count);
+    p->x = realloc(p->x, sizeof(miniexact_link) * p->option_count);
     p->x_capacity = p->option_count;
     p->x_size = 0;
   }
@@ -39,7 +39,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
   while(true) {
     switch(p->state) {
       case X1: {
-        xcc_link i = 0;
+        miniexact_link i = 0;
         do {
           i = RLINK(i);
           if(DLINK(i) == 0 && ULINK(i) == 0) {
@@ -77,7 +77,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
         } else {
           p->p = p->x[p->l] + 1;
           while(p->p != p->x[p->l]) {
-            xcc_link j = TOP(p->p);
+            miniexact_link j = TOP(p->p);
             if(j <= 0) {
               p->p = ULINK(p->p);
             } else {
@@ -92,7 +92,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
       case X6:
         p->p = p->x[p->l] - 1;
         while(p->p != p->x[p->l]) {
-          xcc_link j = TOP(p->p);
+          miniexact_link j = TOP(p->p);
           if(j <= 0) {
             p->p = DLINK(p->p);
           } else {
@@ -122,9 +122,9 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
 }
 
 void
-xcc_algorithm_x_set(xcc_algorithm* a) {
-  xcc_algorithm_standard_functions(a);
+miniexact_algorithm_x_set(miniexact_algorithm* a) {
+  miniexact_algorithm_standard_functions(a);
 
   a->compute_next_result = &compute_next_result;
-  a->choose_i = &xcc_choose_i_mrv;
+  a->choose_i = &miniexact_choose_i_mrv;
 }

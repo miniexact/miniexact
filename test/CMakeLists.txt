@@ -7,5 +7,5 @@ set(TEST_SRCS
 
 add_executable(tests ${TEST_SRCS})
 
-target_link_libraries(tests PRIVATE xcc)
+target_link_libraries(tests PRIVATE miniexact)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)

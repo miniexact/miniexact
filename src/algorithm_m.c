@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -20,16 +20,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <xcc/algorithm.h>
-#include <xcc/algorithm_m.h>
-#include <xcc/ops.h>
+#include <miniexact/algorithm.h>
+#include <miniexact/algorithm_m.h>
+#include <miniexact/ops.h>
 
 typedef enum m_state { M1, M2, M3, M4, M5, M6, M7, M8, M9 } m_state;
 
 static bool
-compute_next_result(xcc_algorithm* a, xcc_problem* p) {
+compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
   if(p->x_capacity < p->option_count) {
-    p->x = realloc(p->x, sizeof(xcc_link) * p->option_count);
+    p->x = realloc(p->x, sizeof(miniexact_link) * p->option_count);
     p->x_capacity = p->option_count;
     p->x_size = 0;
   }
@@ -39,7 +39,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
   while(true) {
     switch(p->state) {
       case M1: {
-        xcc_link i = 0;
+        miniexact_link i = 0;
         do {
           i = RLINK(i);
           if(DLINK(i) == 0 && ULINK(i) == 0) {
@@ -110,7 +110,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
           p->p = p->x[p->l] + 1;
           assert(p->p < p->top_size);
           while(p->x[p->l] != p->p) {
-            xcc_link j = TOP(p->p);
+            miniexact_link j = TOP(p->p);
             if(j <= 0) {
               p->p = ULINK(p->p);
             } else if(j <= p->N_1) {
@@ -131,7 +131,7 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
       case M7:
         p->p = p->x[p->l] - 1;
         while(p->x[p->l] != p->p) {
-          xcc_link j = TOP(p->p);
+          miniexact_link j = TOP(p->p);
           if(j <= 0) {
             p->p = DLINK(p->p);
           } else if(j <= p->N_1) {
@@ -184,10 +184,10 @@ compute_next_result(xcc_algorithm* a, xcc_problem* p) {
 }
 
 void
-xcc_algorithm_m_set(xcc_algorithm* a) {
-  xcc_algorithm_standard_functions(a);
+miniexact_algorithm_m_set(miniexact_algorithm* a) {
+  miniexact_algorithm_standard_functions(a);
 
   a->compute_next_result = &compute_next_result;
   // Override the default MRV heuristic with the slacker MRV heuristic.
-  a->choose_i = &xcc_choose_i_mrv_slacker;
+  a->choose_i = &miniexact_choose_i_mrv_slacker;
 }

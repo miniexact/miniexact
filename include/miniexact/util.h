@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef XCC_UTIL_H
-#define XCC_UTIL_H
+#ifndef MINIEXACT_UTIL_H
+#define MINIEXACT_UTIL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,29 +29,29 @@ extern "C" {
 // Small utility function to extract the sign out of an integer. Positive is
 // true.
 static inline bool
-xcc_sign(int32_t value) {
+miniexact_sign(int32_t value) {
   uint32_t temp = value;
   temp >>= 31;
   bool sign = !temp;
   return sign;
 }
 
-struct xcc_algorithm;
-struct xcc_problem;
-struct xcc_config;
+struct miniexact_algorithm;
+struct miniexact_problem;
+struct miniexact_config;
 
 // Utility function to solve the given problem and print solutions. Both used in
-// the web version and the CLI version of xccsolve.
+// the web version and the CLI version of miniexactsolve.
 int
-xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
-                                      struct xcc_problem* p,
-                                      struct xcc_config* cfg);
+miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
+                                      struct miniexact_problem* p,
+                                      struct miniexact_config* cfg);
 
 // Utility function to solve a given problem and return if there are solutions.
 int
-xcc_solve_problem(struct xcc_algorithm* a, struct xcc_problem* p);
+miniexact_solve_problem(struct miniexact_algorithm* a, struct miniexact_problem* p);
 
-typedef void (*xcc_option_str_iterator)(struct xcc_problem*,
+typedef void (*miniexact_option_str_iterator)(struct miniexact_problem*,
                                         const char** names,
                                         const char** colors,
                                         size_t items_count,
@@ -60,8 +60,8 @@ typedef void (*xcc_option_str_iterator)(struct xcc_problem*,
 // Utility function to iterate over the options that solve a problem. Represents
 // items and colors as strings.
 void
-xcc_iterate_solution_options_str(struct xcc_problem* p,
-                                 xcc_option_str_iterator it,
+miniexact_iterate_solution_options_str(struct miniexact_problem* p,
+                                 miniexact_option_str_iterator it,
                                  void* userdata);
 
 #ifdef __cplusplus

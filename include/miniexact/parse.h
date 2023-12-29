@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -15,17 +15,24 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef XCC_HPP
-#define XCC_HPP
+#ifndef MINIEXACT_PARSE_H
+#define MINIEXACT_PARSE_H
 
-#include <memory>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include "xcc.h"
+typedef struct miniexact_problem miniexact_problem;
+typedef struct miniexact_algorithm miniexact_algorithm;
 
-struct xcc_problem_deleter {
-  void operator()(xcc_problem* p) const { xcc_problem_free(p, NULL); }
-};
+miniexact_problem*
+miniexact_parse_problem(miniexact_algorithm* a, const char* str);
 
-using xcc_problem_ptr = std::unique_ptr<xcc_problem, xcc_problem_deleter>;
+miniexact_problem*
+miniexact_parse_problem_file(miniexact_algorithm* a, const char* file);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

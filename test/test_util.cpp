@@ -1,9 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <xcc/util.h>
+#include <miniexact/util.h>
 
-TEST_CASE("xcc_sign") {
-  REQUIRE(xcc_sign(1) == true);
-  REQUIRE(xcc_sign(0) == true);
-  REQUIRE(xcc_sign(-1) == false);
+TEST_CASE("miniexact_sign") {
+  REQUIRE(miniexact_sign(1) == true);
+  REQUIRE(miniexact_sign(0) == true);
+  REQUIRE(miniexact_sign(-1) == false);
 }

@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -15,22 +15,22 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "xcc/util.h"
+#include "miniexact/util.h"
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <xcc/algorithm.h>
-#include <xcc/git.h>
-#include <xcc/log.h>
-#include <xcc/ops.h>
-#include <xcc/parse.h>
-#include <xcc/xcc.h>
+#include <miniexact/algorithm.h>
+#include <miniexact/git.h>
+#include <miniexact/log.h>
+#include <miniexact/ops.h>
+#include <miniexact/parse.h>
+#include <miniexact/miniexact.h>
 
 static void
 print_help() {
-  printf("xccsolve -- solve XCC problems using different algorithms\n");
+  printf("miniexact -- solve XCC problems using different algorithms\n");
   printf("OPTIONS:\n");
   printf("  -h\t\tprint help\n");
   printf("  -p\t\tprint selected options\n");
@@ -47,26 +47,26 @@ print_help() {
   printf("  -k\t\tcall external binary to solve with SAT\n    \t\t    (Knuth's "
          "trivial encoding)\n");
   printf("VERSION:\n");
-  if(strlen(xcc_git_tag) > 0)
-    printf("  Tag: %s\n", xcc_git_tag);
-  printf("  Commit: %s\n", xcc_git_commit_hash);
-  printf("  GitHub URL: https://github.com/maximaximal/xccsolve/commit/%s\n",
-         xcc_git_commit_hash);
+  if(strlen(miniexact_git_tag) > 0)
+    printf("  Tag: %s\n", miniexact_git_tag);
+  printf("  Commit: %s\n", miniexact_git_commit_hash);
+  printf("  GitHub URL: https://github.com/miniexact/miniexact/commit/%s\n",
+         miniexact_git_commit_hash);
   printf("  Private GitLab URL: "
-         "https://gitlab.sai.jku.at/maximaximal/xcc/commit/%s\n",
-         xcc_git_commit_hash);
+         "https://gitlab.sai.jku.at/miniexact/miniexact/commit/%s\n",
+         miniexact_git_commit_hash);
 }
 
 static void
 print_version() {
-  if(strlen(xcc_git_tag) > 0)
-    printf("%s\n", xcc_git_tag);
+  if(strlen(miniexact_git_tag) > 0)
+    printf("%s\n", miniexact_git_tag);
   else
-    printf("%s\n", xcc_git_commit_hash);
+    printf("%s\n", miniexact_git_commit_hash);
 }
 
 static void
-parse_cli(xcc_config* cfg, int argc, char* argv[]) {
+parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
   int c;
 
   int sel[5];
@@ -77,15 +77,15 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
     { "help", no_argument, 0, 'h' },
     { "version", no_argument, 0, 'v' },
     { "print", no_argument, 0, 'p' },
-    { "print-x", no_argument, 0, XCC_OPTION_PRINT_X },
+    { "print-x", no_argument, 0, MINIEXACT_OPTION_PRINT_X },
     { "enumerate", no_argument, 0, 'e' },
-    { "naive", no_argument, &sel[0], XCC_ALGORITHM_NAIVE },
-    { "mrv", no_argument, &sel[1], XCC_ALGORITHM_MRV },
-    { "smrv", no_argument, &sel[1], XCC_ALGORITHM_MRV },
-    { "x", no_argument, &sel[2], XCC_ALGORITHM_X },
-    { "c", no_argument, &sel[3], XCC_ALGORITHM_C },
-    { "m", no_argument, &sel[3], XCC_ALGORITHM_M },
-    { "k", no_argument, &sel[4], XCC_ALGORITHM_KNUTH_CNF },
+    { "naive", no_argument, &sel[0], MINIEXACT_ALGORITHM_NAIVE },
+    { "mrv", no_argument, &sel[1], MINIEXACT_ALGORITHM_MRV },
+    { "smrv", no_argument, &sel[1], MINIEXACT_ALGORITHM_MRV },
+    { "x", no_argument, &sel[2], MINIEXACT_ALGORITHM_X },
+    { "c", no_argument, &sel[3], MINIEXACT_ALGORITHM_C },
+    { "m", no_argument, &sel[3], MINIEXACT_ALGORITHM_M },
+    { "k", no_argument, &sel[4], MINIEXACT_ALGORITHM_KNUTH_CNF },
     { 0, 0, 0, 0 }
   };
 
@@ -108,7 +108,7 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
       case 'p':
         cfg->print_options = 1;
         break;
-      case XCC_OPTION_PRINT_X:
+      case MINIEXACT_OPTION_PRINT_X:
         cfg->print_x = 1;
         break;
       case 'e':
@@ -121,16 +121,16 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
         print_help();
         exit(EXIT_SUCCESS);
       case 'x':
-        cfg->algorithm_select |= XCC_ALGORITHM_X;
+        cfg->algorithm_select |= MINIEXACT_ALGORITHM_X;
         break;
       case 'c':
-        cfg->algorithm_select |= XCC_ALGORITHM_C;
+        cfg->algorithm_select |= MINIEXACT_ALGORITHM_C;
         break;
       case 'm':
-        cfg->algorithm_select |= XCC_ALGORITHM_M;
+        cfg->algorithm_select |= MINIEXACT_ALGORITHM_M;
         break;
       case 'k':
-        cfg->algorithm_select |= XCC_ALGORITHM_KNUTH_CNF;
+        cfg->algorithm_select |= MINIEXACT_ALGORITHM_KNUTH_CNF;
         break;
       default:
         break;
@@ -147,26 +147,26 @@ parse_cli(xcc_config* cfg, int argc, char* argv[]) {
 }
 
 static int
-process_file(xcc_config* cfg) {
-  xcc_algorithm a;
-  if(!xcc_algorithm_from_select(cfg->algorithm_select, &a)) {
+process_file(miniexact_config* cfg) {
+  miniexact_algorithm a;
+  if(!miniexact_algorithm_from_select(cfg->algorithm_select, &a)) {
     err("Could not extract algorithm from algorithm select! Try different "
         "algorithm selection.");
     return EXIT_FAILURE;
   }
 
-  xcc_problem* p =
-    xcc_parse_problem_file(&a, cfg->input_files[cfg->current_input_file]);
+  miniexact_problem* p =
+    miniexact_parse_problem_file(&a, cfg->input_files[cfg->current_input_file]);
   if(!p)
     return EXIT_FAILURE;
 
   p->cfg = cfg;
 
   if(cfg->verbose)
-    xcc_print_problem_matrix(p);
+    miniexact_print_problem_matrix(p);
 
   if(cfg->transform_to_libexact) {
-    const char* error = xcc_print_problem_matrix_in_libexact_format(p);
+    const char* error = miniexact_print_problem_matrix_in_libexact_format(p);
     if(error) {
       err("Transform error: %s", error);
       return EXIT_FAILURE;
@@ -174,15 +174,15 @@ process_file(xcc_config* cfg) {
       return EXIT_SUCCESS;
   }
 
-  int return_code = xcc_solve_problem_and_print_solutions(&a, p, cfg);
+  int return_code = miniexact_solve_problem_and_print_solutions(&a, p, cfg);
 
-  xcc_problem_free(p, &a);
+  miniexact_problem_free(p, &a);
   return return_code;
 }
 
 int
 main(int argc, char* argv[]) {
-  xcc_config cfg;
+  miniexact_config cfg;
   memset(&cfg, 0, sizeof(cfg));
   parse_cli(&cfg, argc, argv);
 

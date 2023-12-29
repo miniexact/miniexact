@@ -1,5 +1,5 @@
 /*
-    XCCSolve - Toolset to solve exact cover problems and extensions
+    miniexact - Toolset to solve exact cover problems and extensions
     Copyright (C) 2021-2023  Maximilian Heisinger
 
     This program is free software: you can redistribute it and/or modify
@@ -15,17 +15,17 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef XCC_ALGORITHM_KNUTH_CNF_H
-#define XCC_ALGORITHM_KNUTH_CNF_H
+#ifndef MINIEXACT_ALGORITHM_C_H
+#define MINIEXACT_ALGORITHM_C_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct xcc_algorithm xcc_algorithm;
+typedef struct miniexact_algorithm miniexact_algorithm;
 
 void
-xcc_algoritihm_knuth_cnf_set(xcc_algorithm* a);
+miniexact_algorithm_c_set(miniexact_algorithm* a);
 
 #ifdef __cplusplus
 }
