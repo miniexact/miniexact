@@ -489,7 +489,7 @@ parse(miniexact_parser* p) {
 
         t = next(p);
 
-        if(t == SEMICOLON) {
+        if(t == SEMICOLON || t == COLON) {
           t = next(p);
           if(t != IDENT || !isonlydigits(p))
             return "token after first number and semicolon in range specifier "
@@ -497,8 +497,6 @@ parse(miniexact_parser* p) {
                    "number";
           v = atoi(p->ident);
           t = next(p);
-        } else if(t == COLON) {
-          return "separate range specifiers with a semicolon";
         } else {
           // The range will be the first number specified by default.
           v = u;
