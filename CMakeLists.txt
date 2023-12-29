@@ -68,13 +68,6 @@ set_target_properties(miniexactsolve PROPERTIES OUTPUT_NAME "miniexact")
 target_link_libraries(miniexactsolve miniexact-static)
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-  target_link_options(miniexact PRIVATE "-s INITIAL_MEMORY=200MB")
-  target_link_options(miniexact PRIVATE "--use-preload-cache")
-  target_link_options(miniexact PRIVATE "--bind")
-  target_link_options(miniexact PRIVATE "-flto")
-  target_link_options(miniexact PRIVATE "-Os")
-  target_link_options(miniexact PRIVATE "-sALLOW_MEMORY_GROWTH")
-
   target_link_options(miniexactsolve PRIVATE "-s INITIAL_MEMORY=200MB")
   target_link_options(miniexactsolve PRIVATE "--use-preload-cache")
   target_link_options(miniexactsolve PRIVATE "--bind")
@@ -84,8 +77,6 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
 
   target_compile_options(miniexactsolve PRIVATE "-flto")
   target_compile_options(miniexactsolve PRIVATE "-Os")
-  target_compile_options(miniexact PRIVATE "-flto")
-  target_compile_options(miniexact PRIVATE "-Os")
 elseif(NOT CMAKE_C_COMPILER MATCHES "cosmo")
   # Generate bindings with SWIG, if available
   find_package(SWIG)
