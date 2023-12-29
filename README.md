@@ -55,7 +55,7 @@ d e g;
 
 ``` ebnf
 problem ::= primary_items [ secondary_items ] { option }
-primary_items ::= '&lt;' { primary_item } '&gt;'
+primary_items ::= '<' { primary_item } '>'
 primary_item ::= ident [ ':' u [ ';' v ] ]
 secondary_items ::= '[' { secondary_item } ']'
 secondary_item ::= ident
