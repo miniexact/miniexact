@@ -5,7 +5,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     container: emscripten/emsdk:3.1.44
     steps:
@@ -22,9 +22,28 @@ jobs:
         run: make -C build-emscripten
       - name: Copy built files to web folder
         run: cp build-emscripten/miniexact.js build-emscripten/miniexact.wasm web/
-      - name: Install rsync for GitHub Page Deploy Action
-        run: sudo apt update && sudo apt install -y rsync
-      - name: Deploy Page
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Setup Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v3
+      - name: Upload Artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: web
+          path: "./web"
+  deploy-pages:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v3
