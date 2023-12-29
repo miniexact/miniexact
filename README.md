@@ -10,6 +10,7 @@ Currently supporting:
 
 Features:
 
+  - [Web](https://miniexact.github.io/miniexact/) and CLI version
   - Two input formats: One inspired by Donald Knuth's text representation, one
     by DIMACS from SAT solving.
   - C-code is kept as close to Knuth's description as possible using Macros.
@@ -19,10 +20,11 @@ Features:
 
 ## Usage
 
-Either use the web-version in your browser, the latest universal APE release, or
-compile yourself. The command line tools expect the algorithm to use (`-x`,
-`-c`, or `-m`) and the input file(s). If multiple files are given (e.g. using
-your shell's wildcard), each file is solved separately.
+Either use the [web-version](https://miniexact.github.io/miniexact/) in your
+browser, the latest universal APE release, or compile yourself. The command line
+tools expect the algorithm to use (`-x`, `-c`, or `-m`) and the input file(s).
+If multiple files are given (e.g. using your shell's wildcard), each file is
+solved separately.
 
 A solution is the list of selected options. You can also print the options as
 they were listed in the input file with the `-p` (print) switch.
