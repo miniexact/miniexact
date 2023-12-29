@@ -13,7 +13,7 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
                                       struct miniexact_config* cfg) {
   int return_code = EXIT_SUCCESS;
   if(!a->compute_next_result) {
-    err("Algorithm does not support solving!");
+    miniexact_err("Algorithm does not support solving!");
     return EXIT_FAILURE;
   }
 

@@ -50,11 +50,16 @@ target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/incl
 target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(miniexact-static STATIC $<TARGET_OBJECTS:miniexact-obj>)
-add_library(miniexact SHARED $<TARGET_OBJECTS:miniexact-obj>)
 
-target_include_directories(miniexact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+message(STATUS ${CMAKE_C_COMPILER})
+
+if(NOT CMAKE_C_COMPILER MATCHES "cosmo")
+  add_library(miniexact SHARED $<TARGET_OBJECTS:miniexact-obj>)
+  target_include_directories(miniexact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(miniexact PUBLIC git_version)
+endif()
+
 target_include_directories(miniexact-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(miniexact PUBLIC git_version)
 target_link_libraries(miniexact-static PUBLIC git_version)
 
 add_executable(miniexactsolve ${SRCS_MAIN})
@@ -81,7 +86,7 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   target_compile_options(miniexactsolve PRIVATE "-Os")
   target_compile_options(miniexact PRIVATE "-flto")
   target_compile_options(miniexact PRIVATE "-Os")
-else()
+elseif(NOT CMAKE_C_COMPILER MATCHES "cosmo")
   # Generate bindings with SWIG, if available
   find_package(SWIG)
   if(SWIG_FOUND)
@@ -92,6 +97,7 @@ else()
     find_package(Python COMPONENTS Development)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/pyminiexact.i PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/pyminiexact.i PROPERTY CPLUSPLUS ON)
+    set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/pyminiexact.i PROPERTY SWIG_FLAGS -w389)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/pyminiexact.i PROPERTY SWIG_MODULE_NAME pyminiexact)
     swig_add_library(pyminiexact LANGUAGE Python SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/swig/pyminiexact.i)
     target_link_libraries(pyminiexact miniexact-static Python::Module)
@@ -106,6 +112,7 @@ else()
   endif()
 endif()
 
+if(NOT CMAKE_C_COMPILER MATCHES "cosmo")
 find_package(Catch2)
 if(TARGET Catch2::Catch2)
   add_subdirectory(test)
@@ -115,4 +122,5 @@ if(TARGET Catch2::Catch2)
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
+endif()
 endif()

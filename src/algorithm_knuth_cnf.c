@@ -70,7 +70,7 @@ encode_problem(miniexact_problem* p, size_t additional_clauses) {
   miniexact_sat_solver_find_and_init(s, v.variables, v.clauses + additional_clauses);
 
   if(p->N != p->N_1) {
-    err("No secondary items supported by the SAT solver (yet)!");
+    miniexact_err("No secondary items supported by the SAT solver (yet)!");
     return;
   }
 

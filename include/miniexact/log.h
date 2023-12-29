@@ -14,13 +14,13 @@ bool
 miniexact_check_trace();
 
 void
-trc(const char* format, ...);
+miniexact_trc(const char* format, ...);
 
 void
-dbg(const char* format, ...);
+miniexact_dbg(const char* format, ...);
 
 void
-err(const char* format, ...);
+miniexact_err(const char* format, ...);
 
 #ifdef __cplusplus
 }

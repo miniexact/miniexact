@@ -26,8 +26,8 @@
 
 #include <miniexact/algorithm.h>
 #include <miniexact/log.h>
-#include <miniexact/parse.h>
 #include <miniexact/miniexact.h>
+#include <miniexact/parse.h>
 
 extern FILE* yyin;
 
@@ -39,13 +39,16 @@ typedef int (*miniexact_peekc)(struct miniexact_parser* p);
 typedef const char* (*miniexact_add)(struct miniexact_parser* p, int lit);
 
 typedef const char* (*miniexact_init_xc)(struct miniexact_parser* p,
-                                   int primaries,
-                                   int secondaries);
+                                         int primaries,
+                                         int secondaries);
 typedef const char* (*miniexact_init_miniexact)(struct miniexact_parser* p,
-                                    int primaries,
-                                    int secondaries);
+                                                int primaries,
+                                                int secondaries);
 
-typedef enum miniexact_dimacs_problem { DIMACS_XC, DIMACS_XCC } miniexact_dimacs_problem;
+typedef enum miniexact_dimacs_problem {
+  DIMACS_XC,
+  DIMACS_XCC
+} miniexact_dimacs_problem;
 
 typedef struct miniexact_parser {
   miniexact_problem* p;
@@ -379,7 +382,9 @@ parse_dimacs_init_xc(miniexact_parser* p, int primaries, int secondaries) {
 }
 
 static const char*
-parse_dimacs_init_miniexact(miniexact_parser* p, int primaries, int secondaries) {
+parse_dimacs_init_miniexact(miniexact_parser* p,
+                            int primaries,
+                            int secondaries) {
   const char* e = parse_dimacs_init_xc(p, primaries, secondaries);
   if(e)
     return e;
@@ -559,7 +564,8 @@ parse(miniexact_parser* p) {
           return "cannot specify a color for a primary item";
         }
 
-        miniexact_link color = miniexact_color_from_ident_or_insert(p->p, p->ident);
+        miniexact_link color =
+          miniexact_color_from_ident_or_insert(p->p, p->ident);
         t = next(p);
 
         if((e = p->a->add_item_with_color(p->a, p->p, item, color)))
@@ -609,7 +615,7 @@ miniexact_parse_problem(miniexact_algorithm* a, const char* str) {
   return p.p;
 ERROR:
   miniexact_problem_free(p.p, a);
-  err("Parse error at %u:%u %s", p.line, p.col, error);
+  miniexact_err("Parse error at %u:%u %s", p.line, p.col, error);
   return NULL;
 }
 
@@ -618,7 +624,8 @@ miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
 
   FILE* f = fopen(file_path, "r");
   if(!f) {
-    err("Could not open file %s, error: %s", file_path, strerror(errno));
+    miniexact_err(
+      "Could not open file %s, error: %s", file_path, strerror(errno));
     return NULL;
   }
 
@@ -652,6 +659,6 @@ miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
 ERROR:
   assert(problem);
   miniexact_problem_free(problem, a);
-  err("Parse error at %u:%u %s", p.line, p.col, error);
+  miniexact_err("Parse error at %u:%u %s", p.line, p.col, error);
   return NULL;
 }

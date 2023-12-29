@@ -150,7 +150,7 @@ static int
 process_file(miniexact_config* cfg) {
   miniexact_algorithm a;
   if(!miniexact_algorithm_from_select(cfg->algorithm_select, &a)) {
-    err("Could not extract algorithm from algorithm select! Try different "
+    miniexact_err("Could not extract algorithm from algorithm select! Try different "
         "algorithm selection.");
     return EXIT_FAILURE;
   }
@@ -168,7 +168,7 @@ process_file(miniexact_config* cfg) {
   if(cfg->transform_to_libexact) {
     const char* error = miniexact_print_problem_matrix_in_libexact_format(p);
     if(error) {
-      err("Transform error: %s", error);
+      miniexact_err("Transform error: %s", error);
       return EXIT_FAILURE;
     } else
       return EXIT_SUCCESS;

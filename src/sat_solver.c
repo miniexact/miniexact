@@ -85,7 +85,7 @@ find_executable(const char* name, char** overwrite) {
     snprintf(path, path_len + 1, "%s/%s", dir, name);
     assert(strlen(path) == path_len);
     res = file_readable(path);
-    trc("Trying %s", path);
+    miniexact_trc("Trying %s", path);
     if(overwrite)
       *overwrite = strdup(path);
     free(path);
@@ -119,10 +119,10 @@ find_solver_id() {
     }
   }
 
-  err("No SAT solver found! Please install one of the supported solvers.\n"
+  miniexact_err("No SAT solver found! Please install one of the supported solvers.\n"
       "Tried the following in $PATH:\n");
   for(size_t i = 0; known_sat_solvers[i]; ++i) {
-    err("  %s\n", known_sat_solvers[i]);
+    miniexact_err("  %s\n", known_sat_solvers[i]);
   }
   exit(-1);
 }
@@ -203,7 +203,7 @@ miniexact_sat_solver_init(miniexact_sat_solver* solver,
     real_argv[arg_count + 1] = NULL;
 
     int status = execve(binary, real_argv, envp);
-    err("Executing child \"%s\" failed! Error: %s\n", binary, strerror(errno));
+    miniexact_err("Executing child \"%s\" failed! Error: %s\n", binary, strerror(errno));
     exit(-1);
   }
 }
@@ -221,7 +221,7 @@ void
 miniexact_sat_solver_add(miniexact_sat_solver* solver, int l) {
   assert(solver);
   assert(solver->infd_handle);
-  trc("[SAT] Lit: %d", l);
+  miniexact_trc("[SAT] Lit: %d", l);
   if(l == 0) {
     fprintf(solver->infd_handle, "0\n");
   } else {
@@ -233,21 +233,21 @@ void
 miniexact_sat_solver_unit(miniexact_sat_solver* solver, int l) {
   assert(solver);
   assert(solver->infd_handle);
-  trc("[SAT] %d 0", l);
+  miniexact_trc("[SAT] %d 0", l);
   fprintf(solver->infd_handle, "%d 0\n", l);
 }
 void
 miniexact_sat_solver_binary(miniexact_sat_solver* solver, int a, int b) {
   assert(solver);
   assert(solver->infd_handle);
-  trc("[SAT] %d %d 0", a, b);
+  miniexact_trc("[SAT] %d %d 0", a, b);
   fprintf(solver->infd_handle, "%d %d 0\n", a, b);
 }
 void
 miniexact_sat_solver_ternary(miniexact_sat_solver* solver, int a, int b, int c) {
   assert(solver);
   assert(solver->infd_handle);
-  trc("[SAT] %d %d %d 0", a, b, c);
+  miniexact_trc("[SAT] %d %d %d 0", a, b, c);
   fprintf(solver->infd_handle, "%d %d %d 0\n", a, b, c);
 }
 
@@ -308,12 +308,12 @@ miniexact_sat_solver_solve(miniexact_sat_solver* solver) {
         fclose(solver->outfd_handle);
         return 20;
       default:
-        err("Child SAT solver process had unexpected exit code %d!", exit_code);
+        miniexact_err("Child SAT solver process had unexpected exit code %d!", exit_code);
         fclose(solver->outfd_handle);
         return exit_code;
     }
   } else {
-    err("Child SAT solver process had unexpected exit!");
+    miniexact_err("Child SAT solver process had unexpected exit!");
   }
   return 0;
 }

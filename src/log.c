@@ -50,7 +50,7 @@ miniexact_check_trace() {
 }
 
 void
-dbg(const char* format, ...) {
+miniexact_dbg(const char* format, ...) {
   if(miniexact_check_debug()) {
     fprintf(stderr, "[XCC] [DEBUG] ");
     va_list args;
@@ -62,7 +62,7 @@ dbg(const char* format, ...) {
 }
 
 void
-trc(const char* format, ...) {
+miniexact_trc(const char* format, ...) {
   if(miniexact_check_trace()) {
     fprintf(stderr, "[XCC] [TRACE] ");
     va_list args;
@@ -74,7 +74,7 @@ trc(const char* format, ...) {
 }
 
 void
-err(const char* format, ...) {
+miniexact_err(const char* format, ...) {
 #if _POSIX_C_SOURCE >= 199309L
   flockfile(stderr);
 #endif
