@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Exact Cover: Mobile Edition</title>
+    <title>Miniexact Web</title>
     <meta charset="utf-8"/>
 
     <link href="css/bootstrap.min.css" rel="stylesheet" />
@@ -18,7 +18,7 @@
   <body class="d-flex flex-column h-100">
     <main role="main">
       <div class="container-fluid">
-        <h1>Exact Cover: Mobile Edition</h1>
+        <h1>Miniexact Web</h1>
 
         <form>
           <div class="row">
@@ -86,7 +86,7 @@
             </div>
             <div class="col-md">
               <div class="progress" id="loading-indicator" style="height: 3em;">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Loading and Processing WebAssembly of xccsolve...</div>
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Loading and Processing WebAssembly of miniexact...</div>
               </div>
               <button tabindex="0"
                       type="button"
@@ -94,18 +94,6 @@
                       class="btn btn-primary btn-block mb-1"
                       onclick="run_();" id="run-btn">Run (or Shift+Enter in
                 input area)</button>
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <td>xccsolve tag</th>
-                    <td id="xccsolve-tag"></td>
-                  </tr>
-                  <tr>
-                    <td>xccsolve commit</th>
-                    <td id="xccsolve-commit"></td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </div>
         </form>
@@ -147,13 +135,13 @@
         <ul class="nav justify-content-center border-top pb-3 mb-3">
           <li class="nav-item"><a href="index.html" class="nav-link px-2 text-muted">Home</a></li>
           <li class="nav-item"><a href="about.html" class="nav-link px-2 text-muted">About</a></li>
-          <li class="nav-item"><a href="https://github.com/maximaximal/XCCSolve" class="nav-link px-2 text-muted">GitHub</a></li>
+          <li class="nav-item"><a href="https://github.com/miniexact/miniexact" class="nav-link px-2 text-muted">GitHub</a></li>
           <li class="nav-item"><a href="https://maxheisinger.at" class="nav-link px-2 text-muted">Made with ❤ by Max Heisinger</a></li>
         </ul>
       </footer>
     </div>
 
     <script src="main.js"></script>
-    <script src="xccsolve.js"></script>
+    <script src="miniexactsolve.js"></script>
   </body>
 </html>

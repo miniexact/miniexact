@@ -6,9 +6,6 @@ let stderr = document.getElementById("stderr");
 let run_element = document.getElementById("run-btn");
 let loader = document.getElementById("loading-indicator");
 
-let xccsolve_tag = document.getElementById("xccsolve-tag");
-let xccsolve_commit = document.getElementById("xccsolve-commit");
-
 input.parentNode.dataset.replicatedValue = input.value;
 stdout.parentNode.dataset.replicatedValue = stdout.value;
 stderr.parentNode.dataset.replicatedValue = stderr.value;
@@ -45,7 +42,7 @@ function run_() {
 }
 
 function matchError(e) {
-    let matcher = /^\[XCC\] \[ERROR\] Parse error at (\d+):(\d+)/g;
+    let matcher = /^\[MINIEXACT\] \[ERROR\] Parse error at (\d+):(\d+)/g;
     let arr = matcher.exec(e);
 }
 

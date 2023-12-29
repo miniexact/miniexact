@@ -52,7 +52,7 @@ miniexact_check_trace() {
 void
 miniexact_dbg(const char* format, ...) {
   if(miniexact_check_debug()) {
-    fprintf(stderr, "[XCC] [DEBUG] ");
+    fprintf(stderr, "[MINIEXACT] [DEBUG] ");
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
@@ -64,7 +64,7 @@ miniexact_dbg(const char* format, ...) {
 void
 miniexact_trc(const char* format, ...) {
   if(miniexact_check_trace()) {
-    fprintf(stderr, "[XCC] [TRACE] ");
+    fprintf(stderr, "[MINIEXACT] [TRACE] ");
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
@@ -78,7 +78,7 @@ miniexact_err(const char* format, ...) {
 #if _POSIX_C_SOURCE >= 199309L
   flockfile(stderr);
 #endif
-  fprintf(stderr, "[XCC] [ERROR] ");
+  fprintf(stderr, "[MINIEXACT] [ERROR] ");
   va_list args;
   va_start(args, format);
   vfprintf(stderr, format, args);

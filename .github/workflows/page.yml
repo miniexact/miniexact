@@ -23,7 +23,7 @@ jobs:
       - name: Build
         run: make -C build-emscripten
       - name: Copy built files to web folder
-        run: cp build-emscripten/xccsolve.js build-emscripten/xccsolve.wasm web/
+        run: cp build-emscripten/miniexactsolve.js build-emscripten/miniexactsolve.wasm web/
       - name: Install rsync for GitHub Page Deploy Action
         run: sudo apt update && sudo apt install -y rsync
       - name: Deploy Page

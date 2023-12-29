@@ -1,6 +1,6 @@
-from pyxcc import xccs_x
+from pyminiexact import miniexacts_x
 
-x = xccs_x()
+x = miniexacts_x()
 
 a = x.primary("a")
 b = x.primary("b")
