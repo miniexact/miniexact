@@ -2,15 +2,15 @@
 
 #include <miniexact/algorithm.h>
 #include <miniexact/log.h>
+#include <miniexact/miniexact.h>
 #include <miniexact/ops.h>
 #include <miniexact/parse.h>
 #include <miniexact/util.h>
-#include <miniexact/miniexact.h>
 
 int
 miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
-                                      struct miniexact_problem* p,
-                                      struct miniexact_config* cfg) {
+                                            struct miniexact_problem* p,
+                                            struct miniexact_config* cfg) {
   int return_code = EXIT_SUCCESS;
   if(!a->compute_next_result) {
     miniexact_err("Algorithm does not support solving!");
@@ -48,11 +48,11 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
                 printf("%s", NAME(TOP(o_)));
               else
                 printf("%d", TOP(o_));
-              if(TOP(o_) < p->color_size && COLOR(TOP(o_)) > 0) {
-                if(p->color_name[COLOR(TOP(o_))])
-                  printf(":%s", p->color_name[COLOR(TOP(o_))]);
+              if(o_ < p->color_size && COLOR(o_) > 0) {
+                if(COLOR(o_) < p->color_name_size && p->color_name[COLOR(o_)])
+                  printf(":%s", p->color_name[COLOR(o_)]);
                 else
-                  printf(":%d", COLOR(TOP(o_)));
+                  printf(":%d", COLOR(o_));
               }
               ++o_;
 
@@ -70,7 +70,8 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
         printf("\n");
       } else {
         miniexact_link solution[p->l];
-        miniexact_link l = miniexact_extract_solution_option_indices(p, solution);
+        miniexact_link l =
+          miniexact_extract_solution_option_indices(p, solution);
         if(l > 0) {
           for(size_t i = 0; i < l; ++i) {
             printf("%d ", solution[i]);
@@ -97,7 +98,8 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
 }
 
 int
-miniexact_solve_problem(struct miniexact_algorithm* a, struct miniexact_problem* p) {
+miniexact_solve_problem(struct miniexact_algorithm* a,
+                        struct miniexact_problem* p) {
   assert(a);
   assert(p);
   bool has_result = a->compute_next_result(a, p);
@@ -109,8 +111,8 @@ miniexact_solve_problem(struct miniexact_algorithm* a, struct miniexact_problem*
 
 void
 miniexact_iterate_solution_options_str(struct miniexact_problem* p,
-                                 miniexact_option_str_iterator it,
-                                 void* userdata) {
+                                       miniexact_option_str_iterator it,
+                                       void* userdata) {
   assert(p);
   assert(it);
   const char* names[p->longest_option];

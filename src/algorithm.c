@@ -42,7 +42,9 @@ define_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link l) {
 }
 
 static const char*
-define_primary_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link l) {
+define_primary_item(miniexact_algorithm* a,
+                    miniexact_problem* p,
+                    miniexact_link l) {
   const char* e;
   if((e = define_item(a, p, l)))
     return e;
@@ -88,7 +90,9 @@ define_primary_item_with_range(miniexact_algorithm* a,
 }
 
 static const char*
-define_secondary_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link l) {
+define_secondary_item(miniexact_algorithm* a,
+                      miniexact_problem* p,
+                      miniexact_link l) {
   const char* e;
 
   if((e = define_item(a, p, l)))
@@ -120,6 +124,7 @@ prepare_options(miniexact_algorithm* a, miniexact_problem* p) {
   MINIEXACT_ARR_PLUSN(len, p->N + 2);
   MINIEXACT_ARR_PLUSN(ulink, p->N + 2);
   MINIEXACT_ARR_PLUSN(dlink, p->N + 2);
+  MINIEXACT_ARR_PLUSN(color, p->N + 2);
 
   // Normalize the don't cares
   ULINK(p->N + 1) = 0;
@@ -128,16 +133,19 @@ prepare_options(miniexact_algorithm* a, miniexact_problem* p) {
   LEN(0) = 0;
   ULINK(0) = 0;
   DLINK(0) = 0;
+  COLOR(0) = 0;
 
   for(int i = 1; i <= p->N; ++i) {
     LEN(i) = 0;
     ULINK(i) = i;
     DLINK(i) = i;
+    COLOR(i) = 0;
   }
 
   p->M = 0;
   p->p = p->N + 1;
   TOP(p->p) = 0;
+  COLOR(p->p) = 0;
 
   p->Z = p->p;
   return NULL;
@@ -180,6 +188,7 @@ end_option(miniexact_algorithm* a, miniexact_problem* p) {
   MINIEXACT_ARR_PLUS1(len)
   MINIEXACT_ARR_PLUS1(dlink)
   MINIEXACT_ARR_PLUS1(ulink)
+  MINIEXACT_ARR_PLUS1(color)
 
   p->M = p->M + 1;
   DLINK(p->p) = p->p + p->j;
@@ -225,8 +234,8 @@ miniexact_default_init_problem(miniexact_algorithm* a, miniexact_problem* p) {
   LLINK(0) = 0;
   RLINK(0) = 0;
   NAME(0) = NULL;
-  p->color_name[0] = NULL;
   MINIEXACT_ARR_PLUS1(color_name)
+  p->color_name[0] = NULL;
 
   p->name_size = 1;
   p->llink_size = 1;
@@ -305,7 +314,8 @@ miniexact_algorithm_standard_functions(miniexact_algorithm* a) {
 }
 
 bool
-miniexact_algorithm_from_select(int algorithm_select, miniexact_algorithm* algorithm) {
+miniexact_algorithm_from_select(int algorithm_select,
+                                miniexact_algorithm* algorithm) {
   bool success = false;
   if(algorithm_select & MINIEXACT_ALGORITHM_X) {
     miniexact_algorithm_x_set(algorithm);

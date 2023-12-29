@@ -156,11 +156,12 @@ miniexact_print_problem_matrix(miniexact_problem* p) {
   }
   printf("\n");
   for(size_t x = 0; x < p->ulink_size; ++x) {
-    printf("x:%zu\tTOP/LEN:%d\tULINK:%d\tDLINK:%d\n",
+    printf("x:%zu\tTOP/LEN:%d\tULINK:%d\tDLINK:%d\tCOLOR:%d\n",
            x,
            p->top[x],
            p->ulink[x],
-           p->dlink[x]);
+           p->dlink[x],
+           p->color[x]);
   }
 }
 

@@ -420,8 +420,6 @@ parse_dimacs_add(miniexact_parser* pp, int lit) {
       return e;
     miniexact_problem* p = pp->p;
     miniexact_link color = -lit;
-    MINIEXACT_ARR_HASN(color_name, color);
-    p->color_name[color] = NULL;
   } else if(lit < 0 && IS_PRIMARY(pp->dimacs_last_lit)) {
     return "primary items cannot be colored";
   } else if(lit == 0) {
