@@ -111,6 +111,13 @@ xcc_insert_ident_as_name(xcc_problem* p, const char* ident) {
   return l;
 }
 
+void
+xcc_append_NULL_to_name(xcc_problem* p) {
+  xcc_link l = p->name_size;
+  XCC_ARR_PLUS1(name)
+  p->name[l] = NULL;
+}
+
 xcc_link
 xcc_color_from_ident(xcc_problem* p, const char* ident) {
   return xcc_search_for_name(ident, p->color_name, p->color_name_size);

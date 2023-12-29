@@ -33,6 +33,13 @@ typedef struct xcc_algorithm xcc_algorithm;
 
 #define XCC_LINK_MAX INT32_MAX
 
+#define XCC_MAX(a, b)       \
+  ({                        \
+    __typeof__(a) _a = (a); \
+    __typeof__(b) _b = (b); \
+    _a > _b ? _a : _b;      \
+  })
+
 #define ARR(TYPE, NAME) \
   TYPE* NAME;           \
   size_t NAME##_size;   \
@@ -52,6 +59,12 @@ typedef struct xcc_algorithm xcc_algorithm;
     XCC_ARR_REALLOC(ARR)                          \
   }                                               \
   p->ARR##_size += N;
+
+#define XCC_ARR_HASN(ARR, N)     \
+  while(p->ARR##_capacity < N) { \
+    XCC_ARR_REALLOC(ARR)         \
+  }                              \
+  p->ARR##_size = XCC_MAX(N, p->ARR##_size);
 
 #define XCC_ARR_PLUS1(ARR) XCC_ARR_PLUSN(ARR, 1)
 
@@ -139,6 +152,9 @@ xcc_item_from_ident(xcc_problem* p, const char* ident);
 
 xcc_link
 xcc_insert_ident_as_name(xcc_problem* p, const char* ident);
+
+void
+xcc_append_NULL_to_name(xcc_problem* p);
 
 xcc_link
 xcc_color_from_ident(xcc_problem* p, const char* ident);

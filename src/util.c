@@ -44,9 +44,15 @@ xcc_solve_problem_and_print_solutions(struct xcc_algorithm* a,
           // selected options.
           if(o_ > p->N && o_ <= p->Z) {
             while(TOP(o_) > 0) {
-              printf("%s", NAME(TOP(o_)));
+              if(NAME(TOP(o_)))
+                printf("%s", NAME(TOP(o_)));
+              else
+                printf("%d", TOP(o_));
               if(TOP(o_) < p->color_size && COLOR(TOP(o_)) > 0) {
-                printf(":%s", p->color_name[COLOR(TOP(o_))]);
+                if(p->color_name[COLOR(TOP(o_))])
+                  printf(":%s", p->color_name[COLOR(TOP(o_))]);
+                else
+                  printf(":%d", COLOR(TOP(o_)));
               }
               ++o_;
 
@@ -104,7 +110,7 @@ xcc_solve_problem(struct xcc_algorithm* a, struct xcc_problem* p) {
 void
 xcc_iterate_solution_options_str(struct xcc_problem* p,
                                  xcc_option_str_iterator it,
-                                void* userdata) {
+                                 void* userdata) {
   assert(p);
   assert(it);
   const char* names[p->longest_option];

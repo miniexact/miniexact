@@ -15,10 +15,10 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "xcc/xcc.h"
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +27,7 @@
 #include <xcc/algorithm.h>
 #include <xcc/log.h>
 #include <xcc/parse.h>
+#include <xcc/xcc.h>
 
 extern FILE* yyin;
 
@@ -34,6 +35,17 @@ struct xcc_parser;
 
 typedef int (*xcc_getc)(struct xcc_parser* p);
 typedef int (*xcc_peekc)(struct xcc_parser* p);
+
+typedef const char* (*xcc_add)(struct xcc_parser* p, int lit);
+
+typedef const char* (*xcc_init_xc)(struct xcc_parser* p,
+                                   int primaries,
+                                   int secondaries);
+typedef const char* (*xcc_init_xcc)(struct xcc_parser* p,
+                                    int primaries,
+                                    int secondaries);
+
+typedef enum xcc_dimacs_problem { DIMACS_XC, DIMACS_XCC } xcc_dimacs_problem;
 
 typedef struct xcc_parser {
   xcc_problem* p;
@@ -52,6 +64,10 @@ typedef struct xcc_parser {
 
   size_t line;
   size_t col;
+
+  int dimacs_primaries, dimacs_secondaries;
+  xcc_dimacs_problem dimacs_problem;
+  int dimacs_last_lit;
 } xcc_parser;
 
 typedef enum xcc_token {
@@ -62,7 +78,7 @@ typedef enum xcc_token {
   LESS_THAN,
   GREATER_THAN,
   COLON,
-  SEMICOLON
+  SEMICOLON,
 } xcc_token;
 
 #define GETC(P) P->getc(P)
@@ -158,6 +174,282 @@ xcc_peekc_file(xcc_parser* p) {
   return c == EOF ? EOF : ungetc(c, p->file);
 }
 
+static inline bool
+faster_is_digit(int ch) {
+  return '0' <= ch && ch <= '9';
+}
+
+#define ISDIGIT(CH) faster_is_digit(CH)
+
+// The dimacs parser is taken from Kissat, by Armin Biere (MIT Licensed) and
+// modified to parse exact cover header and options.
+static const char*
+parse_dimacs_kissat(xcc_parser* p,
+                    xcc_init_xc xc,
+                    xcc_init_xcc xcc,
+                    xcc_add add) {
+  int ch;
+  uint64_t parsed = 0;
+  int lit = 0;
+  ch = GETC(p);
+
+  xcc_init_xc init = NULL;
+
+  if(ch != ' ')
+    return "expected space after 'p'";
+  ch = GETC(p);
+  ++p->col;
+  if(ch != 'x')
+    return "expected 'x' after 'p '";
+  ch = GETC(p);
+  ++p->col;
+  if(ch != 'c')
+    return "expected 'c' after 'p x'";
+  ch = GETC(p);
+  ++p->col;
+  if(ch == 'c') {
+    init = xcc;
+    ch = GETC(p);
+    ++p->col;
+  } else
+    init = xc;
+  if(ch != ' ')
+    return "expected space after 'p xc'";
+  ch = GETC(p);
+  ++p->col;
+  if(!ISDIGIT(ch))
+    return "expected digit after 'p cnf '";
+  int primaries = ch - '0';
+  while(ISDIGIT(ch = GETC(p))) {
+    ++p->col;
+    if(UINT64_MAX / 10 < primaries)
+      return "primaries too large";
+    primaries *= 10;
+    const int digit = ch - '0';
+    primaries += digit;
+  }
+  if(ch == EOF)
+    return "unexpected end-of-file while parsing digit";
+  if(ch == '\r') {
+    ch = GETC(p);
+    ++p->col;
+    if(ch != '\n')
+      return "expected new-line after carriage-return";
+  }
+  if(ch == '\n')
+    return "unexpected new-line after primaries";
+  if(ch != ' ')
+    return "expected space after primaries";
+  ch = GETC(p);
+  ++p->col;
+  if(!ISDIGIT(ch))
+    return "expected secondaries after primaries";
+  uint64_t secondaries = ch - '0';
+  while(ISDIGIT(ch = GETC(p))) {
+    ++p->col;
+    if(INT_MAX / 10 < secondaries)
+      return "secondaries too large";
+    secondaries *= 10;
+    const int digit = ch - '0';
+    if(INT_MAX - digit < secondaries)
+      return "secondaries too large";
+    secondaries += digit;
+  }
+  if(ch == EOF)
+    return "unexpected end-of-file while parsing secondaries";
+  if(ch == '\r') {
+    ch = GETC(p);
+    if(ch != '\n')
+      return "expected new-line after carriage-return";
+  }
+  if(ch == EOF)
+    return "unexpected end-of-file after parsing secondaries";
+  if(ch != '\n')
+    return "expected new-line after parsing secondaries";
+
+  p->col = 0;
+  ++p->line;
+
+  const char* err = init(p, primaries, secondaries);
+  if(err)
+    return err;
+
+  for(;;) {
+    ch = GETC(p);
+    ++p->col;
+    if(ch == ' ')
+      continue;
+    if(ch == '\t')
+      continue;
+    if(ch == '\n') {
+      p->col = 0;
+      ++p->line;
+      continue;
+    }
+    if(ch == '\r') {
+      ch = GETC(p);
+      if(ch != '\n')
+        return "expected new-line after carriage-return";
+      continue;
+    }
+    if(ch == EOF)
+      break;
+    int sign;
+    if(ch == '-') {
+      ch = GETC(p);
+      ++p->col;
+      if(ch == EOF)
+        return "unexpected end-of-file after '-'";
+      if(ch == '\n')
+        return "unexpected new-line after '-'";
+      if(!ISDIGIT(ch))
+        return "expected digit after '-'";
+      if(ch == '0')
+        return "expected non-zero digit after '-'";
+      sign = -1;
+    } else if(!ISDIGIT(ch))
+      return "expected digit or '-'";
+    else
+      sign = 1;
+    assert(ISDIGIT(ch));
+    int idx = ch - '0';
+    while(ISDIGIT(ch = GETC(p))) {
+      ++p->col;
+      idx *= 10;
+      const int digit = ch - '0';
+      idx += digit;
+    }
+    if(ch == EOF) {
+      if(idx)
+        return "unexpected end-of-file after literal";
+      else
+        return "unexpected end-of-file after trailing zero";
+    } else if(ch == '\r') {
+      ch = GETC(p);
+      ++p->col;
+      if(ch != '\n')
+        return "expected new-line after carriage-return";
+      p->col = 0;
+      ++p->line;
+    } else if(ch != ' ' && ch != '\t' && ch != '\n')
+      return "expected white space after literal";
+    if(idx) {
+      assert(sign == 1 || sign == -1);
+      assert(idx != INT_MIN);
+      lit = sign * idx;
+    } else {
+      parsed++;
+      lit = 0;
+    }
+    err = add(p, lit);
+    if(err)
+      return err;
+  }
+  if(lit)
+    return "trailing zero missing";
+
+  return 0;
+}
+
+static const char*
+parse_dimacs_init_xc(xcc_parser* p, int primaries, int secondaries) {
+  p->dimacs_problem = DIMACS_XC;
+  p->dimacs_primaries = primaries;
+  p->dimacs_secondaries = secondaries;
+
+  if(primaries + secondaries > INT_MAX)
+    return "primaries + secondaries must be smaller than INT_MAX";
+
+  const char* e = NULL;
+  for(int item = 1; item <= primaries; ++item) {
+    if((e = p->a->define_primary_item(p->a, p->p, item)))
+      return e;
+    xcc_append_NULL_to_name(p->p);
+  }
+  for(int item = 1; item <= secondaries; ++item) {
+    if((e = p->a->define_secondary_item(p->a, p->p, item + primaries)))
+      return e;
+    xcc_append_NULL_to_name(p->p);
+  }
+
+  if((e = p->a->prepare_options(p->a, p->p)))
+    return e;
+
+  return NULL;
+}
+
+static const char*
+parse_dimacs_init_xcc(xcc_parser* p, int primaries, int secondaries) {
+  const char* e = parse_dimacs_init_xc(p, primaries, secondaries);
+  if(e)
+    return e;
+
+  p->dimacs_problem = DIMACS_XCC;
+  return NULL;
+}
+
+#define IS_PRIMARY(L) (L > 0 && L <= pp->dimacs_primaries)
+#define IS_SECONDARY(L)        \
+  (L > pp->dimacs_primaries && \
+   L <= pp->dimacs_primaries + pp->dimacs_secondaries)
+
+static const char*
+parse_dimacs_add(xcc_parser* pp, int lit) {
+  const char* e = NULL;
+
+  if(IS_PRIMARY(lit)) {
+    if(IS_SECONDARY(pp->dimacs_last_lit)) {
+      if((e = pp->a->add_item(pp->a, pp->p, pp->dimacs_last_lit)))
+        return e;
+    }
+    if((e = pp->a->add_item(pp->a, pp->p, lit)))
+      return e;
+  } else if(IS_SECONDARY(lit)) {
+    if(IS_SECONDARY(pp->dimacs_last_lit)) {
+      if((e = pp->a->add_item(pp->a, pp->p, pp->dimacs_last_lit)))
+        return e;
+    }
+  } else if(lit < 0 && IS_SECONDARY(pp->dimacs_last_lit)) {
+    if((e =
+          pp->a->add_item_with_color(pp->a, pp->p, pp->dimacs_last_lit, -lit)))
+      return e;
+    xcc_problem* p = pp->p;
+    xcc_link color = -lit;
+    XCC_ARR_HASN(color_name, color);
+    p->color_name[color] = NULL;
+  } else if(lit < 0 && IS_PRIMARY(pp->dimacs_last_lit)) {
+    return "primary items cannot be colored";
+  } else if(lit == 0) {
+    if(IS_SECONDARY(pp->dimacs_last_lit)) {
+      if((e = pp->a->add_item(pp->a, pp->p, pp->dimacs_last_lit)))
+        return e;
+    }
+    if((e = pp->a->end_option(pp->a, pp->p)))
+      return e;
+  } else {
+    return "invalid lit";
+  }
+
+  pp->dimacs_last_lit = lit;
+
+  return NULL;
+}
+
+#undef IS_PRIMARY
+#undef IS_SECONDARY
+
+static const char*
+parse_dimacs(xcc_parser* p) {
+  // Multiple variants of Dimacs exist in the context of exact cover:
+  // XC: Exact cover with Algorithm X.
+  // XCC: Exact cover with colors
+
+  p->dimacs_last_lit = 0;
+
+  return parse_dimacs_kissat(
+    p, &parse_dimacs_init_xc, &parse_dimacs_init_xcc, &parse_dimacs_add);
+}
+
 static const char*
 parse(xcc_parser* p) {
   // Read problem header (primary items, secondary items), then read all
@@ -217,6 +509,10 @@ parse(xcc_parser* p) {
       return "primary item list must end with >";
     }
     t = next(p);
+  } else if(t == IDENT && p->ident_len == 1 && p->ident[0] == 'p') {
+    // Use the dimacs format to parse this problem! There, no tokenizer is used,
+    // so we exit from the general parsing function.
+    return parse_dimacs(p);
   } else {
     return "no primary item definitions given";
   }
