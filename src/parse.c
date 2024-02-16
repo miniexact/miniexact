@@ -53,8 +53,8 @@ typedef enum miniexact_dimacs_problem {
 typedef struct miniexact_parser {
   miniexact_problem* p;
   miniexact_algorithm* a;
-  miniexact_getc getc;
-  miniexact_peekc peekc;
+  miniexact_getc mgetc;
+  miniexact_peekc mpeekc;
 
   // Source for characters.
   FILE* file;
@@ -84,8 +84,8 @@ typedef enum miniexact_token {
   SEMICOLON,
 } miniexact_token;
 
-#define GETC(P) P->getc(P)
-#define PEEKC(P) P->peekc(P)
+#define GETC(P) P->mgetc(P)
+#define PEEKC(P) P->mpeekc(P)
 
 inline static bool
 isidentchar(char c) {
@@ -602,8 +602,8 @@ miniexact_parse_problem(miniexact_algorithm* a, const char* str) {
   p.file = NULL;
   p.ident_len = 0;
 
-  p.getc = &miniexact_getc_str;
-  p.peekc = &miniexact_peekc_str;
+  p.mgetc = &miniexact_getc_str;
+  p.mpeekc = &miniexact_peekc_str;
 
   if((error = parse(&p)))
     goto ERROR;
@@ -640,8 +640,8 @@ miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
   p.str_pos = 0;
   p.ident_len = 0;
 
-  p.getc = &miniexact_getc_file;
-  p.peekc = &miniexact_peekc_file;
+  p.mgetc = &miniexact_getc_file;
+  p.mpeekc = &miniexact_peekc_file;
 
   if((error = parse(&p)))
     goto ERROR;
