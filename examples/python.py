@@ -11,3 +11,6 @@ x.add([b])
 
 while x.solve() == 10:
     print(f"Solution found! Selected options: {x.selected_options()}")
+
+p = x.problem()
+print(f"Field `N` of the generated problem instance: {p.N}")
