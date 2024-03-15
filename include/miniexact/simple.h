@@ -23,8 +23,8 @@
 // command line client uses the direct XCC interface.
 //
 // All more complex functions are abstracted away from the compilation unit,
-// also making this an easy to consume API. Functions start with miniexacts_ instead
-// of miniexact_.
+// also making this an easy to consume API. Functions start with miniexacts_
+// instead of miniexact_.
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,13 +32,14 @@ extern "C" {
 
 #include <stdint.h>
 
+struct miniexact_problem;
 struct miniexacts;
 
 typedef void (*miniexacts_solution_iterator)(struct miniexacts*,
-                                       const char** names,
-                                       const char** colors,
-                                       unsigned int items_count,
-                                       void* userdata);
+                                             const char** names,
+                                             const char** colors,
+                                             unsigned int items_count,
+                                             void* userdata);
 
 struct miniexacts*
 miniexacts_init_x();
@@ -53,9 +54,9 @@ miniexacts_init_m();
 // be 1.
 int32_t
 miniexacts_define_primary_item_with_slack(struct miniexacts* h,
-                                    const char* name,
-                                    unsigned int u,
-                                    unsigned int v);
+                                          const char* name,
+                                          unsigned int u,
+                                          unsigned int v);
 
 int32_t
 miniexacts_define_primary_item(struct miniexacts* h, const char* name);
@@ -83,13 +84,18 @@ int
 miniexacts_solve(struct miniexacts* h);
 
 void
-miniexacts_solution(struct miniexacts* h, miniexacts_solution_iterator it, void* userdata);
+miniexacts_solution(struct miniexacts* h,
+                    miniexacts_solution_iterator it,
+                    void* userdata);
 
 unsigned int
 miniexacts_solution_length(struct miniexacts* h);
 
 int32_t
 miniexacts_extract_solution(struct miniexacts* h, int32_t* arr);
+
+miniexact_problem*
+miniexacts_problem(struct miniexacts* h);
 
 void
 miniexacts_free(struct miniexacts* h);

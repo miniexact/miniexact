@@ -122,6 +122,10 @@ class miniexacts_wrapper {
     });
     std::cout << std::endl;
   }
+
+  miniexact_problem* problem() {
+    return miniexacts_problem(h_.get());
+  }
 };
 
 using miniexacts_x = miniexacts_wrapper<&miniexacts_init_x>;

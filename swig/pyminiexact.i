@@ -1,6 +1,7 @@
 %module pyminiexact
 %{
 #define SWIG_FILE_WITH_INIT
+#include <miniexact/miniexact.h>
 #include <miniexact/simple.h>
 #include <miniexact/simple.hpp>
 %}
@@ -11,6 +12,7 @@
 %template(vectorstr) std::vector<char*>;
 %template(vectori) std::vector<int32_t>;
 
+%include <miniexact/miniexact.h>
 %include <miniexact/simple.h>
 %include <miniexact/simple.hpp>
 

@@ -254,6 +254,11 @@ miniexacts_extract_solution(struct miniexacts* h, int32_t* arr) {
   return miniexact_extract_solution_option_indices(&h->p, arr);
 }
 
+miniexact_problem*
+miniexacts_problem(struct miniexacts* h) {
+  return &h->p;
+}
+
 void
 miniexacts_free(struct miniexacts* h) {
   if(h) {

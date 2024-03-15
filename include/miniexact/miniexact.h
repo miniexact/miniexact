@@ -98,14 +98,18 @@ typedef struct miniexact_problem {
   ARR(miniexact_link, rlink)
   ARR(miniexact_link, ulink)
   ARR(miniexact_link, dlink)
+#ifndef SWIG
   union {
     struct {
+#endif
       ARR(miniexact_link, top)
+#ifndef SWIG
     };
     struct {
       ARR(miniexact_link, len)
     };
   };
+#endif
 
   ARR(miniexact_name, name)
   ARR(miniexact_name, color_name)
@@ -186,11 +190,6 @@ typedef void (*miniexact_link_visitor)(miniexact_problem* p,
                                  void* userdata,
                                  miniexact_link item_index,
                                  const char* item_name);
-
-void
-miniexact_extract_selected_options(miniexact_problem* p,
-                             void* userdata,
-                             miniexact_link_visitor visitor);
 
 #ifdef __cplusplus
 }
