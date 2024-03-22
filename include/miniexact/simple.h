@@ -73,12 +73,18 @@ miniexacts_define_color(struct miniexacts* h, const char* name);
 // Add an item to the current option. If the name is NULL, the option is ended.
 // The color is only valid if the item is a secondary item.
 int32_t
-miniexacts_add_named(struct miniexacts* h, const char* name, const char* color);
+miniexacts_add_named(struct miniexacts* h,
+                     const char* name,
+                     const char* color,
+                     uint32_t cost);
 
 // Add an item to the current option. If the name is 0, the option is ended.
 // The color is only valid if the item is a secondary item.
 int32_t
-miniexacts_add(struct miniexacts* h, int32_t item, int32_t color);
+miniexacts_add(struct miniexacts* h,
+               int32_t item,
+               int32_t color,
+               uint32_t cost);
 
 int
 miniexacts_solve(struct miniexacts* h);

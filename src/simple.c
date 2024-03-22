@@ -7,9 +7,9 @@
 #include <miniexact/algorithm_c.h>
 #include <miniexact/algorithm_m.h>
 #include <miniexact/algorithm_x.h>
+#include <miniexact/miniexact.h>
 #include <miniexact/simple.h>
 #include <miniexact/util.h>
-#include <miniexact/miniexact.h>
 
 enum state {
   S_ADD_PRIMARY_ITEMS = 1u << 0u,
@@ -80,8 +80,9 @@ miniexacts_init_m() {
 static const char*
 require_state(struct miniexacts* h, int s) {
   assert(h);
-  char* error =
-    (h->s == s || h->s & s) ? NULL : "miniexacts state does not match desired state!";
+  char* error = (h->s == s || h->s & s)
+                  ? NULL
+                  : "miniexacts state does not match desired state!";
   return error;
 }
 
@@ -89,9 +90,9 @@ require_state(struct miniexacts* h, int s) {
 // be 1.
 int32_t
 miniexacts_define_primary_item_with_slack(struct miniexacts* h,
-                                    const char* name,
-                                    unsigned int u,
-                                    unsigned int v) {
+                                          const char* name,
+                                          unsigned int u,
+                                          unsigned int v) {
   assert(h);
   assert(name);
   TRY(require_state(h, S_ADD_PRIMARY_ITEMS));
@@ -135,7 +136,10 @@ miniexacts_define_color(struct miniexacts* h, const char* name) {
 }
 
 int32_t
-miniexacts_add_named(struct miniexacts* h, const char* name, const char* color_str) {
+miniexacts_add_named(struct miniexacts* h,
+                     const char* name,
+                     const char* color_str,
+                     uint32_t cost) {
   assert(h);
 
   if(name)
@@ -165,7 +169,7 @@ miniexacts_add_named(struct miniexacts* h, const char* name, const char* color_s
   } else {
     TRY(require_state(h, S_ADDING_OPTION));
 
-    TRY(h->a.end_option(&h->a, &h->p));
+    TRY(h->a.end_option(&h->a, &h->p, cost));
     ++h->p.option_count;
 
     h->s = S_READY;
@@ -174,7 +178,10 @@ miniexacts_add_named(struct miniexacts* h, const char* name, const char* color_s
 }
 
 int32_t
-miniexacts_add(struct miniexacts* h, int32_t item, int32_t color) {
+miniexacts_add(struct miniexacts* h,
+               int32_t item,
+               int32_t color,
+               uint32_t cost) {
   assert(h);
 
   if(h->s == S_ADD_PRIMARY_ITEMS || h->s == S_ADD_SECONDARY_ITEMS) {
@@ -195,7 +202,7 @@ miniexacts_add(struct miniexacts* h, int32_t item, int32_t color) {
   } else {
     TRY(require_state(h, S_ADDING_OPTION));
 
-    TRY(h->a.end_option(&h->a, &h->p));
+    TRY(h->a.end_option(&h->a, &h->p, cost));
     ++h->p.option_count;
 
     h->s = S_READY;
@@ -234,7 +241,9 @@ it_converter(struct miniexact_problem* p,
 }
 
 void
-miniexacts_solution(struct miniexacts* h, miniexacts_solution_iterator it, void* userdata) {
+miniexacts_solution(struct miniexacts* h,
+                    miniexacts_solution_iterator it,
+                    void* userdata) {
   TRY(require_state(h, S_SOLUTIONS_AVAILABLE));
 
   struct userdata_bag b = { .h = h, .it = it, .userdata = userdata };

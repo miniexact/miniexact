@@ -33,6 +33,8 @@ extern "C" {
 #define FT(l) p->ft[l]
 #define SLACK(l) p->slack[l]
 #define BOUND(l) p->bound[l]
+#define BEST(l) p->best[l]
+#define COST(l) p->cost[l]
 
 #include "miniexact.h"
 
@@ -162,7 +164,7 @@ miniexact_hide(miniexact_problem* p, miniexact_link p_) {
   miniexact_link q = p_ + 1;
   while(q != p_) {
     assert(q >= 0);
-    assert(q < p->top_size);
+    assert(((size_t)q) < p->top_size);
     miniexact_link x = TOP(q);
     miniexact_link u = ULINK(q);
     miniexact_link d = DLINK(q);

@@ -23,7 +23,8 @@ class miniexacts_wrapper {
       exit(1);
     }
     selected_options_.resize(miniexacts_solution_length(h_.get()));
-    int32_t len = miniexacts_extract_solution(h_.get(), selected_options_.data());
+    int32_t len =
+      miniexacts_extract_solution(h_.get(), selected_options_.data());
     selected_options_.resize(len);
     solution_valid_ = true;
   }
@@ -40,13 +41,15 @@ class miniexacts_wrapper {
   int32_t secondary(const char* name) {
     return miniexacts_define_secondary_item(h_.get(), name);
   }
-  int32_t color(const char* name) { return miniexacts_define_color(h_.get(), name); }
-
-  int32_t add(const char* name, const char* color = NULL) {
-    return miniexacts_add_named(h_.get(), name, color);
+  int32_t color(const char* name) {
+    return miniexacts_define_color(h_.get(), name);
   }
-  int32_t add(int32_t item, int32_t color = 0) {
-    return miniexacts_add(h_.get(), item, color);
+
+  int32_t add(const char* name, const char* color = NULL, uint32_t cost = 0) {
+    return miniexacts_add_named(h_.get(), name, color, cost);
+  }
+  int32_t add(int32_t item, int32_t color = 0, uint32_t cost = 0) {
+    return miniexacts_add(h_.get(), item, color, cost);
   }
 
   int32_t add(std::vector<const char*> items) {
@@ -123,9 +126,7 @@ class miniexacts_wrapper {
     std::cout << std::endl;
   }
 
-  miniexact_problem* problem() {
-    return miniexacts_problem(h_.get());
-  }
+  miniexact_problem* problem() { return miniexacts_problem(h_.get()); }
 };
 
 using miniexacts_x = miniexacts_wrapper<&miniexacts_init_x>;

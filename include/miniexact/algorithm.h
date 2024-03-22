@@ -46,7 +46,7 @@ typedef const char* (*miniexact_add_item_with_color)(miniexact_algorithm* a,
                                                miniexact_problem* p,
                                                miniexact_link l,
                                                miniexact_color color);
-typedef const char* (*miniexact_end_option)(miniexact_algorithm* a, miniexact_problem* p);
+typedef const char* (*miniexact_end_option)(miniexact_algorithm* a, miniexact_problem* p, miniexact_link cost);
 typedef const char* (*miniexact_prepare_options)(miniexact_algorithm* a, miniexact_problem* p);
 typedef const char* (*miniexact_end_options)(miniexact_algorithm* a, miniexact_problem* p);
 

@@ -88,6 +88,8 @@ miniexact_problem_free_inner(miniexact_problem* p, miniexact_algorithm* a) {
     free(p->slack);
   if(p->bound)
     free(p->bound);
+  if(p->cost)
+    free(p->cost);
 
   memset(p, 0, sizeof(miniexact_problem));
 }

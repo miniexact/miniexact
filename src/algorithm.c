@@ -184,7 +184,7 @@ add_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link ij) {
 }
 
 static const char*
-end_option(miniexact_algorithm* a, miniexact_problem* p) {
+end_option(miniexact_algorithm* a, miniexact_problem* p, miniexact_link cost) {
   MINIEXACT_ARR_PLUS1(len)
   MINIEXACT_ARR_PLUS1(dlink)
   MINIEXACT_ARR_PLUS1(ulink)
@@ -230,6 +230,7 @@ miniexact_default_init_problem(miniexact_algorithm* a, miniexact_problem* p) {
   MINIEXACT_ARR_ALLOC(miniexact_link, ft)
   MINIEXACT_ARR_ALLOC(miniexact_link, slack)
   MINIEXACT_ARR_ALLOC(miniexact_link, bound)
+  MINIEXACT_ARR_ALLOC(miniexact_link, cost)
 
   LLINK(0) = 0;
   RLINK(0) = 0;

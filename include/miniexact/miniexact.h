@@ -117,6 +117,8 @@ typedef struct miniexact_problem {
   ARR(miniexact_link, ft)
   ARR(miniexact_link, slack)
   ARR(miniexact_link, bound)
+  ARR(miniexact_link, cost)
+  ARR(miniexact_link, best)
 
   // Solution
   ARR(miniexact_link, x)

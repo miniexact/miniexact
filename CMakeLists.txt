@@ -63,6 +63,16 @@ target_link_libraries(miniexactsolve miniexact-static)
 
 add_compile_definitions(miniexactsolve PRIVATE MINIEXACT_VERSION="${CMAKE_PROJECT_VERSION}")
 
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  if(MSVC)
+    target_compile_options(miniexact-static PRIVATE /W4 /WX)
+    target_compile_options(miniexactsolve PRIVATE /W4 /WX)
+  else()
+    target_compile_options(miniexact-static PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(miniexactsolve PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()
+endif()
+
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   target_link_options(miniexactsolve PRIVATE "-s INITIAL_MEMORY=200MB")
   target_link_options(miniexactsolve PRIVATE "--use-preload-cache")

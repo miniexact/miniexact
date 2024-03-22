@@ -36,7 +36,9 @@ struct miniexact_parser;
 typedef int (*miniexact_getc)(struct miniexact_parser* p);
 typedef int (*miniexact_peekc)(struct miniexact_parser* p);
 
-typedef const char* (*miniexact_add)(struct miniexact_parser* p, int lit);
+typedef const char* (*miniexact_add)(struct miniexact_parser* p,
+                                     int lit,
+                                     uint32_t cost);
 
 typedef const char* (*miniexact_init_xc)(struct miniexact_parser* p,
                                          int primaries,
@@ -83,6 +85,7 @@ typedef enum miniexact_token {
   GREATER_THAN,
   COLON,
   SEMICOLON,
+  DOLLAR,
 } miniexact_token;
 
 #define GETC(P) P->mgetc(P)
@@ -116,7 +119,6 @@ next(miniexact_parser* p) {
     }
 
     ++p->col;
-    ++p->pos;
     if(c == '\n') {
       p->col = 0;
       ++p->line;
@@ -140,6 +142,8 @@ next(miniexact_parser* p) {
       return LESS_THAN;
     case '>':
       return GREATER_THAN;
+    case '$':
+      return DOLLAR;
   }
 
   if(isidentchar(c)) {
@@ -161,6 +165,7 @@ static inline int
 miniexact_getc_str(miniexact_parser* p) {
   if(p->str[p->str_pos] == '\0')
     return EOF;
+  ++p->pos;
   return p->str[p->str_pos++];
 }
 static inline int
@@ -170,6 +175,7 @@ miniexact_peekc_str(miniexact_parser* p) {
 
 static inline int
 miniexact_getc_file(miniexact_parser* p) {
+  ++p->pos;
   return getc(p->file);
 }
 static inline int
@@ -197,6 +203,7 @@ parse_dimacs_kissat(miniexact_parser* p,
   uint64_t parsed = 0;
   int lit = 0;
   ch = GETC(p);
+  uint32_t cost = 0;
 
   miniexact_init_xc init = NULL;
 
@@ -312,10 +319,20 @@ parse_dimacs_kissat(miniexact_parser* p,
       if(ch == '0')
         return "expected non-zero digit after '-'";
       sign = -1;
+    } else if(ch == '$') {
+      ch = GETC(p);
+      ++p->col;
+      cost = 0;
+      while(ISDIGIT(ch = GETC(p))) {
+        ++p->col;
+        cost *= 10;
+        const int digit = ch - '0';
+        cost += digit;
+      }
+      continue;
     } else if(!ISDIGIT(ch))
-      return "expected digit or '-'";
-    else
-      sign = 1;
+      return "expected digit, $, or '-'";
+    sign = 1;
     assert(ISDIGIT(ch));
     int idx = ch - '0';
     while(ISDIGIT(ch = GETC(p))) {
@@ -346,9 +363,11 @@ parse_dimacs_kissat(miniexact_parser* p,
       parsed++;
       lit = 0;
     }
-    err = add(p, lit);
+    err = add(p, lit, cost);
     if(err)
       return err;
+    if(lit == 0)
+      cost = 0;
   }
   if(lit)
     return "trailing zero missing";
@@ -401,7 +420,7 @@ parse_dimacs_init_miniexact(miniexact_parser* p,
    L <= pp->dimacs_primaries + pp->dimacs_secondaries)
 
 static const char*
-parse_dimacs_add(miniexact_parser* pp, int lit) {
+parse_dimacs_add(miniexact_parser* pp, int lit, uint32_t cost) {
   const char* e = NULL;
 
   if(IS_PRIMARY(lit)) {
@@ -429,7 +448,7 @@ parse_dimacs_add(miniexact_parser* pp, int lit) {
       if((e = pp->a->add_item(pp->a, pp->p, pp->dimacs_last_lit)))
         return e;
     }
-    if((e = pp->a->end_option(pp->a, pp->p)))
+    if((e = pp->a->end_option(pp->a, pp->p, cost)))
       return e;
   } else {
     return "invalid lit";
@@ -463,6 +482,8 @@ parse(miniexact_parser* p) {
 
   miniexact_token t;
   t = next(p);
+
+  miniexact_link cost = 0;
 
   if(t == LESS_THAN) {
     // Primary items
@@ -573,10 +594,20 @@ parse(miniexact_parser* p) {
           return e;
       }
 
+      if(t == DOLLAR) {
+        t = next(p);
+        if(t != IDENT || !isonlydigits(p)) {
+          return "expected number after $ to define cost of option";
+        }
+        cost = atoi(p->ident);
+        t = next(p);
+      }
+
       if(t == SEMICOLON || t == END) {
-        if((e = p->a->end_option(p->a, p->p)))
+        if((e = p->a->end_option(p->a, p->p, cost)))
           return e;
         ++p->p->option_count;
+        cost = 0;
         t = next(p);
       }
     }
@@ -620,7 +651,6 @@ ERROR:
 
 miniexact_problem*
 miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
-
   FILE* f = fopen(file_path, "r");
   if(!f) {
     miniexact_err(
