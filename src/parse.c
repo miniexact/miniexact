@@ -654,6 +654,7 @@ miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
     goto ERROR;
   }
 
+  fclose(f);
   return problem;
 ERROR:
   assert(problem);
