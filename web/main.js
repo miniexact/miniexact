@@ -1,4 +1,5 @@
 let isReady = false;
+let focused_on_error = false;
 
 let input = document.getElementById("input");
 let stdout = document.getElementById("stdout");
@@ -15,7 +16,7 @@ function ready() {
     run_element.style.display = "block";
     isReady = true;
 
-    if(input.innerText.length > 0) {
+    if(input.value.length > 0) {
         run_()
     }
 }
@@ -26,36 +27,48 @@ function run_() {
 
     isReady = false;
     run_element.disabled = true;
+    focused_on_error = false;
 
-    stdout.innerText = "";
-    stderr.innerText = "";
+    stdout.value = "";
+    stderr.value = "";
 
     let algorithm = document.querySelector('input[name="algorithm"]:checked').value;
     let enumerate = document.getElementById("option-enumerate").checked ? 'e' : ' ';
     let verbose = document.getElementById("option-verbose").checked ? 'v' : ' ';
     let print_options = document.getElementById("option-print").checked ? 'p' : ' ';
-    Module.solve(input.innerText, algorithm, enumerate, verbose, print_options);
-    localStorage.setItem('input', input.innerText);
+    let problem = input.value;
+    Module.solve(problem, algorithm, enumerate, verbose, print_options);
+    localStorage.setItem('input', input.value);
 
     isReady = true;
     run_element.disabled = false;
 }
 
 function matchError(e) {
-    let matcher = /^\[MINIEXACT\] \[ERROR\] Parse error at (\d+):(\d+)/g;
+    let matcher = /^\[MINIEXACT\] \[ERROR\] Parse error at (\d+):(\d+) \(pos (\d+)\)/g;
     let arr = matcher.exec(e);
+    if(arr !== null && !focused_on_error) {
+	let line = arr[1];
+	let col = arr[2];
+	let pos = arr[3];
+	input.focus();
+	input.select();
+	input.selectionStart = pos - 1;
+	input.selectionEnd = pos - 1;
+	focused_on_error = true;
+    }
 }
 
 window.onload = function() {
     let i = window.localStorage.getItem('input');
     if(i != null && i.length > 0) {
-        input.innerText = i;
+        input.value = i;
     }
 }
 
 var Module = {
-    'print': function(text) { stdout.innerHTML += text + "<br>"; },
-    'printErr': function(text) { stderr.innerHTML += text + "<br>"; matchError(text) },
+    'print': function(text) { stdout.value += text + "\n"; resize_textarea.call(stdout); },
+    'printErr': function(text) { stderr.value += text + "\n"; matchError(text); resize_textarea.call(stderr); },
     'onRuntimeInitialized': function() { ready(); }
 };
 
@@ -64,4 +77,15 @@ document.onkeydown = function (e) {
         e.preventDefault();
         run_();
     }
+}
+
+const tx = document.getElementsByTagName("textarea");
+for (let i = 0; i < tx.length; i++) {
+  tx[i].setAttribute("style", "height:" + (tx[i].scrollHeight) + "px;overflow-y:hidden;");
+  tx[i].addEventListener("input", resize_textarea, false);
+}
+
+function resize_textarea() {
+  this.style.height = "auto";
+  this.style.height = (this.scrollHeight) + "px";
 }

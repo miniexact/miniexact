@@ -67,6 +67,7 @@ typedef struct miniexact_parser {
 
   size_t line;
   size_t col;
+  size_t pos;
 
   int dimacs_primaries, dimacs_secondaries;
   miniexact_dimacs_problem dimacs_problem;
@@ -115,6 +116,7 @@ next(miniexact_parser* p) {
     }
 
     ++p->col;
+    ++p->pos;
     if(c == '\n') {
       p->col = 0;
       ++p->line;
@@ -611,7 +613,8 @@ miniexact_parse_problem(miniexact_algorithm* a, const char* str) {
   return p.p;
 ERROR:
   miniexact_problem_free(p.p, a);
-  miniexact_err("Parse error at %u:%u %s", p.line, p.col, error);
+  miniexact_err(
+    "Parse error at %u:%u (pos %u) %s", p.line, p.col, p.pos, error);
   return NULL;
 }
 
@@ -655,6 +658,7 @@ miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
 ERROR:
   assert(problem);
   miniexact_problem_free(problem, a);
-  miniexact_err("Parse error at %u:%u %s", p.line, p.col, error);
+  miniexact_err(
+    "Parse error at %u:%u (pos %u) %s", p.line, p.col, p.pos, error);
   return NULL;
 }
