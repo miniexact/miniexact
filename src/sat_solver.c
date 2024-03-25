@@ -29,6 +29,17 @@
 #include <miniexact/sat_solver.h>
 #include <miniexact/util.h>
 
+// Deal with strlcpy.
+#if defined(OpenBSD)
+// OpenBSD has the strlcpy included.
+#else
+static inline size_t
+strlcpy(char* dst, const char* src, size_t size) {
+  (void)size;
+  return strcpy(dst, src) - src;
+}
+#endif
+
 #ifdef WIN32
 #include <io.h>
 #define F_OK 0
@@ -119,8 +130,9 @@ find_solver_id() {
     }
   }
 
-  miniexact_err("No SAT solver found! Please install one of the supported solvers.\n"
-      "Tried the following in $PATH:\n");
+  miniexact_err(
+    "No SAT solver found! Please install one of the supported solvers.\n"
+    "Tried the following in $PATH:\n");
   for(size_t i = 0; known_sat_solvers[i]; ++i) {
     miniexact_err("  %s\n", known_sat_solvers[i]);
   }
@@ -129,26 +141,26 @@ find_solver_id() {
 
 void
 miniexact_sat_solver_find_and_init(miniexact_sat_solver* solver,
-                             unsigned int variables,
-                             unsigned int clauses) {
+                                   unsigned int variables,
+                                   unsigned int clauses) {
   assert(solver);
 
   size_t solver_id = find_solver_id();
   miniexact_sat_solver_init(solver,
-                      variables,
-                      clauses,
-                      known_sat_solvers[solver_id],
-                      known_sat_solver_args[solver_id],
-                      environ);
+                            variables,
+                            clauses,
+                            known_sat_solvers[solver_id],
+                            known_sat_solver_args[solver_id],
+                            environ);
 }
 
 void
 miniexact_sat_solver_init(miniexact_sat_solver* solver,
-                    unsigned int variables,
-                    unsigned int clauses,
-                    char* binary,
-                    char* const argv[],
-                    char* envp[]) {
+                          unsigned int variables,
+                          unsigned int clauses,
+                          char* binary,
+                          char* const argv[],
+                          char* envp[]) {
   assert(solver);
 
   pipe(solver->infd);
@@ -203,7 +215,8 @@ miniexact_sat_solver_init(miniexact_sat_solver* solver,
     real_argv[arg_count + 1] = NULL;
 
     int status = execve(binary, real_argv, envp);
-    miniexact_err("Executing child \"%s\" failed! Error: %s\n", binary, strerror(errno));
+    miniexact_err(
+      "Executing child \"%s\" failed! Error: %s\n", binary, strerror(errno));
     exit(-1);
   }
 }
@@ -244,7 +257,10 @@ miniexact_sat_solver_binary(miniexact_sat_solver* solver, int a, int b) {
   fprintf(solver->infd_handle, "%d %d 0\n", a, b);
 }
 void
-miniexact_sat_solver_ternary(miniexact_sat_solver* solver, int a, int b, int c) {
+miniexact_sat_solver_ternary(miniexact_sat_solver* solver,
+                             int a,
+                             int b,
+                             int c) {
   assert(solver);
   assert(solver->infd_handle);
   miniexact_trc("[SAT] %d %d %d 0", a, b, c);
@@ -308,7 +324,8 @@ miniexact_sat_solver_solve(miniexact_sat_solver* solver) {
         fclose(solver->outfd_handle);
         return 20;
       default:
-        miniexact_err("Child SAT solver process had unexpected exit code %d!", exit_code);
+        miniexact_err("Child SAT solver process had unexpected exit code %d!",
+                      exit_code);
         fclose(solver->outfd_handle);
         return exit_code;
     }
