@@ -69,7 +69,7 @@ find_executable(const char* name, char** overwrite) {
   char* dirs = malloc(dirs_len + 1);
   if(!dirs)
     return false;
-  strcpy(dirs, environment);
+  strlcpy(dirs, environment, dirs_len + 1);
   bool res = false;
   const char* end = dirs + dirs_len + 1;
   for(char *dir = dirs, *q; !res && dir != end; dir = q) {
