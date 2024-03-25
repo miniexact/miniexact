@@ -95,10 +95,10 @@ miniexact_default_init_problem(miniexact_algorithm* a, miniexact_problem* p);
 bool
 miniexact_algorithm_from_select(int algorithm_select, miniexact_algorithm* algorithm);
 
-miniexact_algorithm* miniexact_algorithm_allocate();
-miniexact_algorithm* miniexact_algorithm_x_allocate();
-miniexact_algorithm* miniexact_algorithm_c_allocate();
-miniexact_algorithm* miniexact_algorithm_m_allocate();
+miniexact_algorithm* miniexact_algorithm_allocate(void);
+miniexact_algorithm* miniexact_algorithm_x_allocate(void);
+miniexact_algorithm* miniexact_algorithm_c_allocate(void);
+miniexact_algorithm* miniexact_algorithm_m_allocate(void);
 
 #ifdef __cplusplus
 }

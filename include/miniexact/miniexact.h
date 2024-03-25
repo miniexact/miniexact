@@ -145,7 +145,7 @@ bool
 miniexact_has_item(miniexact_link needle, miniexact_link* list, size_t len);
 
 miniexact_problem*
-miniexact_problem_allocate();
+miniexact_problem_allocate(void);
 
 void
 miniexact_problem_free_inner(miniexact_problem* p, miniexact_algorithm* a);

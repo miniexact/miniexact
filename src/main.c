@@ -29,7 +29,7 @@
 #include <miniexact/parse.h>
 
 static void
-print_help() {
+print_help(void) {
   printf("miniexact -- solve XCC problems using different algorithms, version " MINIEXACT_VERSION "\n");
   printf("OPTIONS:\n");
   printf("  -h\t\tprint help\n");
@@ -49,7 +49,7 @@ print_help() {
 }
 
 static void
-print_version() {
+print_version(void) {
   printf("%s\n", MINIEXACT_VERSION);
 }
 

@@ -8,10 +8,10 @@ extern "C" {
 #include <stdbool.h>
 
 bool
-miniexact_check_debug();
+miniexact_check_debug(void);
 
 bool
-miniexact_check_trace();
+miniexact_check_trace(void);
 
 void
 miniexact_trc(const char* format, ...);
