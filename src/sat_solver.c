@@ -105,11 +105,12 @@ find_executable(const char* name, char** overwrite) {
   return res;
 }
 
-static char* known_sat_solvers[] = { "kissat", "cadical", "lingeling", NULL };
+static char* known_sat_solvers[] = { "kissat", "cadical", "lingeling", "picosat", NULL };
 
 static char* known_sat_solver_args[][2] = { { "-q", NULL },
                                             { "-q", NULL },
                                             { "-q", NULL },
+					    { NULL },
                                             NULL };
 
 static size_t
