@@ -30,12 +30,14 @@
 
 static void
 print_help(void) {
-  printf("miniexact -- solve XCC problems using different algorithms, version " MINIEXACT_VERSION "\n");
+  printf("miniexact -- solve XCC problems using different algorithms, "
+         "version " MINIEXACT_VERSION "\n");
   printf("OPTIONS:\n");
   printf("  -h\t\tprint help\n");
   printf("  -p\t\tprint selected options\n");
   printf("  -e\t\tenumerate all solutions\n");
   printf("  -E\t\tprint the problem matrix in libExact format (only -x)\n");
+  printf("  -K\t\tgenerate K cheapest solutions (for $ variants)\n");
   printf("ALGORITHM SELECTORS:\n");
   printf("  --naive\tuse naive in-order for i selection\n");
   printf("  --mrv\t\tuse MRV for i selection (default)\n");
@@ -57,6 +59,7 @@ static void
 parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
   int c;
 
+  cfg->solutions = 1;
   int sel[5];
   memset(sel, 0, sizeof(sel));
 
@@ -67,6 +70,7 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
     { "print", no_argument, 0, 'p' },
     { "print-x", no_argument, 0, MINIEXACT_OPTION_PRINT_X },
     { "enumerate", no_argument, 0, 'e' },
+    { "solutions", required_argument, 0, 'K' },
     { "naive", no_argument, &sel[0], MINIEXACT_ALGORITHM_NAIVE },
     { "mrv", no_argument, &sel[1], MINIEXACT_ALGORITHM_MRV },
     { "smrv", no_argument, &sel[1], MINIEXACT_ALGORITHM_MRV },
@@ -81,7 +85,7 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "eEpsxcmkhVv", long_options, &option_index);
+    c = getopt_long(argc, argv, "eEK:psxcmkhVv", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -101,6 +105,15 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
         break;
       case 'e':
         cfg->enumerate = 1;
+        break;
+      case 'K':
+        cfg->solutions = atoi(optarg);
+        if(cfg->solutions == 0) {
+          miniexact_err("Option -K expects some number >0 to be given! Gave "
+                        "\"%s\" which evaluated to %d",
+                        optarg,
+                        cfg->solutions);
+        }
         break;
       case 'E':
         cfg->transform_to_libexact = 1;
@@ -150,6 +163,7 @@ process_file(miniexact_config* cfg) {
     return EXIT_FAILURE;
 
   p->cfg = cfg;
+  p->K = cfg->solutions;
 
   if(cfg->verbose)
     miniexact_print_problem_matrix(p);

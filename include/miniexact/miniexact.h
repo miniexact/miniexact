@@ -75,6 +75,7 @@ typedef struct miniexact_config {
   int enumerate;
   int transform_to_libexact;
   int algorithm_select;
+  int solutions;
   char* const* input_files;
   size_t input_files_count;
   size_t current_input_file;
@@ -117,13 +118,13 @@ typedef struct miniexact_problem {
   ARR(miniexact_link, ft)
   ARR(miniexact_link, slack)
   ARR(miniexact_link, bound)
-  ARR(miniexact_link, cost)
-  ARR(miniexact_link, best)
+  ARR(uint32_t, cost)
+  ARR(uint32_t, best)
 
   // Solution
   ARR(miniexact_link, x)
 
-  int N, N_1, M, i, j, l, p, q, Z;
+  int N, N_1, M, i, j, l, p, q, Z, K;
   int primary_item_count;
   int secondary_item_count;
   int option_count;

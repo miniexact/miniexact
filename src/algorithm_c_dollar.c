@@ -53,6 +53,10 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
         p->l = 0;
         p->state = C2;
         p->i = 0;
+        MINIEXACT_ARR_HASN(best, p->K + 1);
+        for(size_t i = 0; i <= p->K; ++i) {
+          BEST(i) = UINT32_MAX;
+        }
         break;
       }
       case C2:

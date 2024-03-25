@@ -3,6 +3,7 @@ set(TEST_SRCS
   test_solve.cpp
   test_util.cpp
   test_sat_solver.cpp
+  test_siftup.cpp
 )
 
 add_executable(tests ${TEST_SRCS})

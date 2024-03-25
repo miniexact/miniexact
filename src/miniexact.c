@@ -22,18 +22,20 @@
 
 #include <miniexact/algorithm.h>
 #include <miniexact/log.h>
-#include <miniexact/ops.h>
 #include <miniexact/miniexact.h>
+#include <miniexact/ops.h>
 
 miniexact_problem*
 miniexact_problem_allocate() {
-  return calloc(1, sizeof(miniexact_problem));
+  miniexact_problem* p = calloc(1, sizeof(miniexact_problem));
+  p->K = 1;// Generate one solution by default.
+  return p;
 }
 
 int
 miniexact_search_for_name(const char* needle,
-                    const miniexact_name* names,
-                    size_t names_size) {
+                          const miniexact_name* names,
+                          size_t names_size) {
   for(int i = 0; i < names_size; ++i) {
     if(names[i] && strcmp(names[i], needle) == 0) {
       return i;
@@ -90,6 +92,8 @@ miniexact_problem_free_inner(miniexact_problem* p, miniexact_algorithm* a) {
     free(p->bound);
   if(p->cost)
     free(p->cost);
+  if(p->best)
+    free(p->best);
 
   memset(p, 0, sizeof(miniexact_problem));
 }
@@ -208,7 +212,8 @@ miniexact_print_problem_solution(miniexact_problem* p) {
 }
 
 miniexact_link
-miniexact_extract_solution_option_indices(miniexact_problem* p, miniexact_link* solution) {
+miniexact_extract_solution_option_indices(miniexact_problem* p,
+                                          miniexact_link* solution) {
   assert(p);
   assert(solution);
 

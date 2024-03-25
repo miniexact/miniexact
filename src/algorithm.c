@@ -230,7 +230,8 @@ miniexact_default_init_problem(miniexact_algorithm* a, miniexact_problem* p) {
   MINIEXACT_ARR_ALLOC(miniexact_link, ft)
   MINIEXACT_ARR_ALLOC(miniexact_link, slack)
   MINIEXACT_ARR_ALLOC(miniexact_link, bound)
-  MINIEXACT_ARR_ALLOC(miniexact_link, cost)
+  MINIEXACT_ARR_ALLOC(uint32_t, cost)
+  MINIEXACT_ARR_ALLOC(uint32_t, best)
 
   LLINK(0) = 0;
   RLINK(0) = 0;
