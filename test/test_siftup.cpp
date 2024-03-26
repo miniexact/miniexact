@@ -1,7 +1,8 @@
 #include <algorithm>
-#include <numeric>
 #include <array>
 #include <iostream>
+#include <limits>
+#include <numeric>
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -15,21 +16,32 @@ print_arr(T& arr) {
   std::cout << std::endl;
 }
 
-void test_two_arr(uint32_t inserted) {
-  
-}
+void
+test_two_arr(uint32_t inserted) {}
 
 TEST_CASE("heap_siftup_uint32") {
   std::array<uint32_t, 8> arr, arr2;
-  std::iota(arr.begin() + 1, arr.end(), 10);
-  std::make_heap(arr.begin() + 1, arr.end());
-  
-  print_arr(arr);
-  heap_siftup(arr.data(), arr.size() - 2, 20);
-  heap_siftup(arr.data(), arr.size() - 2, 10);
-  heap_siftup(arr.data(), arr.size() - 2, 12);
-  heap_siftup(arr.data(), arr.size() - 2, 12);
-  print_arr(arr);
+  std::fill(arr.begin(), arr.end(), std::numeric_limits<uint32_t>::max());
 
-  // REQUIRE(false);
+  heap_siftup(arr.data(), arr.size(), 10);
+  heap_siftup(arr.data(), arr.size(), 20);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 5);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 5);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 5);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 2);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 3);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 8);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 5);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 5);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
+  heap_siftup(arr.data(), arr.size(), 8);
+  REQUIRE(std::is_heap(arr.begin(), arr.end()));
 }
