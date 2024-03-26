@@ -45,10 +45,10 @@ class miniexacts_wrapper {
     return miniexacts_define_color(h_.get(), name);
   }
 
-  int32_t add(const char* name, const char* color = NULL, uint32_t cost = 0) {
+  int32_t add(const char* name, const char* color = NULL, int32_t cost = 0) {
     return miniexacts_add_named(h_.get(), name, color, cost);
   }
-  int32_t add(int32_t item, int32_t color = 0, uint32_t cost = 0) {
+  int32_t add(int32_t item, int32_t color = 0, int32_t cost = 0) {
     return miniexacts_add(h_.get(), item, color, cost);
   }
 

@@ -322,7 +322,7 @@ parse_dimacs_kissat(miniexact_parser* p,
     } else if(ch == '$') {
       ch = GETC(p);
       ++p->col;
-      cost = 0;
+      cost = ch - '0';
       while(ISDIGIT(ch = GETC(p))) {
         ++p->col;
         cost *= 10;
@@ -332,7 +332,8 @@ parse_dimacs_kissat(miniexact_parser* p,
       continue;
     } else if(!ISDIGIT(ch))
       return "expected digit, $, or '-'";
-    sign = 1;
+    else
+      sign = 1;
     assert(ISDIGIT(ch));
     int idx = ch - '0';
     while(ISDIGIT(ch = GETC(p))) {

@@ -20,8 +20,8 @@ void
 test_two_arr(uint32_t inserted) {}
 
 TEST_CASE("heap_siftup_uint32") {
-  std::array<uint32_t, 8> arr, arr2;
-  std::fill(arr.begin(), arr.end(), std::numeric_limits<uint32_t>::max());
+  std::array<int32_t, 8> arr, arr2;
+  std::fill(arr.begin(), arr.end(), std::numeric_limits<int32_t>::max());
 
   heap_siftup(arr.data(), arr.size(), 10);
   heap_siftup(arr.data(), arr.size(), 20);

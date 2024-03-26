@@ -5,7 +5,7 @@
 // USAGE:
 //
 // Define the type you want to use for siftup array. Then, generate
-// the implementation by including the file. Default is uint32_t.
+// the implementation by including the file. Default is int32_t.
 //
 // Requires that R is currently a heap.
 
@@ -20,7 +20,7 @@ extern "C" {
 
 #ifndef SIFTUP_v
 #include <stdint.h>
-#define SIFTUP_v uint32_t
+#define SIFTUP_v int32_t
 #endif
 
 static inline int

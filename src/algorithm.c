@@ -18,10 +18,12 @@
 #include "miniexact/miniexact.h"
 #include <miniexact/algorithm.h>
 #include <miniexact/algorithm_c.h>
+#include <miniexact/algorithm_c_dollar.h>
 #include <miniexact/algorithm_knuth_cnf.h>
 #include <miniexact/algorithm_m.h>
 #include <miniexact/algorithm_x.h>
 #include <miniexact/ops.h>
+#include <stdint.h>
 
 static inline const char*
 define_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link l) {
@@ -163,6 +165,7 @@ add_item_with_color(miniexact_algorithm* a,
   MINIEXACT_ARR_PLUS1(dlink)
   MINIEXACT_ARR_PLUS1(ulink)
   MINIEXACT_ARR_PLUS1(color)
+  MINIEXACT_ARR_PLUS1(cost)
 
   ++p->j;
 
@@ -184,11 +187,21 @@ add_item(miniexact_algorithm* a, miniexact_problem* p, miniexact_link ij) {
 }
 
 static const char*
-end_option(miniexact_algorithm* a, miniexact_problem* p, miniexact_link cost) {
+end_option(miniexact_algorithm* a, miniexact_problem* p, int32_t cost) {
   MINIEXACT_ARR_PLUS1(len)
   MINIEXACT_ARR_PLUS1(dlink)
   MINIEXACT_ARR_PLUS1(ulink)
   MINIEXACT_ARR_PLUS1(color)
+  MINIEXACT_ARR_PLUS1(cost)
+
+  if(cost < p->max_option_cost) {
+    return "Costs are not ordered! Each option may have equal or increasing "
+           "costs.";
+  }
+  p->max_option_cost = cost;
+  for(miniexact_link i = p->p; i <= p->p + p->j + 1; ++i) {
+    COST(i) = cost;
+  }
 
   p->M = p->M + 1;
   DLINK(p->p) = p->p + p->j;
@@ -232,6 +245,8 @@ miniexact_default_init_problem(miniexact_algorithm* a, miniexact_problem* p) {
   MINIEXACT_ARR_ALLOC(miniexact_link, bound)
   MINIEXACT_ARR_ALLOC(uint32_t, cost)
   MINIEXACT_ARR_ALLOC(uint32_t, best)
+  MINIEXACT_ARR_ALLOC(uint32_t, tho)
+  MINIEXACT_ARR_ALLOC(uint32_t, th)
 
   LLINK(0) = 0;
   RLINK(0) = 0;
@@ -255,12 +270,25 @@ miniexact_default_init_problem(miniexact_algorithm* a, miniexact_problem* p) {
 }
 
 miniexact_link
-miniexact_choose_i_naively(miniexact_algorithm* a, miniexact_problem* p) {
+miniexact_choose_i_naively(miniexact_algorithm* a,
+                           miniexact_problem* p,
+                           int32_t t) {
+  (void)t;
   return RLINK(0);
 }
 
 miniexact_link
-miniexact_choose_i_mrv(miniexact_algorithm* a, miniexact_problem* p) {
+miniexact_choose_i_naively_cost(miniexact_algorithm* a,
+                                miniexact_problem* p,
+                                int32_t t) {
+  return RLINK(0);
+}
+
+miniexact_link
+miniexact_choose_i_mrv(miniexact_algorithm* a,
+                       miniexact_problem* p,
+                       int32_t t) {
+  (void)t;
   miniexact_link i = RLINK(0);
   miniexact_link p_ = RLINK(0), theta = MINIEXACT_LINK_MAX;
   while(p_ != 0) {
@@ -278,7 +306,55 @@ miniexact_choose_i_mrv(miniexact_algorithm* a, miniexact_problem* p) {
 }
 
 miniexact_link
-miniexact_choose_i_mrv_slacker(miniexact_algorithm* a, miniexact_problem* p) {
+miniexact_choose_i_mrv_cost(miniexact_algorithm* a,
+                            miniexact_problem* p,
+                            int32_t cutoff) {
+  // This implementation stems from the solution to exercise 248,
+  // 7.2.2.1 (Page 288, Fascicle 4).
+  
+  const int32_t L = 10; // Magic from Knuth.
+  int32_t t = INT32_MAX;
+  int32_t c = 0;
+  miniexact_link j = RLINK(0);
+  miniexact_link i = j;
+  while(j > 0) {
+    miniexact_link s = 0;
+    miniexact_link p_ = DLINK(j);
+    int32_t c_prime = COST(p_);
+    if(p_ == j || c_prime >= cutoff) {
+      return -1;
+    } else {
+      s = 1;
+      p_ = DLINK(p_);
+      for(;;) {
+	if(p_ == j || COST(p_) >= cutoff)
+	  break;
+	else if(s == t) {
+	  s = s + 1;
+	  break;
+	} else if(s >= L) {
+	  s = LEN(p->l);
+	  break;
+	} else {
+	  s = s + 1;
+	  p_ = DLINK(p_);
+	}
+      }
+      if(s < t || (s == t && c < c_prime)) {
+	t = s;
+	i = j;
+	c = c_prime;
+      }
+      j = RLINK(j);
+    }
+  }
+  return i;
+}
+
+miniexact_link
+miniexact_choose_i_mrv_slacker(miniexact_algorithm* a,
+                               miniexact_problem* p,
+                               int32_t t) {
   miniexact_link theta = MINIEXACT_LINK_MAX;
   miniexact_link i = RLINK(0);
   miniexact_link p_ = RLINK(0);
@@ -325,6 +401,9 @@ miniexact_algorithm_from_select(int algorithm_select,
   } else if(algorithm_select & MINIEXACT_ALGORITHM_C) {
     miniexact_algorithm_c_set(algorithm);
     success = true;
+  } else if(algorithm_select & MINIEXACT_ALGORITHM_C_DOLLAR) {
+    miniexact_algorithm_c_dollar_set(algorithm);
+    success = true;
   } else if(algorithm_select & MINIEXACT_ALGORITHM_M) {
     miniexact_algorithm_m_set(algorithm);
     // Set default for Algorithm M. May be overriden, as it is later the first
@@ -338,14 +417,23 @@ miniexact_algorithm_from_select(int algorithm_select,
 #endif
   }
 
-  if(algorithm_select & MINIEXACT_ALGORITHM_MRV_SLACKER) {
-    algorithm->choose_i = &miniexact_choose_i_mrv_slacker;
-  }
-  if(algorithm_select & MINIEXACT_ALGORITHM_NAIVE) {
-    algorithm->choose_i = &miniexact_choose_i_naively;
-  }
-  if(algorithm_select & MINIEXACT_ALGORITHM_MRV) {
-    algorithm->choose_i = &miniexact_choose_i_mrv;
+  if(algorithm_select & MINIEXACT_ALGORITHM_DOLLARS) {
+    if(algorithm_select & MINIEXACT_ALGORITHM_NAIVE) {
+      algorithm->choose_i = &miniexact_choose_i_naively_cost;
+    }
+    if(algorithm_select & MINIEXACT_ALGORITHM_MRV) {
+      algorithm->choose_i = &miniexact_choose_i_mrv_cost;
+    }
+  } else {
+    if(algorithm_select & MINIEXACT_ALGORITHM_MRV_SLACKER) {
+      algorithm->choose_i = &miniexact_choose_i_mrv_slacker;
+    }
+    if(algorithm_select & MINIEXACT_ALGORITHM_NAIVE) {
+      algorithm->choose_i = &miniexact_choose_i_naively;
+    }
+    if(algorithm_select & MINIEXACT_ALGORITHM_MRV) {
+      algorithm->choose_i = &miniexact_choose_i_mrv;
+    }
   }
 
   return success;
@@ -374,5 +462,12 @@ miniexact_algorithm*
 miniexact_algorithm_m_allocate() {
   miniexact_algorithm* a = miniexact_algorithm_allocate();
   miniexact_algorithm_m_set(a);
+  return a;
+}
+
+miniexact_algorithm*
+miniexact_algorithm_c_dollar_allocate() {
+  miniexact_algorithm* a = miniexact_algorithm_allocate();
+  miniexact_algorithm_c_dollar_set(a);
   return a;
 }

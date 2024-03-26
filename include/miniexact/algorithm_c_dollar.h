@@ -15,8 +15,8 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef MINIEXACT_ALGORITHM_C_H
-#define MINIEXACT_ALGORITHM_C_H
+#ifndef MINIEXACT_ALGORITHM_C_DOLLAR_H
+#define MINIEXACT_ALGORITHM_C_DOLLAR_H
 
 #ifdef __cplusplus
 extern "C" {

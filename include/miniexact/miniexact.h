@@ -88,7 +88,9 @@ typedef enum miniexact_algorithm_id {
   MINIEXACT_ALGORITHM_X = 1 << 4,
   MINIEXACT_ALGORITHM_C = 1 << 5,
   MINIEXACT_ALGORITHM_M = 1 << 6,
-  MINIEXACT_ALGORITHM_KNUTH_CNF = 1 << 7
+  MINIEXACT_ALGORITHM_KNUTH_CNF = 1 << 7,
+  MINIEXACT_ALGORITHM_DOLLARS = 1 << 8,
+  MINIEXACT_ALGORITHM_C_DOLLAR = 1 << 8
 } miniexact_algorithm_id;
 
 #define MINIEXACT_LONG_OPTIONS (1 << 20)
@@ -118,8 +120,10 @@ typedef struct miniexact_problem {
   ARR(miniexact_link, ft)
   ARR(miniexact_link, slack)
   ARR(miniexact_link, bound)
-  ARR(uint32_t, cost)
-  ARR(uint32_t, best)
+  ARR(int32_t, cost)
+  ARR(int32_t, best)
+  ARR(int32_t, tho)
+  ARR(int32_t, th)
 
   // Solution
   ARR(miniexact_link, x)
@@ -130,6 +134,7 @@ typedef struct miniexact_problem {
   int option_count;
   int state;
   int longest_option;
+  int32_t max_option_cost;
 
   void* algorithm_userdata;
   miniexact_config* cfg;

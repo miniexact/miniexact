@@ -94,6 +94,10 @@ miniexact_problem_free_inner(miniexact_problem* p, miniexact_algorithm* a) {
     free(p->cost);
   if(p->best)
     free(p->best);
+  if(p->tho)
+    free(p->tho);
+  if(p->th)
+    free(p->th);
 
   memset(p, 0, sizeof(miniexact_problem));
 }

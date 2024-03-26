@@ -27,45 +27,69 @@ extern "C" {
 typedef struct miniexact_algorithm miniexact_algorithm;
 
 typedef const char* (*miniexact_define_primary_item)(miniexact_algorithm* a,
-                                               miniexact_problem* p,
-                                               miniexact_link n);
-typedef const char* (*miniexact_define_primary_item_with_range)(miniexact_algorithm* a,
-                                                          miniexact_problem* p,
-                                                          miniexact_link n,
-                                                          miniexact_link slack,
-                                                          miniexact_link bound);
+                                                     miniexact_problem* p,
+                                                     miniexact_link n);
+typedef const char* (*miniexact_define_primary_item_with_range)(
+  miniexact_algorithm* a,
+  miniexact_problem* p,
+  miniexact_link n,
+  miniexact_link slack,
+  miniexact_link bound);
 
 typedef const char* (*miniexact_define_secondary_item)(miniexact_algorithm* a,
-                                                 miniexact_problem* p,
-                                                 miniexact_link n);
+                                                       miniexact_problem* p,
+                                                       miniexact_link n);
 
 typedef const char* (*miniexact_add_item)(miniexact_algorithm* a,
-                                    miniexact_problem* p,
-                                    miniexact_link l);
+                                          miniexact_problem* p,
+                                          miniexact_link l);
 typedef const char* (*miniexact_add_item_with_color)(miniexact_algorithm* a,
-                                               miniexact_problem* p,
-                                               miniexact_link l,
-                                               miniexact_color color);
-typedef const char* (*miniexact_end_option)(miniexact_algorithm* a, miniexact_problem* p, miniexact_link cost);
-typedef const char* (*miniexact_prepare_options)(miniexact_algorithm* a, miniexact_problem* p);
-typedef const char* (*miniexact_end_options)(miniexact_algorithm* a, miniexact_problem* p);
+                                                     miniexact_problem* p,
+                                                     miniexact_link l,
+                                                     miniexact_color color);
+typedef const char* (*miniexact_end_option)(miniexact_algorithm* a,
+                                            miniexact_problem* p,
+                                            int32_t cost);
+typedef const char* (*miniexact_prepare_options)(miniexact_algorithm* a,
+                                                 miniexact_problem* p);
+typedef const char* (*miniexact_end_options)(miniexact_algorithm* a,
+                                             miniexact_problem* p);
 
-typedef const char* (*miniexact_init_problem)(miniexact_algorithm* a, miniexact_problem* p);
+typedef const char* (*miniexact_init_problem)(miniexact_algorithm* a,
+                                              miniexact_problem* p);
 
-typedef bool (*miniexact_compute_next_result)(miniexact_algorithm* a, miniexact_problem* p);
+typedef bool (*miniexact_compute_next_result)(miniexact_algorithm* a,
+                                              miniexact_problem* p);
 
-typedef miniexact_link (*miniexact_choose_i)(miniexact_algorithm* a, miniexact_problem* p);
+typedef miniexact_link (*miniexact_choose_i)(miniexact_algorithm* a,
+                                             miniexact_problem* p,
+                                             int32_t T);
 
-typedef void (*miniexact_userdata_free)(miniexact_algorithm* a, miniexact_problem* p);
+typedef void (*miniexact_userdata_free)(miniexact_algorithm* a,
+                                        miniexact_problem* p);
 
 miniexact_link
-miniexact_choose_i_naively(miniexact_algorithm* a, miniexact_problem* p);
+miniexact_choose_i_naively(miniexact_algorithm* a,
+                           miniexact_problem* p,
+                           int32_t t);
 
 miniexact_link
-miniexact_choose_i_mrv(miniexact_algorithm* a, miniexact_problem* p);
+miniexact_choose_i_naively_cost(miniexact_algorithm* a,
+                                miniexact_problem* p,
+                                int32_t t);
 
 miniexact_link
-miniexact_choose_i_mrv_slacker(miniexact_algorithm* a, miniexact_problem* p);
+miniexact_choose_i_mrv(miniexact_algorithm* a, miniexact_problem* p, int32_t t);
+
+miniexact_link
+miniexact_choose_i_mrv_cost(miniexact_algorithm* a,
+                            miniexact_problem* p,
+                            int32_t t);
+
+miniexact_link
+miniexact_choose_i_mrv_slacker(miniexact_algorithm* a,
+                               miniexact_problem* p,
+                               int32_t t);
 
 typedef struct miniexact_algorithm {
   miniexact_define_primary_item define_primary_item;
@@ -93,12 +117,17 @@ const char*
 miniexact_default_init_problem(miniexact_algorithm* a, miniexact_problem* p);
 
 bool
-miniexact_algorithm_from_select(int algorithm_select, miniexact_algorithm* algorithm);
+miniexact_algorithm_from_select(int algorithm_select,
+                                miniexact_algorithm* algorithm);
 
-miniexact_algorithm* miniexact_algorithm_allocate(void);
-miniexact_algorithm* miniexact_algorithm_x_allocate(void);
-miniexact_algorithm* miniexact_algorithm_c_allocate(void);
-miniexact_algorithm* miniexact_algorithm_m_allocate(void);
+miniexact_algorithm*
+miniexact_algorithm_allocate(void);
+miniexact_algorithm*
+miniexact_algorithm_x_allocate(void);
+miniexact_algorithm*
+miniexact_algorithm_c_allocate(void);
+miniexact_algorithm*
+miniexact_algorithm_m_allocate(void);
 
 #ifdef __cplusplus
 }

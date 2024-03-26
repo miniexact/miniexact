@@ -64,7 +64,7 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
         p->state = C3;
         break;
       case C3:
-        p->i = a->choose_i(a, p);
+        p->i = a->choose_i(a, p, 0);
         p->state = C4;
         break;
       case C4:

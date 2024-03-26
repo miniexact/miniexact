@@ -60,7 +60,7 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
   int c;
 
   cfg->solutions = 1;
-  int sel[5];
+  int sel[6];
   memset(sel, 0, sizeof(sel));
 
   struct option long_options[] = {
@@ -78,6 +78,7 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
     { "c", no_argument, &sel[3], MINIEXACT_ALGORITHM_C },
     { "m", no_argument, &sel[3], MINIEXACT_ALGORITHM_M },
     { "k", no_argument, &sel[4], MINIEXACT_ALGORITHM_KNUTH_CNF },
+    { "C", no_argument, &sel[5], MINIEXACT_ALGORITHM_C_DOLLAR },
     { 0, 0, 0, 0 }
   };
 
@@ -85,7 +86,7 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "eEK:psxcmkhVv", long_options, &option_index);
+    c = getopt_long(argc, argv, "eEK:psxcmkChVv", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -132,6 +133,9 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
         break;
       case 'k':
         cfg->algorithm_select |= MINIEXACT_ALGORITHM_KNUTH_CNF;
+        break;
+      case 'C':
+        cfg->algorithm_select |= MINIEXACT_ALGORITHM_C_DOLLAR;
         break;
       default:
         break;

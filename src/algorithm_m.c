@@ -62,7 +62,7 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
         p->state = M3;
         break;
       case M3:
-        p->i = a->choose_i(a, p);
+        p->i = a->choose_i(a, p, 0);
         assert(p->i <= p->primary_item_count);
         if(THETA(p->i) == 0) {
           p->state = M9;

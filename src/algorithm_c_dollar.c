@@ -22,7 +22,9 @@
 
 #include <miniexact/algorithm.h>
 #include <miniexact/algorithm_c_dollar.h>
+#include <miniexact/miniexact.h>
 #include <miniexact/ops.h>
+#include <miniexact/siftup.h>
 
 typedef enum c_dollar_state { C1, C2, C3, C4, C5, C6, C7, C8 } c_state;
 
@@ -35,6 +37,8 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
   }
 
   assert(a->choose_i);
+
+  int32_t threshold = 0;
 
   while(true) {
     // State print:
@@ -55,7 +59,7 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
         p->i = 0;
         MINIEXACT_ARR_HASN(best, p->K + 1);
         for(size_t i = 0; i <= p->K; ++i) {
-          BEST(i) = UINT32_MAX;
+          BEST(i) = INT32_MAX;
         }
         break;
       }
@@ -63,21 +67,32 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
         if(RLINK(0) == 0) {
           p->state = C8;
           p->x_size = p->l;
+          heap_siftup(p->best, p->best_size, PART_SOL_COST());
           return true;
         }
         p->state = C3;
         break;
       case C3:
-        p->i = a->choose_i(a, p);
-        p->state = C4;
+        p->i = a->choose_i(a, p, BEST(0));
+        p->state = p->i >= 0 ? C4 : C8;
         break;
       case C4:
-        COVER_PRIME(p->i);
+        MINIEXACT_ARR_HASN(tho, p->l);
         p->x[p->l] = DLINK(p->i);
+        threshold = BEST(0) - PART_SOL_COST() - COST(p->x[p->l]);
+        // printf("L: %d, Chosen i: %d, Threshold: %d, Part Sol Cost: %d, Cost:
+        // %d\n",
+        //        p->l, p->i, threshold, PART_SOL_COST(), COST(p->x[p->l]));
+        assert(threshold > 0);
+        THO(p->l) = threshold;
+        COVER_PRIME_THRESHOLD(p->i, threshold);
         p->state = C5;
         break;
       case C5:
-        if(p->x[p->l] == p->i) {
+        MINIEXACT_ARR_HASN(th, p->l);
+        threshold = BEST(0) - PART_SOL_COST() - COST(p->x[p->l]);
+        TH(p->l) = threshold;
+        if(p->x[p->l] == p->i || threshold <= 0) {
           p->state = C7;
           break;
         }
@@ -87,7 +102,7 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
           if(j <= 0) {
             p->p = ULINK(p->p);
           } else {
-            COMMIT(p->p, j);
+            COMMIT_THRESHOLD(p->p, j, threshold);
             p->p = p->p + 1;
           }
         }
@@ -101,7 +116,7 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
           if(j <= 0) {
             p->p = DLINK(p->p);
           } else {
-            UNCOMMIT(p->p, j);
+            UNCOMMIT_THRESHOLD(p->p, j, TH(p->l));
             p->p = p->p - 1;
           }
         }
@@ -110,7 +125,7 @@ compute_next_result(miniexact_algorithm* a, miniexact_problem* p) {
         p->state = C5;
         break;
       case C7:
-        UNCOVER_PRIME(p->i);
+        UNCOVER_PRIME_THRESHOLD(p->i, THO(p->l));
         p->state = C8;
         break;
       case C8:
@@ -131,5 +146,5 @@ miniexact_algorithm_c_dollar_set(miniexact_algorithm* a) {
   miniexact_algorithm_standard_functions(a);
 
   a->compute_next_result = &compute_next_result;
-  a->choose_i = &miniexact_choose_i_mrv;
+  a->choose_i = &miniexact_choose_i_mrv_cost;
 }
