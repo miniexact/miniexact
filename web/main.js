@@ -53,8 +53,8 @@ function matchError(e) {
 	let pos = arr[3];
 	input.focus();
 	input.select();
-	input.selectionStart = pos - 1;
-	input.selectionEnd = pos - 1;
+	input.selectionStart = pos;
+	input.selectionEnd = pos;
 	focused_on_error = true;
     }
 }
