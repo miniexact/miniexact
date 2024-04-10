@@ -30,7 +30,7 @@
 #include <miniexact/util.h>
 
 // Deal with strlcpy.
-#if defined(OpenBSD)
+#if defined(OpenBSD) || defined(__APPLE_CC__)
 // OpenBSD has the strlcpy included.
 #else
 static inline size_t
