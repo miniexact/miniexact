@@ -13,6 +13,12 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+include(CheckSymbolExists)
+check_symbol_exists(strlcpy "string.h" HAVE_STRLCPY)
+if(HAVE_STRLCPY)
+  add_compile_definitions(HAVE_STRLCPY)
+endif()
+
 add_subdirectory(src)
 
 if(NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")

@@ -30,8 +30,8 @@
 #include <miniexact/util.h>
 
 // Deal with strlcpy.
-#if defined(__FreeBSD__) || defined(OpenBSD) || defined(__APPLE_CC__)
-// OpenBSD has the strlcpy included.
+#if HAVE_STRLCPY
+// Many systems already have this function defined.
 #else
 static inline size_t
 strlcpy(char* dst, const char* src, size_t size) {
