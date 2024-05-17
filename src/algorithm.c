@@ -360,7 +360,7 @@ miniexact_choose_i_mrv_slacker(miniexact_algorithm* a,
   miniexact_link p_ = RLINK(0);
   while(p_ != 0) {
     miniexact_link lambda = THETA(p_);
-    if(lambda < theta || (lambda == theta && SLACK(p_) == SLACK(i)) ||
+    if(lambda < theta || (lambda == theta && SLACK(p_) < SLACK(i)) ||
        (lambda == theta && SLACK(p_) == SLACK(i) && LEN(p_) > LEN(i))) {
       theta = lambda;
       i = p_;
