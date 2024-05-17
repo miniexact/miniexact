@@ -45,30 +45,33 @@ else()
   add_compile_definitions(MINIEXACT_SAT_SOLVER_AVAILABLE)
 endif()
 
-add_library(miniexact-obj OBJECT
-  ${SRCS}
-  ${SRCS_SAT}
-)
-set_property(TARGET miniexact-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
-target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+if(NOT ${CMAKE_C_COMPILER} MATCHES "cosmo")
+  add_library(miniexact-obj OBJECT
+    ${SRCS}
+    ${SRCS_SAT}
+  )
+  set_property(TARGET miniexact-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+  target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-add_library(miniexact-static STATIC $<TARGET_OBJECTS:miniexact-obj>)
+  add_library(miniexact-static STATIC $<TARGET_OBJECTS:miniexact-obj>)
 
-message(STATUS ${CMAKE_C_COMPILER})
+  if(NOT "${CMAKE_C_COMPILER}" MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    add_library(miniexact SHARED $<TARGET_OBJECTS:miniexact-obj>)
+    target_include_directories(miniexact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  endif()
 
-if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-  add_library(miniexact SHARED $<TARGET_OBJECTS:miniexact-obj>)
-  target_include_directories(miniexact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(miniexact-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+  add_executable(miniexactsolve ${SRCS_MAIN})
+  target_link_libraries(miniexactsolve miniexact-static)
+else()
+  add_executable(miniexactsolve ${SRCS_MAIN} ${SRCS} ${SRCS_SAT})
+  target_include_directories(miniexactsolve PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(miniexactsolve PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-target_include_directories(miniexact-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-add_executable(miniexactsolve ${SRCS_MAIN})
 set_target_properties(miniexactsolve PROPERTIES OUTPUT_NAME "miniexact")
-
-target_link_libraries(miniexactsolve miniexact-static)
-
 add_compile_definitions(miniexactsolve PRIVATE MINIEXACT_VERSION="${CMAKE_PROJECT_VERSION}")
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
