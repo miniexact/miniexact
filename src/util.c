@@ -26,6 +26,10 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
       return_code = 20;
       break;
     } else {
+      // Fix for spurious solutions. This seems like an edge-case in the solver?
+      if(p->option_count == 1 && solution > 0) {
+        break;
+      }
       ++solution;
       return_code = 10;
 
