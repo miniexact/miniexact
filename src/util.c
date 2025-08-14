@@ -73,7 +73,7 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
         }
         printf("\n");
       } else {
-        miniexact_link solution[p->l];
+        miniexact_link *solution = malloc(sizeof(miniexact_link) * p->l);
         miniexact_link l =
           miniexact_extract_solution_option_indices(p, solution);
         if(l > 0) {
@@ -83,6 +83,7 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
           printf("\n");
           ++nr_of_solutions;
         }
+        free(solution);
       }
     }
     if(cfg->enumerate)
@@ -119,8 +120,8 @@ miniexact_iterate_solution_options_str(struct miniexact_problem* p,
                                        void* userdata) {
   assert(p);
   assert(it);
-  const char* names[p->longest_option];
-  const char* colors[p->longest_option];
+  const char** names = malloc(sizeof(char*) * p->longest_option);
+  const char** colors = malloc(sizeof(char*) * p->longest_option);
 
   for(miniexact_link o = 0; o < p->l; ++o) {
     memset(names, 0, p->longest_option);
@@ -152,4 +153,7 @@ miniexact_iterate_solution_options_str(struct miniexact_problem* p,
       i = 0;
     }
   }
+
+  free(colors);
+  free(names);
 }
