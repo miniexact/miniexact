@@ -1,5 +1,10 @@
 # MiniExact Changelog
 
+## Version 1.2.8
+
+  - Use cibuildwheel to directly build binary packages for many
+    platforms automatically.
+
 ## Version 1.2.7
 
   - Use the system Python version in the publish workflow.
