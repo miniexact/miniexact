@@ -33,12 +33,7 @@ typedef struct miniexact_algorithm miniexact_algorithm;
 
 #define MINIEXACT_LINK_MAX INT32_MAX
 
-#define MINIEXACT_MAX(a, b)       \
-  ({                        \
-    __typeof__(a) _a = (a); \
-    __typeof__(b) _b = (b); \
-    _a > _b ? _a : _b;      \
-  })
+#define MINIEXACT_MAX(a, b) (((a)>(b))?(a):(b))
 
 #define ARR(TYPE, NAME) \
   TYPE* NAME;           \
