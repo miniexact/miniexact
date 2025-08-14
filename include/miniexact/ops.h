@@ -131,12 +131,7 @@ miniexact_unhide_prime_dollar(miniexact_problem* p, miniexact_link p_);
 #define PART_SOL_COST() miniexact_partial_solution_cost(p)
 
 // Taken from https://stackoverflow.com/a/3437484
-#define MAX(a, b)           \
-  ({                        \
-    __typeof__(a) _a = (a); \
-    __typeof__(b) _b = (b); \
-    _a > _b ? _a : _b;      \
-  })
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 // Defined in Fascicle 5, page 271 (Answer to exercise 166)
 #define MONUS(X, Y) MAX(X - Y, 0)
