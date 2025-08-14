@@ -4,6 +4,8 @@ project(miniexact VERSION 1.2.8)
 # Set a default build type if none was specified
 set(default_build_type "Release")
 
+set(CMAKE_CXX_STANDARD 20)
+
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
