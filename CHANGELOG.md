@@ -1,5 +1,10 @@
 # MiniExact Changelog
 
+## Version 1.2.4
+
+  - Build Wheel in publishing step.
+  - Fix Website release.
+
 ## Version 1.2.3
 
   - Fix tests by fixing Catch2 includes.
