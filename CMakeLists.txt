@@ -37,6 +37,12 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   set(SRCS_MAIN
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main_web.cpp
   )
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  message(STATUS "Compiling on ${CMAKE_SYSTEM_NAME}, so no SAT solver available.")
+  set(SRCS_SAT)
+  set(SRCS_MAIN
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+  )
 else()
   set(SRCS_SAT
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sat_solver.c
