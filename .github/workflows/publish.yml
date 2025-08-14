@@ -21,6 +21,6 @@ jobs:
           python-version: "3.x"
       - name: Build package
         run: |
-          pip install .
+          pip wheel -w dist .
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

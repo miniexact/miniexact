@@ -133,3 +133,6 @@ xcc/xcc_lexer.h
 
 web/xccsolve.js
 web/xccsolve.wasm
+
+dist
+*.whl
