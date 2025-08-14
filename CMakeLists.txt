@@ -4,6 +4,8 @@ project(miniexact VERSION 1.1)
 # Set a default build type if none was specified
 set(default_build_type "Release")
 
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
   set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
@@ -129,16 +131,17 @@ elseif(NOT CMAKE_C_COMPILER MATCHES "cosmo")
 endif()
 
 if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-  find_package(Catch2)
-  if(TARGET Catch2::Catch2)
-    add_subdirectory(test)
-    set_target_properties(tests
-      PROPERTIES
-      ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-  endif()
+  add_subdirectory(test)
+  set_target_properties(tests
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  )
+
+  # Ensure that there is a "test" target.
+  include(CTest)
+  add_test(tests tests)
 endif()
 
 install(TARGETS miniexact)

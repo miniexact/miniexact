@@ -4,9 +4,15 @@ set(TEST_SRCS
   test_util.cpp
   test_sat_solver.cpp
   test_siftup.cpp
+
+  catch_amalgamated.cpp
 )
 
 add_executable(tests ${TEST_SRCS})
 
 target_link_libraries(tests PRIVATE miniexact)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(tests)
+
