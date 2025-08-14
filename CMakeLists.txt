@@ -144,6 +144,8 @@ if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL 
   # Ensure that there is a "test" target.
   include(CTest)
   add_test(tests tests)
+else()
+  include(CTest)
 endif()
 
 if(TARGET miniexact)
