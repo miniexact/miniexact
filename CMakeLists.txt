@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.18)
 project(miniexact VERSION 1.2.8)
 
 # Set a default build type if none was specified
