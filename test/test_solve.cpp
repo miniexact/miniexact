@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <vector>
 
-#include <catch2/catch_test_macros.hpp>
+#include <catch_amalgamated.hpp>
 
 #include <miniexact/algorithm.h>
 #include <miniexact/algorithm_m.h>

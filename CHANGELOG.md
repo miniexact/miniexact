@@ -1,5 +1,9 @@
 # MiniExact Changelog
 
+## Version 1.2.3
+
+  - Fix tests by fixing Catch2 includes.
+
 ## Version 1.2.2
 
   - Add Catch2 amalgamated sources, so `make test` always works.

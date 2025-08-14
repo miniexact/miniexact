@@ -4,7 +4,7 @@
 #include <limits>
 #include <numeric>
 
-#include <catch2/catch_test_macros.hpp>
+#include <catch_amalgamated.hpp>
 
 #include <miniexact/siftup.h>
 
