@@ -22,5 +22,7 @@ jobs:
       - name: Build package
         run: |
           pip wheel -w dist .
+      - name: Remove superflous cmeel package
+        run: rm dist/cmeel*
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
