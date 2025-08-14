@@ -84,7 +84,7 @@ endif()
 set_target_properties(miniexactsolve PROPERTIES OUTPUT_NAME "miniexact")
 add_compile_definitions(miniexactsolve PRIVATE MINIEXACT_VERSION="${CMAKE_PROJECT_VERSION}")
 
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
   if(MSVC)
     target_compile_options(miniexact-static PRIVATE /W4 /WX)
     target_compile_options(miniexactsolve PRIVATE /W4 /WX)
