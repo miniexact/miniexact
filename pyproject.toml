@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "scikit_build_core.build"
-requires = ["scikit-build-core", "swig"]
+requires = ["scikit-build-core", "swig", "CPython"]
 
 [project]
 authors = [{email = "mail+pypi@maxheisinger.at", name = "Max Heisinger"}]
