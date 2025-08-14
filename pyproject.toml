@@ -1,6 +1,6 @@
 [build-system]
-build-backend = "cmeel"
-requires = ["cmeel[build]", "swig"]
+build-backend = "scikit_build_core.build"
+requires = ["scikit-build-core", "swig"]
 
 [project]
 authors = [{email = "mail+pypi@maxheisinger.at", name = "Max Heisinger"}]
