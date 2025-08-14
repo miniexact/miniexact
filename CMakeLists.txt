@@ -144,4 +144,6 @@ if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL 
   add_test(tests tests)
 endif()
 
-install(TARGETS miniexact)
+if(TARGET miniexact)
+  install(TARGETS miniexact)
+endif()
