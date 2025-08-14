@@ -1,5 +1,10 @@
 # MiniExact Changelog
 
+## Version 1.2.6
+
+  - Run the publishing workflow on Ubungu LTS instead of latest. This
+    should make the package more available.
+
 ## Version 1.2.5
 
   - Delete the cmeel package during publish workflow execution.

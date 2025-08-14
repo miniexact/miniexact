@@ -7,7 +7,7 @@ on:
 jobs:
   pypi-publish:
     name: Publish release to PyPI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-lts
     environment:
       name: pypi
       url: https://pypi.org/p/miniexact
