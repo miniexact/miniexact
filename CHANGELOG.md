@@ -1,5 +1,9 @@
 # MiniExact Changelog
 
+## Version 1.2.5
+
+  - Delete the cmeel package during publish workflow execution.
+
 ## Version 1.2.4
 
   - Build Wheel in publishing step.
