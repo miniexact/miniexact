@@ -1,5 +1,13 @@
 # MiniExact Changelog
 
+## Version 1.2.2
+
+  - Add Catch2 amalgamated sources, so `make test` always works.
+
+## Version 1.2.1
+
+  - Small fix for the Python build.
+
 ## Version 1.2
 
   - This is the first version with a release on PyPI! Enjoy
