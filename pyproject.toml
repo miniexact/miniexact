@@ -1,0 +1,16 @@
+[build-system]
+build-backend = "cmeel"
+requires = ["cmeel[build]", "swig"]
+
+[project]
+authors = [{email = "mail+pypi@maxheisinger.at", name = "Max Heisinger"}]
+description = "This is the MiniExact exact cover solver, implementing Donald Knuth's Algorithm X, C, and M using the Dancing Links technique."
+license = "BSD-3-Clause"
+name = "miniexact"
+requires-python = ">= 3.8"
+version = "1.1"
+
+[project.urls]
+changelog = "https://github.com/miniexact/miniexact/CHANGELOG.md"
+homepage = "https://github.com/miniexact/miniexact"
+repository = "https://github.com/miniexact/miniexact.git"

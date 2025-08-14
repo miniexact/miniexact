@@ -116,6 +116,13 @@ elseif(NOT CMAKE_C_COMPILER MATCHES "cosmo")
       message(STATUS "pyminiexact: To run, please prepend your interpreter with LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan.so)")
       message(STATUS "pyminiexact: To supress memory leak errors, also prepend ASAN_OPTIONS=detect_leaks=0")
     endif()
+
+    if("${PYTHON_SITELIB}" STREQUAL "")
+      set(PYTHON_SITELIB "lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages" CACHE STRING "Path to install Python packages to")
+    endif()
+    
+    install(TARGETS pyminiexact LIBRARY DESTINATION ${PYTHON_SITELIB})
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/miniexact.py" DESTINATION ${PYTHON_SITELIB})
   else()
     message(STATUS "SWIG not found. Cannot generate bindings to the simple API.")
   endif()
@@ -133,3 +140,5 @@ if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL 
     )
   endif()
 endif()
+
+install(TARGETS miniexact)
