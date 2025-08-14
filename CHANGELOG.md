@@ -1,5 +1,9 @@
 # MiniExact Changelog
 
+## Version 1.2.7
+
+  - Use the system Python version in the publish workflow.
+
 ## Version 1.2.6
 
   - Run the publishing workflow on Ubungu LTS instead of latest. This
