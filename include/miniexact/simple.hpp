@@ -71,7 +71,7 @@ class miniexacts_wrapper {
     last_res_ = res;
     return res;
   }
-  void solution(miniexacts_solution_iterator it, void* userdata) {
+  bool solution(miniexacts_solution_iterator it, void* userdata) {
     extract_solution();
     return miniexacts_solution(h_.get(), it, userdata);
   }

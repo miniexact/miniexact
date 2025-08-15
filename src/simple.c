@@ -18,6 +18,7 @@ enum state {
   S_READY = 1u << 3u,
   S_SOLUTIONS_AVAILABLE = 1u << 4u,
   S_DONE = 1u << 5u,
+  S_ERROR = 1u << 6u,
 };
 
 struct miniexacts {
@@ -63,18 +64,19 @@ miniexacts_init_m() {
 #define xstr(s) str(s)
 #define str(s) #s
 
-#define DIE(MESSAGE)                \
-  fprintf(stderr, "%s\n", MESSAGE); \
-  assert(false);                    \
-  exit(1);
+#define DIE(MESSAGE)                                \
+  fprintf(stderr, "!! FATAL ERROR: %s\n", MESSAGE); \
+  h->s = S_ERROR;                                   \
+  return 0;
 
-#define TRY(STMT)                                                        \
-  do {                                                                   \
-    const char* err = STMT;                                              \
-    if(err) {                                                            \
-      fprintf(stderr, "Error while executing %s: %s\n", str(STMT), err); \
-      exit(1);                                                           \
-    }                                                                    \
+#define TRY(STMT)                                                           \
+  do {                                                                      \
+    const char* err = STMT;                                                 \
+    if(err) {                                                               \
+      fprintf(stderr, "!! Error while executing %s: %s\n", str(STMT), err); \
+      h->s = S_ERROR;                                                       \
+      return 0;                                                             \
+    }                                                                       \
   } while(false);
 
 static const char*
@@ -240,7 +242,7 @@ it_converter(struct miniexact_problem* p,
   b->it(b->h, names, colors, items_count, b->userdata);
 }
 
-void
+bool
 miniexacts_solution(struct miniexacts* h,
                     miniexacts_solution_iterator it,
                     void* userdata) {

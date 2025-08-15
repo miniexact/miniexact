@@ -31,6 +31,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 struct miniexact_problem;
 struct miniexacts;
@@ -89,7 +90,7 @@ miniexacts_add(struct miniexacts* h,
 int
 miniexacts_solve(struct miniexacts* h);
 
-void
+bool
 miniexacts_solution(struct miniexacts* h,
                     miniexacts_solution_iterator it,
                     void* userdata);
