@@ -43,7 +43,7 @@ solve(std::string problem,
   miniexact_algorithm a;
   memset(&a, 0, sizeof(a));
   miniexact_algorithm_from_select(algorithm_select, &a);
-  miniexact_problem* p = miniexact_parse_problem(&a, problem.c_str());
+  miniexact_problem* p = miniexact_parse_problem(&a, problem.c_str(), NULL);
 
   if(!p)
     return EXIT_FAILURE;
