@@ -4,6 +4,8 @@
 
 #include <catch_amalgamated.hpp>
 
+#ifdef MINIEXACT_SAT_SOLVER_AVAILABLE
+
 #include <miniexact/sat_solver.h>
 
 TEST_CASE("Gather an UNSAT result from a SAT Solver") {
@@ -42,3 +44,5 @@ TEST_CASE("Gather a SAT result from a SAT Solver") {
 
   miniexact_sat_solver_destroy(&solver);
 }
+
+#endif
