@@ -30,8 +30,8 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 struct miniexact_problem;
 struct miniexacts;
@@ -101,7 +101,10 @@ miniexacts_solution_length(struct miniexacts* h);
 int32_t
 miniexacts_extract_solution(struct miniexacts* h, int32_t* arr);
 
-miniexact_problem*
+bool
+miniexacts_write_to_dlx(struct miniexacts* h, const char* path);
+
+struct miniexact_problem*
 miniexacts_problem(struct miniexacts* h);
 
 void

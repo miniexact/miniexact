@@ -1,5 +1,14 @@
 # MiniExact Changelog
 
+## Version 1.3.1
+
+  - Support the [DLX format](https://cs.stanford.edu/~knuth/programs/dlx2.w)
+    from Donald Knuth directly.
+  - Add a `write_to_dlx` function to the Python interface for solver objects.
+  - Provide a `-P` option that only prints out the parsed problem in DLX.
+  - Provide a `-D` option that makes the parser ignore all guessing of input
+    format and only read DLX files.
+
 ## Version 1.3
 
   - Make `add` and `selected_options` refer to the same indices in the

@@ -74,6 +74,8 @@ typedef struct miniexact_parser {
   int dimacs_primaries, dimacs_secondaries;
   miniexact_dimacs_problem dimacs_problem;
   int dimacs_last_lit;
+
+  bool significant_newline;
 } miniexact_parser;
 
 typedef enum miniexact_token {
@@ -86,6 +88,8 @@ typedef enum miniexact_token {
   COLON,
   SEMICOLON,
   DOLLAR,
+  NEWLINE,
+  PIPE,
 } miniexact_token;
 
 #define GETC(P) P->mgetc(P)
@@ -122,6 +126,9 @@ next(miniexact_parser* p) {
     if(c == '\n') {
       p->col = 0;
       ++p->line;
+      if(p->significant_newline) {
+        return NEWLINE;
+      }
       continue;
     }
 
@@ -144,6 +151,8 @@ next(miniexact_parser* p) {
       return GREATER_THAN;
     case '$':
       return DOLLAR;
+    case '|':
+      return PIPE;
   }
 
   if(isidentchar(c)) {
@@ -476,7 +485,7 @@ parse_dimacs(miniexact_parser* p) {
 }
 
 static const char*
-parse(miniexact_parser* p) {
+parse(miniexact_parser* p, bool dlx) {
   // Read problem header (primary items, secondary items), then read all
   // options.
   const char* e = NULL;
@@ -484,11 +493,74 @@ parse(miniexact_parser* p) {
   miniexact_token t;
   t = next(p);
 
+  bool skip_secondary = false;
+
   miniexact_link cost = 0;
 
-  if(t == LESS_THAN) {
+  if(t == LESS_THAN && !dlx) {
     // Primary items
     t = next(p);
+    while(t == IDENT) {
+      miniexact_link item = miniexact_item_from_ident(p->p, p->ident);
+      if(item != -1) {
+        return "duplicate name for new primary item";
+      }
+      item = miniexact_insert_ident_as_name(p->p, p->ident);
+
+      t = next(p);
+      if(t == COLON) {
+        // Triggers define_primary_item_with_range
+        t = next(p);
+
+        miniexact_link u = 1;
+        miniexact_link v = 0;
+
+        if(t != IDENT && isonlydigits(p))
+          return "token after colon in range specifier must be a number";
+
+        u = atoi(p->ident);
+
+        t = next(p);
+
+        if(t == SEMICOLON || t == COLON) {
+          t = next(p);
+          if(t != IDENT || !isonlydigits(p))
+            return "token after first number and semicolon in range "
+                   "specifier "
+                   "must also be a "
+                   "number";
+          v = atoi(p->ident);
+          t = next(p);
+        } else {
+          // The range will be the first number specified by default.
+          v = u;
+        }
+        if((e = p->a->define_primary_item_with_range(p->a, p->p, item, u, v)))
+          return e;
+      } else {
+        if((e = p->a->define_primary_item(p->a, p->p, item)))
+          return e;
+      }
+    }
+    if(t != GREATER_THAN) {
+      return "primary item list must end with >";
+    }
+    t = next(p);
+  } else if(!dlx && t == IDENT && p->ident_len == 1 && p->ident[0] == 'p') {
+    // Use the dimacs format to parse this problem! There, no tokenizer is
+    // used, so we exit from the general parsing function.
+    return parse_dimacs(p);
+  } else {
+    // Must use Donald Knuth's DLX format.
+
+    // Make newline significant
+    p->significant_newline = true;
+
+    // Skip regular secondaries
+    skip_secondary = true;
+
+    // First, read the primary items.
+
     while(t == IDENT) {
       miniexact_link item = miniexact_item_from_ident(p->p, p->ident);
       if(item != -1) {
@@ -514,7 +586,8 @@ parse(miniexact_parser* p) {
         if(t == SEMICOLON || t == COLON) {
           t = next(p);
           if(t != IDENT || !isonlydigits(p))
-            return "token after first number and semicolon in range specifier "
+            return "token after first number and semicolon in range "
+                   "specifier "
                    "must also be a "
                    "number";
           v = atoi(p->ident);
@@ -530,18 +603,34 @@ parse(miniexact_parser* p) {
           return e;
       }
     }
-    if(t != GREATER_THAN) {
-      return "primary item list must end with >";
+
+    // Skip the separator.
+    if(t == PIPE) {
+      t = next(p);
     }
-    t = next(p);
-  } else if(t == IDENT && p->ident_len == 1 && p->ident[0] == 'p') {
-    // Use the dimacs format to parse this problem! There, no tokenizer is used,
-    // so we exit from the general parsing function.
-    return parse_dimacs(p);
-  } else {
-    return "no primary item definitions given";
+
+    // Then, read the secondaries.
+    while(t == IDENT) {
+      miniexact_link item = miniexact_item_from_ident(p->p, p->ident);
+      if(item != -1) {
+        return "duplicate name for new secondary item";
+      }
+      item = miniexact_insert_ident_as_name(p->p, p->ident);
+
+      if((e = p->a->define_secondary_item(p->a, p->p, item)))
+        return e;
+
+      t = next(p);
+    }
+
+    // Expect a newline.
+    if(t == NEWLINE)
+      t = next(p);
+    else {
+      return "expect newline after primary and secondary items in DLX header";
+    }
   }
-  if(t == LBRACK) {
+  if(t == LBRACK && !skip_secondary) {
     t = next(p);
     while(t == IDENT) {
       miniexact_link item = miniexact_item_from_ident(p->p, p->ident);
@@ -604,7 +693,8 @@ parse(miniexact_parser* p) {
         t = next(p);
       }
 
-      if(t == SEMICOLON || t == END) {
+      if(t == SEMICOLON || t == END ||
+         (p->significant_newline && t == NEWLINE)) {
         if((e = p->a->end_option(p->a, p->p, cost)))
           return e;
         ++p->p->option_count;
@@ -618,8 +708,11 @@ parse(miniexact_parser* p) {
 }
 
 miniexact_problem*
-miniexact_parse_problem(miniexact_algorithm* a, const char* str) {
+miniexact_parse_problem(miniexact_algorithm* a,
+                        const char* str,
+                        const miniexact_config* cfg) {
   int i;
+  bool dlx = cfg && cfg->parse_dlx;
 
   miniexact_parser p;
   memset(&p, 0, sizeof(p));
@@ -639,7 +732,7 @@ miniexact_parse_problem(miniexact_algorithm* a, const char* str) {
   p.mgetc = &miniexact_getc_str;
   p.mpeekc = &miniexact_peekc_str;
 
-  if((error = parse(&p)))
+  if((error = parse(&p, dlx)))
     goto ERROR;
 
   return p.p;
@@ -651,7 +744,11 @@ ERROR:
 }
 
 miniexact_problem*
-miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
+miniexact_parse_problem_file(miniexact_algorithm* a,
+                             const char* file_path,
+                             const miniexact_config* cfg) {
+  bool dlx = cfg && cfg->parse_dlx;
+
   FILE* f = fopen(file_path, "r");
   if(!f) {
     miniexact_err(
@@ -673,11 +770,12 @@ miniexact_parse_problem_file(miniexact_algorithm* a, const char* file_path) {
   p.str = NULL;
   p.str_pos = 0;
   p.ident_len = 0;
+  p.significant_newline = false;
 
   p.mgetc = &miniexact_getc_file;
   p.mpeekc = &miniexact_peekc_file;
 
-  if((error = parse(&p)))
+  if((error = parse(&p, dlx)))
     goto ERROR;
 
   if(problem->name_size == 0) {

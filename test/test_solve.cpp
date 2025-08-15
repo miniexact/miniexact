@@ -15,7 +15,7 @@ TEST_CASE("solve standard XCC example") {
   miniexact_algorithm algorithm;
   miniexact_algorithm_x_set(&algorithm);
 
-  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str));
+  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str, NULL));
   REQUIRE(p);
 
   bool has_result = algorithm.compute_next_result(&algorithm, p.get());
@@ -36,7 +36,7 @@ TEST_CASE("solve small MCC example") {
   miniexact_algorithm algorithm;
   miniexact_algorithm_m_set(&algorithm);
 
-  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str));
+  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str, NULL));
   REQUIRE(p);
 
   bool has_result = algorithm.compute_next_result(&algorithm, p.get());

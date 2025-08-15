@@ -12,8 +12,9 @@ Dancing Links trick . Currently supporting:
 Features:
 
   - [Web](https://miniexact.github.io/miniexact/) and CLI version
-  - Two input formats: One inspired by Donald Knuth's text representation, one
-    by DIMACS from SAT solving.
+  - Three input formats: [Knuth's
+    DLX](https://cs.stanford.edu/~knuth/programs/dlx2.w), One inspired by Donald
+    Knuth's text representation, one by DIMACS from SAT solving.
   - C-code is kept as close to Knuth's description as possible using Macros, but
     has a different memory layout.
   - Extensively hackable
@@ -80,7 +81,7 @@ color1 = s.color("test")
 s.add(c, color1)
 
 # You may also use the string-based input to make things easier:
-s.add("c", "test2")
+s.add("c", "test")
 
 s.add(b)
 
@@ -111,6 +112,9 @@ assert res == 10
 # Until there are no more solutions:
 res = s.solve()
 assert res == 20
+
+# The problem can also be serialized into the DLX format:
+s.write_to_dlx("out.dlx")
 ```
 
 The code above prints out the following two solutions:
@@ -157,6 +161,16 @@ secondary_items ::= '[' { secondary_item } ']'
 secondary_item ::= ident
 option ::= { ident [ ':' color ] } ';'
 ```
+
+### Support for DLX Notation
+
+If you use the [DLX-style
+notation](https://cs.stanford.edu/~knuth/programs/dlx2.w), namely having a `|`
+symbol to separate primary and secondary items and using newlines to separate
+options, the parser behaves the same as if using the format above.
+
+It is not supported to have an item called `p` as the first item in this case,
+as this would trigger the DIMACS-inspired format below.
 
 ## DIMACS-inspired Format
 

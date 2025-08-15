@@ -206,6 +206,70 @@ miniexact_print_problem_matrix_in_libexact_format(miniexact_problem* p) {
   return NULL;
 }
 
+static inline void
+print_name(miniexact_problem* p, FILE* o, size_t i) {
+  if(p->name[i] && p->name[i][0] != '0') {
+    fprintf(o, "%s", p->name[i]);
+  } else {
+    fprintf(o, "%zu", i);
+  }
+}
+
+static inline void
+print_color(miniexact_problem* p, FILE* o, miniexact_link i) {
+  if(p->color_name[i]) {
+    fprintf(o, "%s", p->color_name[i]);
+  } else {
+    fprintf(o, "%d", i);
+  }
+}
+
+void
+miniexact_write_problem_to_dlx(miniexact_problem* p, FILE* o) {
+  bool first = true;
+  for(size_t i = 1; i < p->name_size; ++i) {
+    if(i > 0 && i <= p->primary_item_count) {
+      if(first) {
+        first = false;
+      } else {
+        fprintf(o, " ");
+      }
+      print_name(p, o, i);
+      if(p->slack[i] != 1) {
+        fprintf(o, ":%d;%d", p->slack[i] + p->bound[i], p->bound[i]);
+      }
+    } else {
+      if(!first) {
+        first = true;
+        fprintf(o, " |");
+      }
+      fprintf(o, " ");
+      print_name(p, o, i);
+    }
+  }
+
+  fprintf(o, "\n");
+
+  first = true;
+  for(miniexact_link i = p->N + 2; i < p->ulink_size; ++i) {
+    if(first)
+      first = false;
+    else
+      fprintf(o, " ");
+
+    if(TOP(i) <= 0) {
+      fprintf(o, "\n");
+      first = true;
+    } else {
+      print_name(p, o, TOP(i));
+      if(COLOR(i)) {
+        fprintf(o, ":");
+        print_color(p, o, COLOR(i));
+      }
+    }
+  }
+}
+
 void
 miniexact_print_problem_solution(miniexact_problem* p) {
   printf("Solution:\n");

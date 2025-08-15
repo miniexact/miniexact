@@ -311,7 +311,7 @@ miniexact_choose_i_mrv_cost(miniexact_algorithm* a,
                             int32_t cutoff) {
   // This implementation stems from the solution to exercise 248,
   // 7.2.2.1 (Page 288, Fascicle 4).
-  
+
   const int32_t L = 10; // Magic from Knuth.
   int32_t t = INT32_MAX;
   int32_t c = 0;

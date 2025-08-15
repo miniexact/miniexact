@@ -37,7 +37,9 @@ print_help(void) {
   printf("  -p\t\tprint selected options\n");
   printf("  -e\t\tenumerate all solutions\n");
   printf("  -E\t\tprint the problem matrix in libExact format (only -x)\n");
+  printf("  -P\t\tprint DLX format after parsing and stop\n");
   printf("  -K\t\tgenerate K cheapest solutions (for $ variants)\n");
+  printf("  -D\t\tstick to the DLX format, don't try to guess\n");
   printf("ALGORITHM SELECTORS:\n");
   printf("  --naive\tuse naive in-order for i selection\n");
   printf("  --mrv\t\tuse MRV for i selection (default)\n");
@@ -68,6 +70,8 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
     { "help", no_argument, 0, 'h' },
     { "version", no_argument, 0, 'v' },
     { "print", no_argument, 0, 'p' },
+    { "print-dlx", no_argument, &cfg->print_dlx, 1 },
+    { "dlx", no_argument, &cfg->parse_dlx, 1 },
     { "print-x", no_argument, 0, MINIEXACT_OPTION_PRINT_X },
     { "enumerate", no_argument, 0, 'e' },
     { "solutions", required_argument, 0, 'K' },
@@ -86,7 +90,8 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "eEK:psxcmkChVv", long_options, &option_index);
+    c =
+      getopt_long(argc, argv, "DePEK:psxcmkChVv", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -100,6 +105,12 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
         exit(EXIT_SUCCESS);
       case 'p':
         cfg->print_options = 1;
+        break;
+      case 'D':
+        cfg->parse_dlx = 1;
+        break;
+      case 'P':
+        cfg->print_dlx = 1;
         break;
       case MINIEXACT_OPTION_PRINT_X:
         cfg->print_x = 1;
@@ -147,6 +158,10 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
     cfg->input_files_count = argc - optind;
   }
 
+  if(cfg->algorithm_select == 0 && cfg->print_dlx) {
+    cfg->algorithm_select = MINIEXACT_ALGORITHM_M;
+  }
+
   for(size_t i = 0; i < sizeof(sel) / sizeof(sel[0]); ++i)
     cfg->algorithm_select |= sel[i];
 }
@@ -162,7 +177,7 @@ process_file(miniexact_config* cfg) {
   }
 
   miniexact_problem* p =
-    miniexact_parse_problem_file(&a, cfg->input_files[cfg->current_input_file]);
+    miniexact_parse_problem_file(&a, cfg->input_files[cfg->current_input_file], cfg);
   if(!p)
     return EXIT_FAILURE;
 
@@ -181,7 +196,14 @@ process_file(miniexact_config* cfg) {
       return EXIT_SUCCESS;
   }
 
-  int return_code = miniexact_solve_problem_and_print_solutions(&a, p, cfg);
+  int return_code;
+
+  if(cfg->print_dlx) {
+    miniexact_write_problem_to_dlx(p, stdout);
+    return_code = EXIT_SUCCESS;
+  } else {
+    return_code = miniexact_solve_problem_and_print_solutions(&a, p, cfg);
+  }
 
   miniexact_problem_free(p, &a);
   return return_code;

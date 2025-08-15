@@ -24,12 +24,17 @@ extern "C" {
 
 typedef struct miniexact_problem miniexact_problem;
 typedef struct miniexact_algorithm miniexact_algorithm;
+typedef struct miniexact_config miniexact_config;
 
 miniexact_problem*
-miniexact_parse_problem(miniexact_algorithm* a, const char* str);
+miniexact_parse_problem(miniexact_algorithm* a,
+                        const char* str,
+                        const miniexact_config* cfg);
 
 miniexact_problem*
-miniexact_parse_problem_file(miniexact_algorithm* a, const char* file);
+miniexact_parse_problem_file(miniexact_algorithm* a,
+                             const char* file,
+                             const miniexact_config* cfg);
 
 #ifdef __cplusplus
 }

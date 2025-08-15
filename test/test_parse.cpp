@@ -14,7 +14,7 @@ TEST_CASE("parse standard XCC example") {
   miniexact_algorithm algorithm;
   miniexact_algorithm_x_set(&algorithm);
 
-  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str));
+  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str, NULL));
   REQUIRE(p);
 
   // Reference solution from page 66 of Dancing Links (Table 1)
@@ -100,7 +100,7 @@ TEST_CASE("parse standard colored XCC example") {
   miniexact_algorithm algorithm;
   miniexact_algorithm_c_set(&algorithm);
 
-  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str));
+  miniexact_problem_ptr p(miniexact_parse_problem(&algorithm, str, NULL));
   REQUIRE(p);
 
   // Reference solution from page 87 of Dancing Links (Table 2)

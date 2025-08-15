@@ -266,6 +266,16 @@ miniexacts_extract_solution(struct miniexacts* h, int32_t* arr) {
   return miniexact_extract_solution_option_indices(&h->p, arr);
 }
 
+bool
+miniexacts_write_to_dlx(struct miniexacts* h, const char* path) {
+  assert(h);
+  assert(path);
+  FILE* out = fopen(path, "w");
+  miniexact_write_problem_to_dlx(&h->p, out);
+  fclose(out);
+  return true;
+}
+
 miniexact_problem*
 miniexacts_problem(struct miniexacts* h) {
   return &h->p;

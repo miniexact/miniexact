@@ -25,6 +25,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 typedef int32_t miniexact_link;
 typedef miniexact_link miniexact_color;
@@ -33,32 +34,32 @@ typedef struct miniexact_algorithm miniexact_algorithm;
 
 #define MINIEXACT_LINK_MAX INT32_MAX
 
-#define MINIEXACT_MAX(a, b) (((a)>(b))?(a):(b))
+#define MINIEXACT_MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 #define ARR(TYPE, NAME) \
   TYPE* NAME;           \
   size_t NAME##_size;   \
   size_t NAME##_capacity;
 
-#define MINIEXACT_ARR_ALLOC(TYPE, ARR)                     \
+#define MINIEXACT_ARR_ALLOC(TYPE, ARR)               \
   p->ARR##_capacity = 65536;                         \
   p->ARR = malloc(p->ARR##_capacity * sizeof(TYPE)); \
   p->ARR##_size = 0;
 
-#define MINIEXACT_ARR_REALLOC(ARR)                 \
+#define MINIEXACT_ARR_REALLOC(ARR)           \
   p->ARR##_capacity = p->ARR##_capacity * 4; \
   p->ARR = realloc(p->ARR, p->ARR##_capacity * sizeof(p->ARR[0]));
 
-#define MINIEXACT_ARR_PLUSN(ARR, N)                     \
+#define MINIEXACT_ARR_PLUSN(ARR, N)               \
   while(p->ARR##_size + N >= p->ARR##_capacity) { \
-    MINIEXACT_ARR_REALLOC(ARR)                          \
+    MINIEXACT_ARR_REALLOC(ARR)                    \
   }                                               \
   p->ARR##_size += N;
 
-#define MINIEXACT_ARR_HASN(ARR, N)     \
-  while(p->ARR##_capacity < N) { \
-    MINIEXACT_ARR_REALLOC(ARR)         \
-  }                              \
+#define MINIEXACT_ARR_HASN(ARR, N) \
+  while(p->ARR##_capacity < N) {   \
+    MINIEXACT_ARR_REALLOC(ARR)     \
+  }                                \
   p->ARR##_size = MINIEXACT_MAX(N, p->ARR##_size);
 
 #define MINIEXACT_ARR_PLUS1(ARR) MINIEXACT_ARR_PLUSN(ARR, 1)
@@ -68,6 +69,8 @@ typedef struct miniexact_config {
   int print_options;
   int print_x;
   int enumerate;
+  int print_dlx;
+  int parse_dlx;
   int transform_to_libexact;
   int algorithm_select;
   int solutions;
@@ -139,8 +142,8 @@ typedef struct miniexact_problem {
 
 int
 miniexact_search_for_name(const char* needle,
-                    const miniexact_name* names,
-                    size_t names_size);
+                          const miniexact_name* names,
+                          size_t names_size);
 
 bool
 miniexact_has_item(miniexact_link needle, miniexact_link* list, size_t len);
@@ -176,6 +179,9 @@ const char*
 miniexact_print_problem_matrix_in_libexact_format(miniexact_problem* p);
 
 void
+miniexact_write_problem_to_dlx(miniexact_problem* p, FILE* o);
+
+void
 miniexact_print_problem_solution(miniexact_problem* p);
 
 /** @brief Extract a valid solution, consisting of the option indices
@@ -187,12 +193,13 @@ miniexact_print_problem_solution(miniexact_problem* p);
  * This is basically exercise 13 combined with exercise 12.
  */
 miniexact_link
-miniexact_extract_solution_option_indices(miniexact_problem* p, miniexact_link* solution);
+miniexact_extract_solution_option_indices(miniexact_problem* p,
+                                          miniexact_link* solution);
 
 typedef void (*miniexact_link_visitor)(miniexact_problem* p,
-                                 void* userdata,
-                                 miniexact_link item_index,
-                                 const char* item_name);
+                                       void* userdata,
+                                       miniexact_link item_index,
+                                       const char* item_name);
 
 #ifdef __cplusplus
 }

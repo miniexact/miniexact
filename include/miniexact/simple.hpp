@@ -111,6 +111,10 @@ class miniexacts_wrapper {
     return selected_options_.size();
   }
 
+  bool write_to_dlx(const char* path) {
+    return miniexacts_write_to_dlx(h_.get(), path);
+  }
+
   bool has_solution() const { return last_res_ == 10; }
 
   void print_solution() {

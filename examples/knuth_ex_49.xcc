@@ -1,0 +1,7 @@
+< p q r > [ x y ]
+p q x y:1;
+p r
+x:1 y;
+p x:2;
+q x:1;
+r y:2;
