@@ -14,13 +14,20 @@ Features:
   - [Web](https://miniexact.github.io/miniexact/) and CLI version
   - Two input formats: One inspired by Donald Knuth's text representation, one
     by DIMACS from SAT solving.
-  - C-code is kept as close to Knuth's description as possible using Macros.
+  - C-code is kept as close to Knuth's description as possible using Macros, but
+    has a different memory layout.
   - Extensively hackable
   - No dependencies
   - SWIG Bindings support (if available on the system), see the Python example.
   - [Package on PiPI](https://pypi.org/project/miniexact/) with builds for Linux
     (Intel and ARM), MacOS (Intel and ARM), Windows (Intel and ARM), and
     (manually) Pyodide.
+
+Future Goals:
+
+  - Add the new **Dancing Cells** algorithm based on sparse sets as known from
+    Christine Solnon and the newest TAOCP Fascicle 7.
+  - More comparisons with other implementations.
 
 ## Usage
 
