@@ -140,7 +140,7 @@ if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL
     swig_add_library(pyminiexact LANGUAGE Python SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/swig/miniexact.i)
     target_link_libraries(pyminiexact miniexact-static Python::Module)
     set_property(TARGET pyminiexact PROPERTY CXX_STANDARD 20)
-    if(${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND CMAKE_C_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND CMAKE_C_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
       target_link_libraries(pyminiexact -shared-libasan)
       message(STATUS "pyminiexact: Using shared libasan, because you are using Clang in a Debug build.")
       message(STATUS "pyminiexact: To run, please prepend your interpreter with LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan.so)")
