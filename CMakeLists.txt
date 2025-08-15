@@ -148,7 +148,9 @@ if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL
     endif()
 
     install(TARGETS pyminiexact LIBRARY DESTINATION miniexact)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/miniexact.py" DESTINATION miniexact)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/miniexact.py"
+      DESTINATION miniexact
+      RENAME "__init__.py")
   else()
     message(STATUS "SWIG not found. Cannot generate bindings to the simple API.")
   endif()
