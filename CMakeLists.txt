@@ -132,7 +132,7 @@ if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL
     cmake_policy(SET CMP0086 NEW)
     include(UseSWIG)
 
-    find_package(Python COMPONENTS Development.Module REQUIRED)
+    find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/miniexact.i PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/miniexact.i PROPERTY CPLUSPLUS ON)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/miniexact.i PROPERTY SWIG_FLAGS -w389)
