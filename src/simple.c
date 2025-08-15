@@ -109,7 +109,7 @@ miniexacts_define_primary_item_with_slack(struct miniexacts* h,
 
 int32_t
 miniexacts_define_primary_item(struct miniexacts* h, const char* name) {
-  return miniexacts_define_primary_item_with_slack(h, name, 1, 0);
+  return miniexacts_define_primary_item_with_slack(h, name, 1, 1);
 }
 
 int32_t

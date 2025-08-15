@@ -56,8 +56,8 @@ define_primary_item(miniexact_algorithm* a,
   // Always track them with as the base-case w.r.t. primary items.
   MINIEXACT_ARR_PLUS1(slack)
   MINIEXACT_ARR_PLUS1(bound)
-  SLACK(p->i) = 1;
-  BOUND(p->i) = 0;
+  SLACK(p->i) = 0;
+  BOUND(p->i) = 1;
 
   return NULL;
 }

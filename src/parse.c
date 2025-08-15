@@ -513,7 +513,7 @@ parse(miniexact_parser* p, bool dlx) {
         t = next(p);
 
         miniexact_link u = 1;
-        miniexact_link v = 0;
+        miniexact_link v = 1;
 
         if(t != IDENT && isonlydigits(p))
           return "token after colon in range specifier must be a number";
