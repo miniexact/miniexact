@@ -20,7 +20,7 @@ Features:
   - SWIG Bindings support (if available on the system), see the Python example.
   - [Package on PiPI](https://pypi.org/project/miniexact/) with builds for Linux
     (Intel and ARM), MacOS (Intel and ARM), Windows (Intel and ARM), and
-    Pyodide.
+    (manually) Pyodide.
 
 ## Usage
 
