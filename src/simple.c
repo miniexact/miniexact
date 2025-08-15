@@ -250,6 +250,7 @@ miniexacts_solution(struct miniexacts* h,
 
   struct userdata_bag b = { .h = h, .it = it, .userdata = userdata };
   miniexact_iterate_solution_options_str(&h->p, &it_converter, &b);
+  return true;
 }
 
 unsigned int
