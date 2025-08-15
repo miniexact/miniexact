@@ -16,7 +16,13 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "miniexact/util.h"
+
+#if __has_include("getopt.h")
 #include <getopt.h>
+#else
+#include "getopt_port.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +33,8 @@
 #include <miniexact/miniexact.h>
 #include <miniexact/ops.h>
 #include <miniexact/parse.h>
+
+#include "license.h"
 
 static void
 print_help(void) {
@@ -50,11 +58,20 @@ print_help(void) {
   printf("  -m\t\tuse Algorithm M\n");
   printf("  -k\t\tcall external binary to solve with SAT\n    \t\t    (Knuth's "
          "trivial encoding)\n");
+
+  printf("\n");
+  printf("License: BSD-3-Clause\n");
+  printf("Using open source code. Please see -L\n");
 }
 
 static void
 print_version(void) {
   printf("%s\n", MINIEXACT_VERSION);
+}
+
+static void
+print_licenses() {
+  printf("%s\n", miniexact_license);
 }
 
 static void
@@ -91,7 +108,7 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
     int option_index = 0;
 
     c =
-      getopt_long(argc, argv, "DePEK:psxcmkChVv", long_options, &option_index);
+      getopt_long(argc, argv, "DePEK:psxcmkChVvL", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -100,6 +117,9 @@ parse_cli(miniexact_config* cfg, int argc, char* argv[]) {
       case 'V':
         cfg->verbose = 1;
         break;
+      case 'L':
+        print_licenses();
+        exit(EXIT_SUCCESS);
       case 'v':
         print_version();
         exit(EXIT_SUCCESS);
@@ -176,8 +196,8 @@ process_file(miniexact_config* cfg) {
     return EXIT_FAILURE;
   }
 
-  miniexact_problem* p =
-    miniexact_parse_problem_file(&a, cfg->input_files[cfg->current_input_file], cfg);
+  miniexact_problem* p = miniexact_parse_problem_file(
+    &a, cfg->input_files[cfg->current_input_file], cfg);
   if(!p)
     return EXIT_FAILURE;
 

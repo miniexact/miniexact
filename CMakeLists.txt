@@ -23,6 +23,12 @@ if(HAVE_STRLCPY)
   add_compile_definitions(HAVE_STRLCPY)
 endif()
 
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/license.h" "")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md" LICENSE_TEXT HEX)
+string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," LICENSE_TEXT ${LICENSE_TEXT})
+file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/license.h" "const unsigned char miniexact_license[] = {${LICENSE_TEXT}0x00};")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+
 add_subdirectory(src)
 
 if(NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
@@ -42,6 +48,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(SRCS_SAT)
   set(SRCS_MAIN
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/getopt_port.c
   )
 else()
   set(SRCS_SAT
