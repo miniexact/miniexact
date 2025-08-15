@@ -1,12 +1,13 @@
 # miniexact
 
-A minimalistic implementation of Donald Knuth's exact cover solving algorithms.
-Currently supporting:
+A minimalistic and efficient implementation of Donald Knuth's [exact
+cover](https://en.wikipedia.org/wiki/Exact_cover) solving algorithms using his
+Dancing Links trick . Currently supporting:
 
   - Algorithm X
   - Algorithm C
   - Algorithm M
-  - SAT Backend
+  - SAT Backend (Only on Linux and MacOS)
 
 Features:
 
@@ -17,14 +18,18 @@ Features:
   - Extensively hackable
   - No dependencies
   - SWIG Bindings support (if available on the system), see the Python example.
+  - [Package on PiPI](https://pypi.org/project/miniexact/) with builds for Linux
+    (Intel and ARM), MacOS (Intel and ARM), Windows (Intel and ARM), and
+    Pyodide.
 
 ## Usage
 
 Either use the [web-version](https://miniexact.github.io/miniexact/) in your
-browser, the latest universal APE release, or compile yourself. The command line
-tools expect the algorithm to use (`-x`, `-c`, or `-m`) and the input file(s).
-If multiple files are given (e.g. using your shell's wildcard), each file is
-solved separately.
+browser, the latest universal APE release, the [version on
+PyPI](https://pypi.org/project/miniexact/), or compile yourself. The command
+line tools expect the algorithm to use (`-x`, `-c`, or `-m`) and the input
+file(s). If multiple files are given (e.g. using your shell's wildcard), each
+file is solved separately.
 
 A solution is the list of selected options. You can also print the options as
 they were listed in the input file with the `-p` (print) switch.
@@ -33,6 +38,88 @@ In order to enumerate all possible solutions, use the `-e` (enumerate) switch.
 
 You can change the heuristic used internally to a naive one, but the MRV
 heuristic (the default) is a good choice usually.
+
+## Python API (also usable from C and C++)
+
+The package exposes a *simplified API* to Python and other tools trying to
+import it over C or C++. Here is an example using algorithm C to solve an exact
+cover with colors problem:
+
+``` python
+from miniexact import miniexacts_c
+
+# Initiate Solver
+s = miniexacts_c()
+
+# First, add primary items. These calls return integers that you may
+# use to reference the items later.
+a = s.primary("a")
+b = s.primary("b")
+
+# After defining primary items, define secondaries.
+c = s.secondary("c")
+
+# Now, add some options
+
+# You can add them using the list-based syntax:
+maybe_enabled_1 = s.add([a])
+
+# You can also use multiple calls to add(), ending with add(0):
+s.add(a)
+maybe_enabled_2 = s.add(0)
+
+# This is how you color secondary items:
+color1 = s.color("test")
+s.add(c, color1)
+
+# You may also use the string-based input to make things easier:
+s.add("c", "test2")
+
+s.add(b)
+
+# Adds always return the option index they were added in.
+forced_option = s.add(0)
+
+# Now, call solve:
+res = s.solve()
+
+# The return code is 10 if a solution was found, otherwise it is 20.
+assert res == 10
+
+# You can print the solution directly to STDOUT or extract selected
+# options.
+
+s.print_solution()
+
+# The returned option indices always match the indices from the add()
+# calls.
+assert forced_option in s.selected_options()
+assert maybe_enabled_1 in s.selected_options() or maybe_enabled_2 in s.selected_options()
+
+# Each additional call to solve() checks for another solution.
+res = s.solve()
+s.print_solution()
+assert res == 10
+
+# Until there are no more solutions:
+res = s.solve()
+assert res == 20
+```
+
+The code above prints out the following two solutions:
+
+``` text
+c:test2 c:test2 b
+a
+
+c:test2 c:test2 b
+a
+```
+
+With `a` being the first or second option.
+
+In case of an error, the function returns 0 and sends its handle into an
+irrecoverable error state. Errors are also printed to STDERR.
 
 ## Knuth Exact Cover Format
 

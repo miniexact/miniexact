@@ -175,7 +175,7 @@ miniexacts_add_named(struct miniexacts* h,
     ++h->p.option_count;
 
     h->s = S_READY;
-    return h->p.option_count - 1;
+    return h->p.option_count;
   }
 }
 
@@ -208,7 +208,7 @@ miniexacts_add(struct miniexacts* h,
     ++h->p.option_count;
 
     h->s = S_READY;
-    return h->p.option_count - 1;
+    return h->p.option_count;
   }
 }
 

@@ -1,5 +1,13 @@
 # MiniExact Changelog
 
+## Version 1.3
+
+  - Make `add` and `selected_options` refer to the same indices in the
+    simplified API.
+  - Change error reporting mechanism in the simplified API to print to STDERR
+    and send the handle into an error state, it no longer just calls `exit`.
+  - Add a nicer example to the README.
+
 ## Version 1.2.9
 
   - Change how Python is included in CMake a bit.

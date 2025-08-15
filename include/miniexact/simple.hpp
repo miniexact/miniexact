@@ -101,8 +101,8 @@ class miniexacts_wrapper {
   int32_t operator[](unsigned int i) {
     extract_solution();
     if(i >= selected_options_.size()) {
-      fprintf(stderr, "%s\n", "Solution index out of range");
-      exit(1);
+      fprintf(stderr, "%s\n", "!! Solution index out of range");
+      return 0;
     }
     return selected_options_[i];
   }
