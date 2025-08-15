@@ -1,5 +1,9 @@
 # MiniExact Changelog
 
+## Version 1.4
+
+  - Installing the package over pip also installs the `miniexact` CLI now.
+
 ## Version 1.3.1
 
   - Support the [DLX format](https://cs.stanford.edu/~knuth/programs/dlx2.w)

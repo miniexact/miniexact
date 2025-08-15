@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(miniexact VERSION 1.3.1)
+project(miniexact VERSION 1.4)
 
 # Set a default build type if none was specified
 set(default_build_type "Release")
@@ -67,6 +67,10 @@ if(SKBUILD)
   add_library(miniexact-static STATIC $<TARGET_OBJECTS:miniexact-obj>)
 
   target_include_directories(miniexact-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+  add_executable(miniexactsolve ${SRCS_MAIN})
+  target_link_libraries(miniexactsolve miniexact-static)
+  install(TARGETS miniexactsolve DESTINATION "${SKBUILD_SCRIPTS_DIR}")
 elseif(NOT ${CMAKE_C_COMPILER} MATCHES "cosmo")
   add_library(miniexact-obj OBJECT
     ${SRCS}
@@ -170,8 +174,4 @@ if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL 
   add_test(tests tests)
 else()
   include(CTest)
-endif()
-
-if(TARGET miniexact)
-  install(TARGETS miniexact)
 endif()
