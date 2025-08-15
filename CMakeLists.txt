@@ -94,7 +94,7 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
   endif()
 endif()
 
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten" AND NOT SKBUILD)
   target_link_options(miniexactsolve PRIVATE "-s INITIAL_MEMORY=200MB")
   target_link_options(miniexactsolve PRIVATE "--use-preload-cache")
   target_link_options(miniexactsolve PRIVATE "--bind")
@@ -104,7 +104,9 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
 
   target_compile_options(miniexactsolve PRIVATE "-flto")
   target_compile_options(miniexactsolve PRIVATE "-Os")
-elseif(NOT CMAKE_C_COMPILER MATCHES "cosmo")
+endif()
+
+if(NOT CMAKE_C_COMPILER MATCHES "cosmo" AND NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten" AND NOT SKBUILD))
   # Generate bindings with SWIG, if available
   find_package(SWIG)
   if(SWIG_FOUND)
@@ -112,7 +114,7 @@ elseif(NOT CMAKE_C_COMPILER MATCHES "cosmo")
     cmake_policy(SET CMP0086 NEW)
     include(UseSWIG)
 
-    find_package(Python COMPONENTS Development)
+    find_package(Python COMPONENTS Development.Module REQUIRED)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/miniexact.i PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/miniexact.i PROPERTY CPLUSPLUS ON)
     set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/swig/miniexact.i PROPERTY SWIG_FLAGS -w389)

@@ -1,5 +1,9 @@
 # MiniExact Changelog
 
+## Version 1.2.9
+
+  - Change how Python is included in CMake a bit.
+
 ## Version 1.2.8
 
   - Use cibuildwheel to directly build binary packages for many
