@@ -55,7 +55,19 @@ else()
   add_compile_definitions(MINIEXACT_SAT_SOLVER_AVAILABLE)
 endif()
 
-if(NOT ${CMAKE_C_COMPILER} MATCHES "cosmo")
+if(SKBUILD)
+  add_library(miniexact-obj OBJECT
+    ${SRCS}
+    ${SRCS_SAT}
+  )
+  set_property(TARGET miniexact-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+  target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(miniexact-obj PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+
+  add_library(miniexact-static STATIC $<TARGET_OBJECTS:miniexact-obj>)
+
+  target_include_directories(miniexact-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+elseif(NOT ${CMAKE_C_COMPILER} MATCHES "cosmo")
   add_library(miniexact-obj OBJECT
     ${SRCS}
     ${SRCS_SAT}
@@ -81,20 +93,26 @@ else()
   target_include_directories(miniexactsolve PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-set_target_properties(miniexactsolve PROPERTIES OUTPUT_NAME "miniexact")
-add_compile_definitions(miniexactsolve PRIVATE MINIEXACT_VERSION="${CMAKE_PROJECT_VERSION}")
+if(TARGET miniexactsolve)
+  set_target_properties(miniexactsolve PROPERTIES OUTPUT_NAME "miniexact")
+  add_compile_definitions(miniexactsolve PRIVATE MINIEXACT_VERSION="${CMAKE_PROJECT_VERSION}")
+endif()
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
   if(MSVC)
     target_compile_options(miniexact-static PRIVATE /W4 /WX)
-    target_compile_options(miniexactsolve PRIVATE /W4 /WX)
+    if(TARGET miniexactsolve)
+      target_compile_options(miniexactsolve PRIVATE /W4 /WX)
+    endif()
   else()
     target_compile_options(miniexact-static PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    target_compile_options(miniexactsolve PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    if(TARGET miniexactsolve)
+      target_compile_options(miniexactsolve PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    endif()
   endif()
 endif()
 
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten" AND NOT SKBUILD)
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten" AND TARGET miniexactsolve)
   target_link_options(miniexactsolve PRIVATE "-s INITIAL_MEMORY=200MB")
   target_link_options(miniexactsolve PRIVATE "--use-preload-cache")
   target_link_options(miniexactsolve PRIVATE "--bind")
