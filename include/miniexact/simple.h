@@ -110,6 +110,9 @@ miniexacts_problem(struct miniexacts* h);
 void
 miniexacts_free(struct miniexacts* h);
 
+const char*
+miniexacts_version();
+
 #ifdef __cplusplus
 }
 #endif

@@ -288,3 +288,8 @@ miniexacts_free(struct miniexacts* h) {
     free(h);
   }
 }
+
+const char*
+miniexacts_version() {
+  return MINIEXACT_VERSION;
+}

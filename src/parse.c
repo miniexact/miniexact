@@ -122,6 +122,32 @@ next(miniexact_parser* p) {
       return END;
     }
 
+    // Skip C-style comments
+    if(p->col == 0 && c == '/') {
+      c = GETC(p);
+      if(c == EOF) {
+        return END;
+      } else if(c == '/') {
+        while(c != '\n' && c != EOF) {
+          c = GETC(p);
+        }
+        continue;
+      } else {
+        return END;
+      }
+    }
+    // Skip #-comments and knuth-styel |-comments
+    else if(p->col == 0 && (c == '#' || c == '|')) {
+      while(c != '\n' && c != EOF) {
+        c = GETC(p);
+      }
+      continue;
+    }
+    // Skip empty lines.
+    else if(p->col == 0 && c == '\n') {
+      continue;
+    }
+
     ++p->col;
     if(c == '\n') {
       p->col = 0;
