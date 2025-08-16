@@ -132,6 +132,7 @@ next(miniexact_parser* p) {
         while(c != '\n' && c != EOF) {
           c = GETC(p);
         }
+        ++p->line;
         continue;
       } else {
         return END;
@@ -142,10 +143,12 @@ next(miniexact_parser* p) {
       while(c != '\n' && c != EOF) {
         c = GETC(p);
       }
+      ++p->line;
       continue;
     }
     // Skip empty lines.
     else if(p->col == 0 && c == '\n') {
+      ++p->line;
       continue;
     }
 
