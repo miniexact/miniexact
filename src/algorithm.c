@@ -192,7 +192,9 @@ end_option(miniexact_algorithm* a, miniexact_problem* p, int32_t cost) {
   MINIEXACT_ARR_PLUS1(dlink)
   MINIEXACT_ARR_PLUS1(ulink)
   MINIEXACT_ARR_PLUS1(color)
-  MINIEXACT_ARR_PLUS1(cost)
+
+  // Fix costs array.
+  MINIEXACT_ARR_HASN(cost, (p->p + p->j + 1))
 
   if(cost < p->max_option_cost) {
     return "Costs are not ordered! Each option may have equal or increasing "
