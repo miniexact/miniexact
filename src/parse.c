@@ -101,8 +101,9 @@ isidentchar(char c) {
          (c >= '0' && c <= '9') || (c == '_') || (c == '-') || (c == ',') ||
          (c == '!') || (c == '#') || (c == '@') || (c == '+') || (c == '%') ||
          (c == '^') || (c == '&') || (c == '*') || (c & 128u) || (c == '!') ||
-         (c == '/') || (c == '#') || (c == '.') || (c == '\\') || (c == '(') ||
-         (c == ')') || (c == '{') || (c == '}') || (c == '\'') || (c == '"');
+         (c == '/') || (c == '#') || (c == '.') || (c == ',') || (c == '\\') ||
+         (c == '(') || (c == ')') || (c == '{') || (c == '}') || (c == '\'') ||
+         (c == '"') || (c == '=') || (c == '?');
   /* c & 128u checks for some UTF-8 extended character, we want to accept all of
      them for trivial unicode supporting behavior for idents */
 }
@@ -140,7 +141,7 @@ next(miniexact_parser* p) {
       }
     }
     // Skip knuth-style |-comments
-    else if(p->col == 0 &&  c == '|') {
+    else if(p->col == 0 && c == '|') {
       while(c != '\n' && c != EOF) {
         c = GETC(p);
       }

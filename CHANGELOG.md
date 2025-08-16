@@ -4,6 +4,7 @@
 
   - Remove #-style comments again, as they are incompatible with many
     benchmarks.
+  - Also allow `?`, `,`, `=` in ident names.
 
 ## Version 1.4.2
 
