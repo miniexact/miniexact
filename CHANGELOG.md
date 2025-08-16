@@ -2,8 +2,10 @@
 
 ## Version 1.4.1
 
-  - Add `miniexacts_version()` function and Python API
+  - Add `miniexacts_version()` function and Python API.
   - Have the parser skip all lines starting with `//`, `#`, and `|`.
+  - Have the parser process Donald Knuth's DLX input files with extended Idents.
+  - Fix a heap corruption issue on bigger benchmarks.
 
 ## Version 1.4
 
