@@ -1,5 +1,10 @@
 # MiniExact Changelog
 
+## Version 1.4.1
+
+  - Add `miniexacts_version()` function and Python API
+  - Have the parser skip all lines starting with `//`, `#`, and `|`.
+
 ## Version 1.4
 
   - Installing the package over pip also installs the `miniexact` CLI now.
