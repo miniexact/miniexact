@@ -1,5 +1,10 @@
 # MiniExact Changelog
 
+## Version 1.4.3
+
+  - Remove #-style comments again, as they are incompatible with many
+    benchmarks.
+
 ## Version 1.4.2
 
   - Also allow `.`, `\\`, `'`, `"`, `{`, `}`, `(`, and `)` in ident names.

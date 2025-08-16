@@ -139,8 +139,8 @@ next(miniexact_parser* p) {
         return END;
       }
     }
-    // Skip #-comments and knuth-styel |-comments
-    else if(p->col == 0 && (c == '#' || c == '|')) {
+    // Skip knuth-style |-comments
+    else if(p->col == 0 &&  c == '|') {
       while(c != '\n' && c != EOF) {
         c = GETC(p);
       }
