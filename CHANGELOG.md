@@ -1,5 +1,9 @@
 # MiniExact Changelog
 
+## Version 1.4.2
+
+  - Also allow `.`, `\\`, `'`, `"`, `{`, `}`, `(`, and `)` in ident names.
+
 ## Version 1.4.1
 
   - Add `miniexacts_version()` function and Python API.
