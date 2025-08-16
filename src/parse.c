@@ -100,7 +100,8 @@ isidentchar(char c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
          (c >= '0' && c <= '9') || (c == '_') || (c == '-') || (c == ',') ||
          (c == '!') || (c == '#') || (c == '@') || (c == '+') || (c == '%') ||
-         (c == '^') || (c == '&') || (c == '*') || (c & 128u);
+         (c == '^') || (c == '&') || (c == '*') || (c & 128u) || (c == '!') ||
+         (c == '/') || (c == '#');
   /* c & 128u checks for some UTF-8 extended character, we want to accept all of
      them for trivial unicode supporting behavior for idents */
 }
@@ -184,7 +185,9 @@ next(miniexact_parser* p) {
   if(isidentchar(c)) {
     p->ident[0] = c;
     p->ident_len = 1;
-    while(PEEKC(p) != EOF && isidentchar(PEEKC(p))) {
+    while(PEEKC(p) != EOF &&
+          (isidentchar(PEEKC(p)) ||
+           (p->significant_newline && (c == '>' || c == '<')))) {
       char c = GETC(p);
       ++p->col;
       p->ident[p->ident_len++] = c;
