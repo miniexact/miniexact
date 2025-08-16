@@ -166,33 +166,49 @@ next(miniexact_parser* p) {
       break;
   }
 
-  switch(c) {
-    case ';':
-      return SEMICOLON;
-    case ':':
-      return COLON;
-    case '[':
-      return LBRACK;
-    case ']':
-      return RBRACK;
-    case '<':
-      return LESS_THAN;
-    case '>':
-      return GREATER_THAN;
-    case '$':
-      return DOLLAR;
-    case '|':
-      return PIPE;
+  if(p->significant_newline) {
+    switch(c) {
+      case ';':
+        return SEMICOLON;
+      case ':':
+        return COLON;
+      case '[':
+        return LBRACK;
+      case ']':
+        return RBRACK;
+      case '$':
+        return DOLLAR;
+      case '|':
+        return PIPE;
+    }
+  } else {
+    switch(c) {
+      case ';':
+        return SEMICOLON;
+      case ':':
+        return COLON;
+      case '[':
+        return LBRACK;
+      case ']':
+        return RBRACK;
+      case '<':
+        return LESS_THAN;
+      case '>':
+        return GREATER_THAN;
+      case '$':
+        return DOLLAR;
+    }
   }
 
-  if(isidentchar(c)) {
+  if(isidentchar(c) || (p->significant_newline && (c == '>' || c == '<'))) {
     p->ident[0] = c;
     p->ident_len = 1;
     while(PEEKC(p) != EOF &&
           (isidentchar(PEEKC(p)) ||
-           (p->significant_newline && (c == '>' || c == '<')))) {
+           (p->significant_newline && (PEEKC(p) == '>' || PEEKC(p) == '<')))) {
       char c = GETC(p);
       ++p->col;
+      assert(p->ident_len < 4096);
       p->ident[p->ident_len++] = c;
     }
     p->ident[p->ident_len] = '\0';
@@ -659,7 +675,7 @@ parse(miniexact_parser* p, bool dlx) {
     if(t == NEWLINE)
       t = next(p);
     else {
-      return "expect newline after primary and secondary items in DLX header";
+      return "expect new-line after primary and secondary items in DLX header";
     }
   }
   if(t == LBRACK && !skip_secondary) {
