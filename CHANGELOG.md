@@ -1,5 +1,13 @@
 # MiniExact Changelog
 
+## Version 1.5
+
+  - Add `item_colors` to Python API, available once a solution is
+    available.
+  - Add `wordrects.py` as another Python example. You can use this
+    module to generate word search puzzles with arbitrary inputs and
+    sizes.
+
 ## Version 1.4.3
 
   - Remove #-style comments again, as they are incompatible with many

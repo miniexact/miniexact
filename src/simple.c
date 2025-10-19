@@ -266,6 +266,13 @@ miniexacts_extract_solution(struct miniexacts* h, int32_t* arr) {
   return miniexact_extract_solution_option_indices(&h->p, arr);
 }
 
+void
+miniexacts_extract_colors(struct miniexacts* h, int32_t* items) {
+  assert(h);
+  assert(items);
+  miniexact_extract_solution_item_colors(&h->p, items);
+}
+
 bool
 miniexacts_write_to_dlx(struct miniexacts* h, const char* path) {
   assert(h);

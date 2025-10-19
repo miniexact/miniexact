@@ -12,6 +12,7 @@ class miniexacts_wrapper {
   private:
   std::unique_ptr<miniexacts, void (*)(miniexacts*)> h_;
   std::vector<int32_t> selected_options_;
+  std::vector<int32_t> colors_of_secondary_items_;
   bool solution_valid_ = false;
   int last_res_ = 0;
 
@@ -26,19 +27,25 @@ class miniexacts_wrapper {
     int32_t len =
       miniexacts_extract_solution(h_.get(), selected_options_.data());
     selected_options_.resize(len);
+    miniexacts_extract_colors(h_.get(), colors_of_secondary_items_.data());
     solution_valid_ = true;
   }
 
   public:
   miniexacts_wrapper()
-    : h_(init(), &miniexacts_free) {}
+  : h_(init(), &miniexacts_free) {
+    colors_of_secondary_items_.reserve(512);
+    colors_of_secondary_items_.push_back(0);
+  }
 
   ~miniexacts_wrapper() {}
 
   int32_t primary(const char* name, unsigned int u = 1, unsigned int v = 1) {
+    colors_of_secondary_items_.push_back(0);
     return miniexacts_define_primary_item_with_slack(h_.get(), name, u, v);
   }
   int32_t secondary(const char* name) {
+    colors_of_secondary_items_.push_back(0);
     return miniexacts_define_secondary_item(h_.get(), name);
   }
   int32_t color(const char* name) {
@@ -97,6 +104,10 @@ class miniexacts_wrapper {
   const std::vector<int32_t>& selected_options() {
     extract_solution();
     return selected_options_;
+  }
+  const std::vector<int32_t>& item_colors() {
+    extract_solution();
+    return colors_of_secondary_items_;
   }
   int32_t operator[](unsigned int i) {
     extract_solution();

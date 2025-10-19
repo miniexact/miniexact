@@ -101,6 +101,9 @@ miniexacts_solution_length(struct miniexacts* h);
 int32_t
 miniexacts_extract_solution(struct miniexacts* h, int32_t* arr);
 
+void
+miniexacts_extract_colors(struct miniexacts* h, int32_t* items);
+
 bool
 miniexacts_write_to_dlx(struct miniexacts* h, const char* path);
 

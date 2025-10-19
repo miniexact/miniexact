@@ -300,3 +300,28 @@ miniexact_extract_solution_option_indices(miniexact_problem* p,
 
   return size;
 }
+
+void
+miniexact_extract_solution_item_colors(miniexact_problem* p,
+                                       miniexact_link* colors) {
+  assert(p);
+  assert(colors);
+  memset(colors,
+         0,
+         sizeof(miniexact_link) *
+           (p->primary_item_count + p->secondary_item_count));
+
+  for(miniexact_link j = 0; j < p->l; ++j) {
+    miniexact_link r = p->x[j];
+
+    if(r <= p->N || r > p->Z)
+      continue;// Out of range (e.g. MCC)
+
+    while(TOP(r) >= 0) {
+      if(TOP(r) > p->primary_item_count && COLOR(r) > 0) {
+        colors[TOP(r)] = COLOR(r);
+      }
+      ++r;
+    }
+  }
+}

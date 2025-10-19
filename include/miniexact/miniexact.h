@@ -196,6 +196,12 @@ miniexact_link
 miniexact_extract_solution_option_indices(miniexact_problem* p,
                                           miniexact_link* solution);
 
+/** @brief Extract the color indices of secondary items of a valid solution
+ */
+void
+miniexact_extract_solution_item_colors(miniexact_problem* p,
+                                       miniexact_link* solution);
+
 typedef void (*miniexact_link_visitor)(miniexact_problem* p,
                                        void* userdata,
                                        miniexact_link item_index,
