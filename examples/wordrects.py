@@ -5,6 +5,7 @@
 #   - right to left,
 #   - top to bottom,
 #   - bottom to top
+#   - diagonal (all directions)
 #
 # Takes the alphabet to use from the command line and inserts missing
 # letters. Width and height may be modified from the terminal. Input
@@ -14,7 +15,7 @@ import argparse
 from sys import stdin
 from miniexact import miniexacts_c
 
-def option(s, *options):
+def option(s, O, w, x, y, hint, *options):
     for o in options:
         if isinstance(o, tuple):
             s.add(o[0], o[1])
@@ -22,15 +23,17 @@ def option(s, *options):
             s.add(o)
         else:
             raise ValueError
-    s.add(0)
+    n = s.add(0)
+    O[n] = (w, x, y, hint)
 
-def build_problem(words: set, alphabet: set, width: int, height: int):
+def build_problem(words: set, alphabet: set, width: int, height: int, dlx: str):
     s = miniexacts_c()
 
     wp = {}
     p = {}
     C = {}
     CC = {}
+    OPTIONS = {}
 
     # Initiate the problem with all positions and all words.
     for w in words:
@@ -47,14 +50,26 @@ def build_problem(words: set, alphabet: set, width: int, height: int):
         l = len(w)
         for x in range(width):
             for y in range(height):
-                if width - x >= l:
-                    option(s, *[wp[w], *[(p[(x + i, y)], C[c]) for i,c in enumerate(w)]])
-                if x >= l:
-                    option(s, *[wp[w], *[(p[(x - i, y)], C[c]) for i,c in enumerate(w)]])
-                if height - y >= l:
-                    option(s, *[wp[w], *[(p[(x, y + i)], C[c]) for i,c in enumerate(w)]])
-                if y >= l:
-                    option(s, *[wp[w], *[(p[(x, y - i)], C[c]) for i,c in enumerate(w)]])
+                # Horizontal words:
+                if x + l <= width:
+                    option(s, OPTIONS, w, x, y, "left->right", *[wp[w], *[(p[(x + i, y)], C[c]) for i,c in enumerate(w)]])
+                    option(s, OPTIONS, w, x, y, "right->left", *[wp[w], *[(p[(x + (l - i - 1), y)], C[c]) for i,c in enumerate(w)]])
+
+                # Vertical words:
+                if y + l <= height:
+                    option(s, OPTIONS, w, x, y, "top->bottom", *[wp[w], *[(p[(x, y + i)], C[c]) for i,c in enumerate(w)]])
+                    option(s, OPTIONS, w, x, y, "bottom->top", *[wp[w], *[(p[(x, y + (l - i - 1))], C[c]) for i,c in enumerate(w)]])
+
+                # Diagonal words:
+                if x + l <= width and y + l <= height:
+                    option(s, OPTIONS, w, x, y, "topleft->lowerright", *[wp[w], *[(p[(x + i, y + i)], C[c]) for i,c in enumerate(w)]])
+                    option(s, OPTIONS, w, x, y, "lowerright->topleft", *[wp[w], *[(p[(x + (l - i - 1), y + (l - i - 1))], C[c]) for i,c in enumerate(w)]])
+                    option(s, OPTIONS, w, x, y, "topright->lowerleft", *[wp[w], *[(p[(x + (l - i - 1), y + i)], C[c]) for i,c in enumerate(w)]])
+                    option(s, OPTIONS, w, x, y, "lowerleft->topright", *[wp[w], *[(p[(x + i, y + (l - i - 1))], C[c]) for i,c in enumerate(w)]])
+
+    if dlx != "":
+        s.write_to_dlx(dlx)
+        return
                     
     # Solve, and print a solution
     res = s.solve()
@@ -62,14 +77,21 @@ def build_problem(words: set, alphabet: set, width: int, height: int):
         print("No solution found!")
     else:
         for y in range(height):
+            sep = ""
             for x in range(width):
                 pos = p[(x, y)]
                 color = s.item_colors()[pos]
                 char = ' '
                 if color != 0:
                     char = CC[color]
-                print(f"{char}", end='')
+                print(f"{sep}{char}", end='')
+                sep = "\t"
             print("")
+        print("")
+        print("Word positions:")
+        for s in s.selected_options():
+            (w, x, y, hint) = OPTIONS[s]
+            print(f"  Word \"{w}\" starts at {x}x{y} and goes {hint}")
 
 def main():
     parser = argparse.ArgumentParser(prog="wordrects",
@@ -82,12 +104,15 @@ def main():
                         action='store_true')
     parser.add_argument("-a", "--alphabet", help="The alphabet to use", type=str,
                         default="AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz")
+    parser.add_argument("--dlx", help="Print problem as DLX to the given path and stop", type=str,
+                        default="")
 
     args = parser.parse_args()
 
     width = args.width
     height = args.height
     mixed_case = args.mixed_case or False
+    dlx = args.dlx
     words = set()
     alphabet = set()
 
@@ -118,7 +143,7 @@ def main():
 
     assert width >= max_word_len or height >= max_word_len
 
-    build_problem(words, alphabet, width, height)
+    build_problem(words, alphabet, width, height, dlx)
 
 if __name__ == "__main__":
     main()
