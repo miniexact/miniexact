@@ -26,7 +26,7 @@ def option(s, O, w, x, y, hint, *options):
     n = s.add(0)
     O[n] = (w, x, y, hint)
 
-def build_problem(words: set, alphabet: set, width: int, height: int, dlx: str):
+def build_problem(words: set, alphabet: set, width: int, height: int, dlx: str, count: int):
     s = miniexacts_c()
 
     wp = {}
@@ -72,26 +72,33 @@ def build_problem(words: set, alphabet: set, width: int, height: int, dlx: str):
         return
                     
     # Solve, and print a solution
-    res = s.solve()
-    if res == 20:
-        print("No solution found!")
-    else:
-        for y in range(height):
-            sep = ""
-            for x in range(width):
-                pos = p[(x, y)]
-                color = s.item_colors()[pos]
-                char = ' '
-                if color != 0:
-                    char = CC[color]
-                print(f"{sep}{char}", end='')
-                sep = "\t"
+    for i in range(count):
+        res = s.solve()
+        if res == 20:
+            print("No solution found!")
+            break
+        else:
             print("")
-        print("")
-        print("Word positions:")
-        for s in s.selected_options():
-            (w, x, y, hint) = OPTIONS[s]
-            print(f"  Word \"{w}\" starts at {x}x{y} and goes {hint}")
+            print("===================================================")
+            print(f"Solution {i}")
+            print("")
+            
+            for y in range(height):
+                sep = ""
+                for x in range(width):
+                    pos = p[(x, y)]
+                    color = s.item_colors()[pos]
+                    char = ' '
+                    if color != 0:
+                        char = CC[color]
+                    print(f"{sep}{char}", end='')
+                    sep = "\t"
+                print("")
+            print("")
+            print("Word positions:")
+            for sel in s.selected_options():
+                (w, x, y, hint) = OPTIONS[sel]
+                print(f"  Word \"{w}\" starts at {x}x{y} and goes {hint}")
 
 def main():
     parser = argparse.ArgumentParser(prog="wordrects",
@@ -106,6 +113,8 @@ def main():
                         default="AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz")
     parser.add_argument("--dlx", help="Print problem as DLX to the given path and stop", type=str,
                         default="")
+    parser.add_argument("--count", help="Number of solutions to generate", type=int,
+                        default=1)
 
     args = parser.parse_args()
 
@@ -113,6 +122,7 @@ def main():
     height = args.height
     mixed_case = args.mixed_case or False
     dlx = args.dlx
+    count = args.count
     words = set()
     alphabet = set()
 
@@ -143,7 +153,7 @@ def main():
 
     assert width >= max_word_len or height >= max_word_len
 
-    build_problem(words, alphabet, width, height, dlx)
+    build_problem(words, alphabet, width, height, dlx, count)
 
 if __name__ == "__main__":
     main()
