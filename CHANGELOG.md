@@ -1,5 +1,20 @@
 # MiniExact Changelog
 
+## Version 1.6
+
+  - Fix issue #2: Print selected options misses colour
+  - Fix issue #4: Print DLX corrupts multiplicity
+  - Fix issue #5: Item names drop leading zeroes
+  - A big thanks to [@donkirkby](https://github.com/donkirkby) for
+    reporting these issues and the really nice and well actionable bug
+    reports!
+  - Update CIBuildWheel to 3.3.0
+
+## Version 1.5.1
+
+  - Add a `.status()` call to the simple interface, so that tools can
+    get the last solve result more easily.
+
 ## Version 1.5
 
   - Add `item_colors` to Python API, available once a solution is
