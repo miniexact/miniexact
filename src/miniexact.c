@@ -208,7 +208,7 @@ miniexact_print_problem_matrix_in_libexact_format(miniexact_problem* p) {
 
 static inline void
 print_name(miniexact_problem* p, FILE* o, size_t i) {
-  if(p->name[i] && p->name[i][0] != '0') {
+  if(p->name[i]) {
     fprintf(o, "%s", p->name[i]);
   } else {
     fprintf(o, "%zu", i);
@@ -311,7 +311,8 @@ miniexact_extract_solution_item_colors(miniexact_problem* p,
   memset(colors,
          0,
          sizeof(miniexact_link) *
-           (p->primary_item_count + p->secondary_item_count) + 1);
+             (p->primary_item_count + p->secondary_item_count) +
+           1);
 
   for(miniexact_link j = 0; j < p->l; ++j) {
     miniexact_link r = p->x[j];
