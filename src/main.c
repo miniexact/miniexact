@@ -70,7 +70,7 @@ print_version(void) {
 }
 
 static void
-print_licenses() {
+print_licenses(void) {
   printf("%s\n", miniexact_license);
 }
 

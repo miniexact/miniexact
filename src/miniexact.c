@@ -309,7 +309,7 @@ miniexact_extract_solution_item_colors(miniexact_problem* p,
   memset(colors,
          0,
          sizeof(miniexact_link) *
-           (p->primary_item_count + p->secondary_item_count));
+           (p->primary_item_count + p->secondary_item_count) + 1);
 
   for(miniexact_link j = 0; j < p->l; ++j) {
     miniexact_link r = p->x[j];

@@ -20,6 +20,12 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
   int solution = 0;
   int nr_of_solutions = 0;
 
+  miniexact_color* item_colors = NULL;
+  if(p->color) {
+    item_colors = calloc(p->primary_item_count + p->secondary_item_count + 1,
+                         sizeof(miniexact_color));
+  }
+
   do {
     bool has_solution = a->compute_next_result(a, p);
     if(!has_solution) {
@@ -35,6 +41,11 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
 
       if(cfg->print_options) {
         ++nr_of_solutions;
+
+        if(item_colors) {
+          miniexact_extract_solution_item_colors(p, item_colors);
+        }
+        
         for(miniexact_link o = 0; o < p->l; ++o) {
           miniexact_link o_ = p->x[o];
 
@@ -52,11 +63,12 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
                 printf("%s", NAME(TOP(o_)));
               else
                 printf("%d", TOP(o_));
-              if(o_ < p->color_size && COLOR(o_) > 0) {
-                if(COLOR(o_) < p->color_name_size && p->color_name[COLOR(o_)])
-                  printf(":%s", p->color_name[COLOR(o_)]);
+              if(p->color && item_colors[TOP(o_)]) {
+                miniexact_color c = item_colors[TOP(o_)];
+                if(c < p->color_name_size && p->color_name[c])
+                  printf(":%s", p->color_name[c]);
                 else
-                  printf(":%d", COLOR(o_));
+                  printf(":%d", c);
               }
               ++o_;
 
@@ -73,7 +85,7 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
         }
         printf("\n");
       } else {
-        miniexact_link *solution = malloc(sizeof(miniexact_link) * p->l);
+        miniexact_link* solution = malloc(sizeof(miniexact_link) * p->l);
         miniexact_link l =
           miniexact_extract_solution_option_indices(p, solution);
         if(l > 0) {
@@ -98,6 +110,9 @@ miniexact_solve_problem_and_print_solutions(struct miniexact_algorithm* a,
   if(cfg->enumerate) {
     printf("Found %d solutions!\n", nr_of_solutions);
   }
+
+  if(item_colors)
+    free(item_colors);
 
   return return_code;
 }
