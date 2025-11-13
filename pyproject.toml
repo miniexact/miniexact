@@ -8,7 +8,7 @@ description = "This is the MiniExact exact cover solver, implementing Donald Knu
 license = "BSD-3-Clause"
 name = "miniexact"
 requires-python = ">= 3.8"
-version = "1.5"
+version = "1.5.1"
 readme = "README.md"
 
 [project.urls]

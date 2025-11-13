@@ -41,21 +41,26 @@ class miniexacts_wrapper {
   ~miniexacts_wrapper() {}
 
   int32_t primary(const char* name, unsigned int u = 1, unsigned int v = 1) {
+    last_res_ = 0;
     colors_of_secondary_items_.push_back(0);
     return miniexacts_define_primary_item_with_slack(h_.get(), name, u, v);
   }
   int32_t secondary(const char* name) {
     colors_of_secondary_items_.push_back(0);
+    last_res_ = 0;
     return miniexacts_define_secondary_item(h_.get(), name);
   }
   int32_t color(const char* name) {
+    last_res_ = 0;
     return miniexacts_define_color(h_.get(), name);
   }
 
   int32_t add(const char* name, const char* color = NULL, int32_t cost = 0) {
+    last_res_ = 0;
     return miniexacts_add_named(h_.get(), name, color, cost);
   }
   int32_t add(int32_t item, int32_t color = 0, int32_t cost = 0) {
+    last_res_ = 0;
     return miniexacts_add(h_.get(), item, color, cost);
   }
 
@@ -82,6 +87,8 @@ class miniexacts_wrapper {
     extract_solution();
     return miniexacts_solution(h_.get(), it, userdata);
   }
+
+  int status() { return last_res_; }
 
   using solution_cb_func =
     std::function<void(const char**, const char**, unsigned int)>;
