@@ -236,7 +236,9 @@ miniexact_write_problem_to_dlx(miniexact_problem* p, FILE* o) {
       }
       print_name(p, o, i);
       if(p->slack[i] != 0) {
-        fprintf(o, ":%d;%d", p->slack[i] + p->bound[i], p->bound[i]);
+        miniexact_link v = p->bound[i];
+        miniexact_link u = v - p->slack[i];
+        fprintf(o, ":%d;%d", u, v);
       }
     } else {
       if(!first) {
