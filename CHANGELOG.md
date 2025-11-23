@@ -1,5 +1,9 @@
 # MiniExact Changelog
 
+## Version 1.6.1
+
+  - Fix issue #4, now also for the slack == bound case.
+
 ## Version 1.6
 
   - Fix issue #2: Print selected options misses colour
