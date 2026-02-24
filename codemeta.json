@@ -1,0 +1,28 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "type": "SoftwareSourceCode",
+    "author": [
+        {
+            "id": "https://orcid.org/0000-0001-7297-6000",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Johannes Kepler University Linz"
+            },
+            "email": "mail@maxheisinger.at",
+            "familyName": "Heisinger",
+            "givenName": "Max"
+        }
+    ],
+    "codeRepository": "https://github.com/miniexact/miniexact",
+    "dateCreated": "2020-10-12",
+    "datePublished": "2023-12-29",
+    "description": "A simple and hackable exact cover solver inspired by Donald Knuth's Fascicle 5 ",
+    "license": "https://spdx.org/licenses/BSD-3-Clause",
+    "name": "MiniExact",
+    "programmingLanguage": [
+        "C",
+        "Python"
+    ],
+    "issueTracker": "https://github.com/miniexact/miniexact/issues"
+}
